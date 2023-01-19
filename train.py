@@ -49,11 +49,13 @@ class Trainer():
             self.e += 1
             r, spot_name = episode(self.agent)
             rewards.append(r) ; spot_names.append(spot_name)
-            self.agent.learn(batch_size = self.args.batch_size)
-            if(self.e >= self.args.epochs): 
+            losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change = \
+                self.agent.learn(batch_size = self.args.batch_size)
+            if(self.e % 100 == 0):
                 plot_rewards(rewards, self.e)
                 plot_spot_names(spot_names, self.e)
                 episode(self.agent, push = False, verbose = True)
+            if(self.e >= self.args.epochs): 
                 break
     
 print("train.py loaded.")

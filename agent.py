@@ -96,30 +96,26 @@ class Agent:
         
         dkl_change = dkl(weights_after[0], weights_after[1], weights_before[0], weights_before[1]) + \
             dkl(weights_after[2], weights_after[3], weights_before[2], weights_before[3])
-        dkl_changes = torch.tile(dkl_change, rewards.shape)                
-        
+        dkl_changes = torch.tile(dkl_change, rewards.shape)   
+                
         dkl_change = log(dkl_changes.sum().item())    
         dkl_changes *= masks 
+                
         
         
-        
-        if(self.args.naive_curiosity == "true"):
+        if(self.args.naive_curiosity):
             if(self.args.eta == None):
                 curiosity = self.eta * forward_errors
-                self.eta = self.eta * self.args.eta_rate
             else:
                 curiosity = self.args.eta * forward_errors
-                self.args.eta = self.args.eta * self.args.eta_rate
                 
             #print("\nMSE curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
         
         else:
             if(self.args.eta == None):
                 curiosity = self.eta * dkl_changes
-                self.eta = self.eta * self.args.eta_rate
             else:
                 curiosity = self.args.eta * dkl_changes
-                self.args.eta = self.args.eta * self.args.eta_rate
                 
             #print("\nFEB curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
             

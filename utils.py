@@ -38,13 +38,12 @@ parser.add_argument('--power',              type=float, default = 1)
 # Training
 parser.add_argument("--d",                  type=int,   default = 2)    # Delay to train actors
 parser.add_argument("--alpha",              type=float, default = None) # Soft-Actor-Critic entropy aim
-parser.add_argument("--target_entropy",     type=float, default = -5)   # Soft-Actor-Critic entropy aim
+parser.add_argument("--target_entropy",     type=float, default = -10)   # Soft-Actor-Critic entropy aim
 parser.add_argument("--eta",                type=float, default = 0) # Scale curiosity
-parser.add_argument("--eta_rate",           type=float, default = 1)    # Scale eta
 parser.add_argument("--tau",                type=float, default = .05)  # For soft-updating target critics
 parser.add_argument("--dkl_rate",           type=float, default = .001)#.0001)# Scale bayesian dkl
 parser.add_argument("--sample_elbo",        type=int,   default = 5)   # Samples for elbo
-parser.add_argument("--naive_curiosity",    type=str,   default = "true") # Which kind of curiosity
+parser.add_argument("--naive_curiosity",    type=str,   default = False) # Which kind of curiosity
 parser.add_argument("--dkl_change_size",    type=str,   default = "batch")  # "batch", "episode", "step"
 
 args, _ = parser.parse_known_args()
@@ -122,6 +121,7 @@ def weights(model):
         torch.cat(bias_sigma, -1).to("cpu"))
     
 def dkl(mu_1, sigma_1, mu_2, sigma_2):
+    if(sigma_1 == 0): return(torch.tensor(1.0))
     sigma_1 = torch.pow(sigma_1, 2)
     sigma_2 = torch.pow(sigma_2, 2)
     term_1 = torch.pow(mu_2 - mu_1, 2) / sigma_2 
