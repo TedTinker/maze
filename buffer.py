@@ -20,7 +20,7 @@ class RecurrentReplayBuffer:
     """Use this version when num_bptt == max_episode_len"""
     
     def __init__(
-        self, args, segment_len=None  # for non-overlapping truncated bptt, maybe need a large batch size
+        self, args = args, segment_len=None  # for non-overlapping truncated bptt, maybe need a large batch size
     ):
     
         self.args = args

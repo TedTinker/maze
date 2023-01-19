@@ -30,7 +30,7 @@ parser.add_argument('--critic_lr',          type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
 
 # Memory buffer
-parser.add_argument('--capacity',           type=int,   default = 300)
+parser.add_argument('--capacity',           type=int,   default = 100)
 parser.add_argument('--replacement',        type=str,   default = "index")
 parser.add_argument('--selection',          type=str,   default = "uniform")
 parser.add_argument('--power',              type=float, default = 1)
@@ -51,7 +51,6 @@ args, _ = parser.parse_known_args()
     
 
 from random import choice
-from itertools import product
 
 class Spot:
     
@@ -73,8 +72,8 @@ class T_Maze:
             if(x < 0): x = -1 ; y = 0 
             else:      x = 1  ; y = 0
         else:
-            if(y < 0): x = 0 ; y = -1 
-            else:      x = 0 ; y = 1
+            if(y < 0): x = 0  ; y = -1 
+            else:      x = 0  ; y = 1
         new_pos = (self.agent_pos[0] + x, self.agent_pos[1] + y)
         for spot in self.maze:
             if(spot.pos == new_pos):
@@ -121,18 +120,22 @@ def weights(model):
         torch.cat(bias_sigma, -1).to("cpu"))
     
 def dkl(mu_1, sigma_1, mu_2, sigma_2):
-    if(sigma_1 == 0): return(torch.tensor(1.0))
     sigma_1 = torch.pow(sigma_1, 2)
     sigma_2 = torch.pow(sigma_2, 2)
     term_1 = torch.pow(mu_2 - mu_1, 2) / sigma_2 
     term_2 = sigma_1 / sigma_2 
     term_3 = torch.log(term_2)
-    return((.5 * (term_1 + term_2 - term_3 - 1)).sum())
+    out = (.5 * (term_1 + term_2 - term_3 - 1)).sum()
+    out = torch.nan_to_num(out)
+    return(out)
 
 
+import os 
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Without this, pyplot crashes the kernal
 
 import matplotlib.pyplot as plt 
 from itertools import accumulate
+import numpy as np
 
 def plot_rewards(rewards, e):
     rewards = list(accumulate(rewards))
@@ -146,6 +149,47 @@ def plot_spot_names(spot_names, e):
     plt.scatter([0 for _ in kinds], kinds, color = (0,0,0,0))
     plt.scatter(range(len(spot_names)), spot_names, color = "gray")
     plt.title("Endings at epoch {}".format(e))
+    plt.show()
+    plt.close()
+    
+def plot_losses(losses, e):
+    losses = np.concatenate(losses, axis = 0)
+    plt.plot(losses[:,0], color = "blue", label = "MSE")
+    plt.plot(losses[:,1], color = "red", label = "DKL")
+    plt.legend()
+    plt.title("Forward Losses at epoch {}".format(e))
+    plt.show()
+    plt.close()
+    
+    alpha = losses[:,2]
+    alpha_xs = [i for i in range(len(alpha)) if alpha[i] != None] ; alpha = [a for a in alpha if a != None]
+    
+    actor = losses[:,3]
+    actor_xs = [i for i in range(len(actor)) if actor[i] != None] ; actor = [a for a in actor if a != None]
+    
+    plt.plot(alpha_xs, alpha, color = "black", label = "Alpha", alpha = .5)
+    ax2 = plt.twinx()
+    ax2.plot(actor_xs, actor, color = "red", label = "Actor", alpha = .5)
+    ax3 = plt.twinx()
+    ax3.plot(losses[:,4], color = "blue", label = "Critic 1", alpha = .5)
+    ax3.plot(losses[:,5], color = "blue", label = "Critic 2", alpha = .5)
+    plt.legend()
+    plt.title("Other Losses at epoch {}".format(e))
+    plt.show()
+    plt.close()
+    
+def plot_ext_int(extrinsic, intrinsic_curiosity, intrinsic_entropy, e):
+    plt.plot(extrinsic, color = "red", label = "Extrinsic", alpha = .5)
+    plt.plot(intrinsic_curiosity, color = "green", label = "Curiosity", alpha = .5)
+    plt.plot(intrinsic_entropy, color = "blue", label = "Entropy", alpha = .5)
+    plt.legend()
+    plt.title("Extrinsic and Intrinsic Rewards")
+    plt.show()
+    plt.close()
+    
+def plot_dkl_change(dkl_change, e):
+    plt.plot(dkl_change) 
+    plt.title("DKL at epoch {}".format(e))
     plt.show()
     plt.close()
                 

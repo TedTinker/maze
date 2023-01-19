@@ -8,6 +8,4 @@ trainer.train()
 
 print("\n\nFinished training!")
 
-
-
 # %%

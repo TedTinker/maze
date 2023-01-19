@@ -3,7 +3,7 @@
 import torch
 import enlighten
 
-from utils import device, args, T_Maze, plot_rewards, plot_spot_names
+from utils import device, args, T_Maze, plot_rewards, plot_spot_names, plot_losses, plot_ext_int, plot_dkl_change
 from agent import Agent
 
 def episode(agent, push = True, verbose = False):
@@ -42,18 +42,22 @@ class Trainer():
         self.agent.train()
         manager = enlighten.Manager()
         E = manager.counter(total = self.args.epochs, desc = "Epochs:", unit = "ticks", color = "blue")
-        rewards = [] 
-        spot_names = []
+        rewards = [] ; spot_names = []
+        losses = [] ; extrinsic = [] ; intrinsic_curiosity = [] ; intrinsic_entropy = [] ; dkl_change = []
         while(True):
             E.update()
             self.e += 1
             r, spot_name = episode(self.agent)
             rewards.append(r) ; spot_names.append(spot_name)
-            losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change = \
-                self.agent.learn(batch_size = self.args.batch_size)
+            l, e, ic, ie, dkl = self.agent.learn(batch_size = self.args.batch_size)
+            losses.append(l) ; extrinsic.append(e) ; intrinsic_curiosity.append(ic)
+            intrinsic_entropy.append(ie) ; dkl_change.append(dkl)
             if(self.e % 100 == 0):
                 plot_rewards(rewards, self.e)
                 plot_spot_names(spot_names, self.e)
+                plot_losses(losses, e)
+                plot_ext_int(extrinsic, intrinsic_curiosity, intrinsic_entropy, self.e)
+                plot_dkl_change(dkl_change, self.e)
                 episode(self.agent, push = False, verbose = True)
             if(self.e >= self.args.epochs): 
                 break
