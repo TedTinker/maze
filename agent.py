@@ -101,9 +101,7 @@ class Agent:
         if(dkl_changes.sum().item() != 0):
             dkl_change = log(dkl_changes.sum().item())    
         dkl_changes *= masks 
-                
-        print("ERRORS:", forward_errors)
-        
+                        
         if(self.args.naive_curiosity):
             curiosity = self.args.eta * forward_errors
                 
@@ -113,13 +111,9 @@ class Agent:
             curiosity = self.args.eta * dkl_changes
                 
             #print("\nFEB curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
-            
-        print("CUR BEFORE:", curiosity)
-            
+                        
         extrinsic = torch.mean(rewards*masks.detach()).item()
         intrinsic_curiosity = torch.mean(curiosity*masks.detach()).item()
-        print("\n")
-        print("CUR:", intrinsic_curiosity)
         rewards += curiosity
         
         
@@ -178,7 +172,6 @@ class Agent:
                 self.critic1(obs.detach(), actions_pred), 
                 self.critic2(obs.detach(), actions_pred)).sum(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis.cpu())*masks.detach().cpu()).item()
-            print("ENT:", intrinsic_entropy)
             actor_loss = (alpha * log_pis.cpu() - policy_prior_log_probs - Q.cpu())*masks.detach().cpu()
             actor_loss = actor_loss.sum() / masks.sum()
 

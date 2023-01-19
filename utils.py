@@ -37,13 +37,13 @@ parser.add_argument('--power',              type=float, default = 1)
 
 # Training
 parser.add_argument("--d",                  type=int,   default = 2)    # Delay to train actors
-parser.add_argument("--alpha",              type=float, default = None) # Soft-Actor-Critic entropy aim
-parser.add_argument("--target_entropy",     type=float, default = -1)   # Soft-Actor-Critic entropy aim
-parser.add_argument("--eta",                type=float, default = 1) # Scale curiosity
+parser.add_argument("--alpha",              type=float, default = 0) # Soft-Actor-Critic entropy aim
+parser.add_argument("--target_entropy",     type=float, default = -2)   # Soft-Actor-Critic entropy aim
+parser.add_argument("--eta",                type=float, default = 0) # Scale curiosity
 parser.add_argument("--tau",                type=float, default = .05)  # For soft-updating target critics
 parser.add_argument("--dkl_rate",           type=float, default = .001)#.0001)# Scale bayesian dkl
 parser.add_argument("--sample_elbo",        type=int,   default = 5)   # Samples for elbo
-parser.add_argument("--naive_curiosity",    type=str,   default = False) # Which kind of curiosity
+parser.add_argument("--naive_curiosity",    type=str,   default = True) # Which kind of curiosity
 parser.add_argument("--dkl_change_size",    type=str,   default = "batch")  # "batch", "episode", "step"
 
 args, _ = parser.parse_known_args()
@@ -67,6 +67,15 @@ class T_Maze:
             Spot((2, 2)), Spot((3, 2)), Spot((3, 1), 10, "GOOD")]
         self.agent_pos = (0, 0)
         
+    def obs(self):
+        right = 0 ; left = 0 ; up = 0 ; down = 0 
+        for spot in self.maze:
+            if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
+            if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1 
+            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1 
+            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1 
+        return(torch.tensor((self.agent_pos[0], self.agent_pos[1], right, left, up, down)).unsqueeze(0).float())
+        
     def action(self, x = 0, y = 0):
         if(abs(x) > abs(y)):
             if(x < 0): x = -1 ; y = 0 
@@ -78,13 +87,15 @@ class T_Maze:
         for spot in self.maze:
             if(spot.pos == new_pos):
                 self.agent_pos = new_pos 
-                if(spot.exit_reward != None):
+                if(spot.exit_reward == None):
+                    return(0, spot.name, False)
+                else:
                     if(type(spot.exit_reward) == tuple):
-                        return(choice(spot.exit_reward), spot.name)
+                        return(choice(spot.exit_reward), spot.name, True)
                     else:
-                        return(spot.exit_reward, spot.name)
+                        return(spot.exit_reward, spot.name, True)
                 break
-        return(0, "NONE")    
+        return(-1, "NONE", False)    
     
     def __str__(self):
         to_print = ""
@@ -97,6 +108,28 @@ class T_Maze:
                 to_print += portrayal 
             to_print += "\n"
         return(to_print)
+    
+    
+    
+if __name__ == "__main__":
+    t_maze = T_Maze()
+    print(t_maze)
+    print(t_maze.obs())
+    
+    reward, name, done = t_maze.action(1, 0)
+    print(t_maze)
+    print(reward, name, done, "\n")
+    print(t_maze.obs())
+    
+    reward, name, done = t_maze.action(0, 1)
+    print(t_maze)
+    print(reward, name, done, "\n")
+    print(t_maze.obs())
+    
+    reward, name, done = t_maze.action(-1, 0)
+    print(t_maze)
+    print(reward, name, done, "\n")
+    print(t_maze.obs())
     
     
 
@@ -140,7 +173,7 @@ import numpy as np
 def plot_rewards(rewards, e):
     rewards = list(accumulate(rewards))
     plt.plot(rewards) 
-    plt.title("Rewards at epoch {}".format(e))
+    plt.title("Cumulative Rewards at epoch {}".format(e))
     plt.show()
     plt.close()
 
@@ -197,12 +230,6 @@ def plot_dkl_change(dkl_change, e):
                 
             
             
-if __name__ == "__main__":
-    t_maze = T_Maze()
-    print(t_maze)
-    t_maze.action(1, 0)
-    print(t_maze)
-    t_maze.action(0, 1)
-    print(t_maze)
+
     
 # %%

@@ -14,12 +14,11 @@ def episode(agent, push = True, verbose = False):
     with torch.no_grad():
         while(done == False):
             if(verbose): print(t_maze)
-            o = t_maze.agent_pos
-            a = agent.act(torch.tensor(o).unsqueeze(0).float())
-            r, spot_name = t_maze.action(a[0], a[1])
-            no = t_maze.agent_pos
+            o = t_maze.obs()
+            a = agent.act(o)
+            r, spot_name, done = t_maze.action(a[0], a[1])
+            no = t_maze.obs()
             steps += 1
-            if(r != 0): done = True
             if(steps >= agent.args.max_steps): done = True ; r = -1
             if(device == "cuda"): torch.cuda.synchronize(device=device)
             if(push): agent.memory.push(o, a, r, no, done, done, agent)
@@ -29,7 +28,7 @@ def episode(agent, push = True, verbose = False):
 
 
 class Trainer():
-    def __init__(self, args = args):
+    def __init__(self, args = args, folder = None):
         
         self.args = args
         self.restart()
