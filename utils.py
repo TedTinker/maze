@@ -38,8 +38,8 @@ parser.add_argument('--power',              type=float, default = 1)
 # Training
 parser.add_argument("--d",                  type=int,   default = 2)    # Delay to train actors
 parser.add_argument("--alpha",              type=float, default = None) # Soft-Actor-Critic entropy aim
-parser.add_argument("--target_entropy",     type=float, default = -10)   # Soft-Actor-Critic entropy aim
-parser.add_argument("--eta",                type=float, default = 0) # Scale curiosity
+parser.add_argument("--target_entropy",     type=float, default = -1)   # Soft-Actor-Critic entropy aim
+parser.add_argument("--eta",                type=float, default = 1) # Scale curiosity
 parser.add_argument("--tau",                type=float, default = .05)  # For soft-updating target critics
 parser.add_argument("--dkl_rate",           type=float, default = .001)#.0001)# Scale bayesian dkl
 parser.add_argument("--sample_elbo",        type=int,   default = 5)   # Samples for elbo
@@ -179,9 +179,11 @@ def plot_losses(losses, e):
     plt.close()
     
 def plot_ext_int(extrinsic, intrinsic_curiosity, intrinsic_entropy, e):
+    ent_xs = [i for i in range(len(intrinsic_entropy)) if intrinsic_entropy[i] != None] ; intrinsic_entropy = [a for a in intrinsic_entropy if a != None]
+
     plt.plot(extrinsic, color = "red", label = "Extrinsic", alpha = .5)
     plt.plot(intrinsic_curiosity, color = "green", label = "Curiosity", alpha = .5)
-    plt.plot(intrinsic_entropy, color = "blue", label = "Entropy", alpha = .5)
+    plt.plot(ent_xs, intrinsic_entropy, color = "blue", label = "Entropy", alpha = .5)
     plt.legend()
     plt.title("Extrinsic and Intrinsic Rewards")
     plt.show()
