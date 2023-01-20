@@ -6,8 +6,8 @@ from train import Trainer
 bayes = True
 dkl_rate = .001
 entropy = -2
-curiosity = 1
-naive = False 
+curiosity = 5
+naive = True 
 
 args.bayes = bayes
 args.dkl_rate = dkl_rate
