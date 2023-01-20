@@ -2,8 +2,9 @@
 
 import torch
 import enlighten
+from copy import deepcopy
 
-from utils import device, args, T_Maze, plot_rewards, plot_spot_names, plot_losses, plot_ext_int, plot_dkl_change
+from utils import device, args, T_Maze, plots
 from agent import Agent
 
 def episode(agent, push = True, verbose = False):
@@ -28,36 +29,49 @@ def episode(agent, push = True, verbose = False):
 
 
 class Trainer():
-    def __init__(self, args = args, folder = None):
+    def __init__(self, args = args, title = None):
         
         self.args = args
+        self.title = title
         self.restart()
     
     def restart(self):
         self.e = 0
-        self.agent = Agent(args = self.args)
+        self.agents = [Agent(args = self.args) for _ in range(self.args.agents)]
+        self.plot_dict = {
+            "rewards" : [[] for agent in self.agents], "spot_names" : [[] for agent in self.agents], 
+            "mse" : [[] for agent in self.agents], "dkl" : [[] for agent in self.agents], 
+            "alpha" : [[] for agent in self.agents], "actor" : [[] for agent in self.agents], 
+            "critic_1" : [[] for agent in self.agents], "critic_2" : [[] for agent in self.agents], 
+            "extrinsic" : [[] for agent in self.agents], "intrinsic_curiosity" : [[] for agent in self.agents], 
+            "intrinsic_entropy" : [[] for agent in self.agents], "dkl_change" : [[] for agent in self.agents]
+        }
 
     def train(self):
-        self.agent.train()
+        for agent in self.agents: agent.train()
         manager = enlighten.Manager()
         E = manager.counter(total = self.args.epochs, desc = "Epochs:", unit = "ticks", color = "blue")
-        rewards = [] ; spot_names = []
-        losses = [] ; extrinsic = [] ; intrinsic_curiosity = [] ; intrinsic_entropy = [] ; dkl_change = []
         while(True):
             E.update()
             self.e += 1
-            r, spot_name = episode(self.agent)
-            rewards.append(r) ; spot_names.append(spot_name)
-            l, e, ic, ie, dkl = self.agent.learn(batch_size = self.args.batch_size)
-            losses.append(l) ; extrinsic.append(e) ; intrinsic_curiosity.append(ic)
-            intrinsic_entropy.append(ie) ; dkl_change.append(dkl)
+            for i, agent in enumerate(self.agents):
+                r, spot_name = episode(agent)
+                l, e, ic, ie, dkl = agent.learn(batch_size = self.args.batch_size)
+                self.plot_dict["rewards"][i].append(r)
+                self.plot_dict["spot_names"][i].append(spot_name)
+                self.plot_dict["mse"][i].append(l[0][0])
+                self.plot_dict["dkl"][i].append(l[0][1])
+                self.plot_dict["alpha"][i].append(l[0][2])
+                self.plot_dict["actor"][i].append(l[0][3])
+                self.plot_dict["critic_1"][i].append(l[0][4])
+                self.plot_dict["critic_2"][i].append(l[0][5])
+                self.plot_dict["extrinsic"][i].append(e)
+                self.plot_dict["intrinsic_curiosity"][i].append(ic)
+                self.plot_dict["intrinsic_entropy"][i].append(ie)
+                self.plot_dict["dkl_change"][i].append(dkl)
             if(self.e % 100 == 0):
-                plot_rewards(rewards, self.e)
-                plot_spot_names(spot_names, self.e)
-                plot_losses(losses, e)
-                plot_ext_int(extrinsic, intrinsic_curiosity, intrinsic_entropy, self.e)
-                plot_dkl_change(dkl_change, self.e)
-                episode(self.agent, push = False, verbose = True)
+                plots(deepcopy(self.plot_dict), self.title)
+                episode(self.agents[0], push = False, verbose = True)
             if(self.e >= self.args.epochs): 
                 break
     

@@ -17,6 +17,7 @@ import argparse
 parser = argparse.ArgumentParser()
 
 # Training 
+parser.add_argument('--agents',             type=int,   default = 10)
 parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--epochs',             type=int,   default = 1000)
 parser.add_argument('--batch_size',         type=int,   default = 16)
@@ -37,12 +38,12 @@ parser.add_argument('--power',              type=float, default = 1)
 
 # Training
 parser.add_argument("--d",                  type=int,   default = 2)    # Delay to train actors
-parser.add_argument("--alpha",              type=float, default = 0) # Soft-Actor-Critic entropy aim
+parser.add_argument("--alpha",              type=float, default = 0)    # Soft-Actor-Critic entropy aim
 parser.add_argument("--target_entropy",     type=float, default = -2)   # Soft-Actor-Critic entropy aim
-parser.add_argument("--eta",                type=float, default = 0) # Scale curiosity
+parser.add_argument("--eta",                type=float, default = 0)    # Scale curiosity
 parser.add_argument("--tau",                type=float, default = .05)  # For soft-updating target critics
-parser.add_argument("--dkl_rate",           type=float, default = .001)#.0001)# Scale bayesian dkl
-parser.add_argument("--sample_elbo",        type=int,   default = 5)   # Samples for elbo
+parser.add_argument("--dkl_rate",           type=float, default = .001) # Scale bayesian dkl
+parser.add_argument("--sample_elbo",        type=int,   default = 5)    # Samples for elbo
 parser.add_argument("--naive_curiosity",    type=str,   default = True) # Which kind of curiosity
 parser.add_argument("--dkl_change_size",    type=str,   default = "batch")  # "batch", "episode", "step"
 
@@ -170,61 +171,92 @@ import matplotlib.pyplot as plt
 from itertools import accumulate
 import numpy as np
 
-def plot_rewards(rewards, e):
-    rewards = list(accumulate(rewards))
-    plt.plot(rewards) 
-    plt.title("Cumulative Rewards at epoch {}".format(e))
-    plt.show()
-    plt.close()
 
-def plot_spot_names(spot_names, e):
+
+def get_quantiles(plot_dict, name):
+    xs = [i for i, x in enumerate(plot_dict[name][0]) if x != None]
+    lists = np.array(plot_dict[name], dtype=float)    
+    lists = lists[:,xs]
+    quantile_dict = {"xs" : xs}
+    quantile_dict["q20"] = np.quantile(lists, .2, 0)
+    quantile_dict["med"] = np.quantile(lists, .50, 0)
+    quantile_dict["q80"] = np.quantile(lists, .8, 0)
+    quantile_dict["min"] = np.min(lists, 0)
+    quantile_dict["max"] = np.max(lists, 0)
+    return(quantile_dict)
+
+
+
+def awesome_plot(here, quantile_dict, color, label):
+    here.fill_between(quantile_dict["xs"], quantile_dict["min"], quantile_dict["max"], color = color, alpha = fill_transparency/2, linewidth = 0)
+    here.fill_between(quantile_dict["xs"], quantile_dict["q20"], quantile_dict["q80"], color = color, alpha = fill_transparency, linewidth = 0)
+    here.plot(quantile_dict["xs"], quantile_dict["med"], color = color, label = label)
+
+
+
+line_transparency = .5 ; fill_transparency = .1
+def plots(plot_dict, title):
+    fig, axs = plt.subplots(6, 1, figsize = (7, 50))
+    plt.suptitle(title)
+    
+    # Cumulative rewards
+    ax = axs[0]
+    for i in range(len(plot_dict["rewards"])):
+        plot_dict["rewards"][i] = list(accumulate(plot_dict["rewards"][i]))
+    rew_dict = get_quantiles(plot_dict, "rewards")
+    awesome_plot(ax, rew_dict, "turquoise", "Reward")
+    ax.set_title("Cumulative Rewards")
+
+    # Ending spot
+    ax = axs[1]
     kinds = ["NONE", "BAD", "GOOD"]
-    plt.scatter([0 for _ in kinds], kinds, color = (0,0,0,0))
-    plt.scatter(range(len(spot_names)), spot_names, color = "gray")
-    plt.title("Endings at epoch {}".format(e))
-    plt.show()
-    plt.close()
+    ax.scatter([0 for _ in kinds], kinds, color = (0,0,0,0))
+    for spot_names in plot_dict["spot_names"]:
+        ax.scatter(range(len(spot_names)), spot_names, color = "gray", alpha = 1/len(plot_dict["spot_names"]))
+    ax.set_title("Endings")
     
-def plot_losses(losses, e):
-    losses = np.concatenate(losses, axis = 0)
-    plt.plot(losses[:,0], color = "blue", label = "MSE")
-    plt.plot(losses[:,1], color = "red", label = "DKL")
-    plt.legend()
-    plt.title("Forward Losses at epoch {}".format(e))
-    plt.show()
-    plt.close()
+    # Losses
+    ax = axs[2]
     
-    alpha = losses[:,2]
-    alpha_xs = [i for i in range(len(alpha)) if alpha[i] != None] ; alpha = [a for a in alpha if a != None]
+    mse_dict = get_quantiles(plot_dict, "mse")
+    dkl_dict = get_quantiles(plot_dict, "dkl")
+    alpha_dict = get_quantiles(plot_dict, "alpha")
+    actor_dict = get_quantiles(plot_dict, "actor")
+    crit1_dict = get_quantiles(plot_dict, "critic_1")
+    crit2_dict = get_quantiles(plot_dict, "critic_2")
     
-    actor = losses[:,3]
-    actor_xs = [i for i in range(len(actor)) if actor[i] != None] ; actor = [a for a in actor if a != None]
+    awesome_plot(ax, mse_dict, "green", "MSE")
+    awesome_plot(ax, dkl_dict, "red", "DKL")
+    ax.legend()
+    ax.set_title("Forward Losses")
     
-    plt.plot(alpha_xs, alpha, color = "black", label = "Alpha", alpha = .5)
-    ax2 = plt.twinx()
-    ax2.plot(actor_xs, actor, color = "red", label = "Actor", alpha = .5)
-    ax3 = plt.twinx()
-    ax3.plot(losses[:,4], color = "blue", label = "Critic 1", alpha = .5)
-    ax3.plot(losses[:,5], color = "blue", label = "Critic 2", alpha = .5)
-    plt.legend()
-    plt.title("Other Losses at epoch {}".format(e))
-    plt.show()
-    plt.close()
+    ax = axs[3]
+    awesome_plot(ax, alpha_dict, "black", "Alpha")
+    ax2 = ax.twinx()
+    awesome_plot(ax2, actor_dict, "red", "Actor")
+    ax3 = ax.twinx()
+    awesome_plot(ax3, crit1_dict, "blue", "Critic")
+    awesome_plot(ax3, crit2_dict, "blue", "Critic")
+    ax.legend()
+    ax.set_title("Other Losses")
     
-def plot_ext_int(extrinsic, intrinsic_curiosity, intrinsic_entropy, e):
-    ent_xs = [i for i in range(len(intrinsic_entropy)) if intrinsic_entropy[i] != None] ; intrinsic_entropy = [a for a in intrinsic_entropy if a != None]
-
-    plt.plot(extrinsic, color = "red", label = "Extrinsic", alpha = .5)
-    plt.plot(intrinsic_curiosity, color = "green", label = "Curiosity", alpha = .5)
-    plt.plot(ent_xs, intrinsic_entropy, color = "blue", label = "Entropy", alpha = .5)
-    plt.legend()
-    plt.title("Extrinsic and Intrinsic Rewards")
-    plt.show()
-    plt.close()
+    # Extrinsic and Intrinsic rewards
+    ax = axs[4]
+    ext_dict = get_quantiles(plot_dict, "extrinsic")
+    cur_dict = get_quantiles(plot_dict, "intrinsic_curiosity")
+    ent_dict = get_quantiles(plot_dict, "intrinsic_entropy")
+    awesome_plot(ax, ext_dict, "red", "Extrinsic")
+    awesome_plot(ax, cur_dict, "green", "Curiosity")
+    awesome_plot(ax, ent_dict, "blue", "Entropy")
+    ax.legend()
+    ax.set_title("Extrinsic and Intrinsic Rewards")
     
-def plot_dkl_change(dkl_change, e):
-    plt.plot(dkl_change) 
-    plt.title("DKL at epoch {}".format(e))
+    # DKL
+    ax = axs[5]
+    dkl_dict = get_quantiles(plot_dict, "dkl")
+    awesome_plot(ax, dkl_dict, "green", "DKL")
+    ax.set_title("DKL")
+    plt.savefig("plots/{}.png".format(title))
     plt.show()
     plt.close()
                 

@@ -104,12 +104,9 @@ class Agent:
                         
         if(self.args.naive_curiosity):
             curiosity = self.args.eta * forward_errors
-                
             #print("\nMSE curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
-        
         else:
             curiosity = self.args.eta * dkl_changes
-                
             #print("\nFEB curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
                         
         extrinsic = torch.mean(rewards*masks.detach()).item()
