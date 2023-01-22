@@ -10,7 +10,7 @@ from blitz.losses import kl_divergence_from_nn as b_kl_loss
 import numpy as np
 from math import log
 
-from utils import args, dkl, weights
+from utils import default_args, dkl, weights
 from buffer import RecurrentReplayBuffer
 from models import Forward, Bayes_Forward, Actor, Critic
 
@@ -18,7 +18,7 @@ from models import Forward, Bayes_Forward, Actor, Critic
 
 class Agent:
     
-    def __init__(self, action_prior="normal", args = args):
+    def __init__(self, action_prior="normal", args = default_args):
         
         self.args = args
         self.steps = 0

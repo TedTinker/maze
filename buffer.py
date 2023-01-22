@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from collections import namedtuple
-from utils import args, device
+from utils import default_args, device
 
 
 RecurrentBatch = namedtuple('RecurrentBatch', 'o a r d m')
@@ -20,7 +20,7 @@ class RecurrentReplayBuffer:
     """Use this version when num_bptt == max_episode_len"""
     
     def __init__(
-        self, args = args, segment_len=None  # for non-overlapping truncated bptt, maybe need a large batch size
+        self, args = default_args, segment_len=None  # for non-overlapping truncated bptt, maybe need a large batch size
     ):
     
         self.args = args

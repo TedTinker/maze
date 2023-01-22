@@ -2,7 +2,6 @@
 
 import torch
 from torch import nn 
-import torch.nn.functional as F
 from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 from blitz.modules import BayesianLinear
@@ -18,9 +17,7 @@ class Forward(nn.Module):
         
         self.pos_out = nn.Sequential(
             nn.Linear(8, 64),
-            nn.LeakyReLU(),
             nn.Linear(64, 64),
-            nn.LeakyReLU(),
             nn.Linear(64, 6))
         
         self.pos_out.apply(init_weights)
@@ -41,9 +38,7 @@ class Bayes_Forward(nn.Module):
         
         self.pos_out = nn.Sequential(
             BayesianLinear(8, 64),
-            nn.LeakyReLU(),
             BayesianLinear(64, 64),
-            nn.LeakyReLU(),
             BayesianLinear(64, 6))
         
         self.pos_out.apply(init_weights)

@@ -2,10 +2,14 @@
 
 import torch
 import enlighten
+from itertools import accumulate
 from copy import deepcopy
 
-from utils import device, args, T_Maze, plots
+from utils import device, default_args
+from maze import T_Maze
 from agent import Agent
+
+
 
 def episode(agent, push = True, verbose = False):
     done = False
@@ -29,7 +33,7 @@ def episode(agent, push = True, verbose = False):
 
 
 class Trainer():
-    def __init__(self, args = args, title = None):
+    def __init__(self, args = default_args, title = None):
         
         self.args = args
         self.title = title
@@ -39,18 +43,18 @@ class Trainer():
         self.e = 0
         self.agents = [Agent(args = self.args) for _ in range(self.args.agents)]
         self.plot_dict = {
+            "title" : self.title,
             "rewards" : [[] for agent in self.agents], "spot_names" : [[] for agent in self.agents], 
             "mse" : [[] for agent in self.agents], "dkl" : [[] for agent in self.agents], 
             "alpha" : [[] for agent in self.agents], "actor" : [[] for agent in self.agents], 
             "critic_1" : [[] for agent in self.agents], "critic_2" : [[] for agent in self.agents], 
             "extrinsic" : [[] for agent in self.agents], "intrinsic_curiosity" : [[] for agent in self.agents], 
-            "intrinsic_entropy" : [[] for agent in self.agents], "dkl_change" : [[] for agent in self.agents]
-        }
+            "intrinsic_entropy" : [[] for agent in self.agents], "dkl_change" : [[] for agent in self.agents]}
 
     def train(self):
         for agent in self.agents: agent.train()
         manager = enlighten.Manager()
-        E = manager.counter(total = self.args.epochs, desc = "Epochs:", unit = "ticks", color = "blue")
+        E = manager.counter(total = self.args.epochs, desc = "{}:".format(self.title), unit = "ticks", color = "blue")
         while(True):
             E.update()
             self.e += 1
@@ -69,11 +73,24 @@ class Trainer():
                 self.plot_dict["intrinsic_curiosity"][i].append(ic)
                 self.plot_dict["intrinsic_entropy"][i].append(ie)
                 self.plot_dict["dkl_change"][i].append(dkl)
-            if(self.e % 100 == 0):
-                plots(deepcopy(self.plot_dict), self.title)
-                episode(self.agents[0], push = False, verbose = True)
             if(self.e >= self.args.epochs): 
                 break
+        for i, rewards in enumerate(self.plot_dict["rewards"]):
+            self.plot_dict["rewards"][i] = list(accumulate(rewards))
+        min_max_dict = {key : [] for key in self.plot_dict.keys()}
+        for key in min_max_dict.keys():
+            if(not key in ["title", "spot_names"]):
+                minimum = None ; maximum = None 
+                for l in self.plot_dict[key]:
+                    l = deepcopy(l)
+                    l = [_ for _ in l if _ != None]
+                    if(l != []):
+                        if(minimum == None):    minimum = min(l)
+                        elif(minimum > min(l)): minimum = min(l)
+                        if(maximum == None):    maximum = max(l) 
+                        elif(maximum < max(l)): maximum = max(l)
+                min_max_dict[key] = (minimum, maximum)
+        return(self.plot_dict, min_max_dict)
     
 print("train.py loaded.")
 # %%
