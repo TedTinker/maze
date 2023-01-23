@@ -1,7 +1,6 @@
 #%%
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import MultivariateNormal
 import torch.optim as optim
@@ -27,29 +26,33 @@ class Agent:
         self.target_entropy = self.args.target_entropy # -dim(A)
         self.alpha = 1
         self.log_alpha = torch.tensor([0.0], requires_grad=True)
-        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=self.args.alpha_lr, weight_decay=0) 
+        self.alpha_opt = optim.Adam(params=[self.log_alpha], lr=self.args.alpha_lr, weight_decay=0) 
         self._action_prior = action_prior
         
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        if(self.args.bayes):
-            self.forward = Bayes_Forward()
-        else:
-            self.forward = Forward()
-        self.forward_optimizer = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)     
-                           
-        self.actor = Actor()
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.args.actor_lr, weight_decay=0)     
+        if(self.args.bayes): self.forward = Bayes_Forward(self.args)
+        else:                self.forward = Forward(self.args)
+        self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
-        self.critic1 = Critic()
-        self.critic1_optimizer = optim.Adam(self.critic1.parameters(), lr=self.args.critic_lr, weight_decay=0)
-        self.critic1_target = Critic()
+        if(self.args.dkl_change_size):
+            clone_lr = self.args.forward_lr / self.args.max_steps
+            if(self.args.bayes): self.forward_clone = Bayes_Forward(self.args)
+            else:                self.forward_clone = Forward(self.args)
+            self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=clone_lr, weight_decay=0)
+                           
+        self.actor = Actor(self.args)
+        self.actor_opt = optim.Adam(self.actor.parameters(), lr=self.args.actor_lr, weight_decay=0)     
+        
+        self.critic1 = Critic(self.args)
+        self.critic1_opt = optim.Adam(self.critic1.parameters(), lr=self.args.critic_lr, weight_decay=0)
+        self.critic1_target = Critic(self.args)
         self.critic1_target.load_state_dict(self.critic1.state_dict())
 
-        self.critic2 = Critic()
-        self.critic2_optimizer = optim.Adam(self.critic2.parameters(), lr=self.args.critic_lr, weight_decay=0) 
-        self.critic2_target = Critic()
+        self.critic2 = Critic(self.args)
+        self.critic2_opt = optim.Adam(self.critic2.parameters(), lr=self.args.critic_lr, weight_decay=0) 
+        self.critic2_target = Critic(self.args)
         self.critic2_target.load_state_dict(self.critic2.state_dict())
         
         self.restart_memory()
@@ -86,31 +89,72 @@ class Agent:
         forward_loss = mse_loss + dkl_loss
         #print("\nMSE: {}. KL: {}.\n".format(mse_loss.item(), dkl_loss if type(dkl_loss == int) else dkl_loss.item()))
         
+        old_state_dict = self.forward_clone.state_dict() # For curiosity
         weights_before = weights(self.forward)
     
-        self.forward_optimizer.zero_grad()
+        self.forward_opt.zero_grad()
         forward_loss.sum().backward()
-        self.forward_optimizer.step()
+        self.forward_opt.step()
         
         weights_after = weights(self.forward)
         
         dkl_change = dkl(weights_after[0], weights_after[1], weights_before[0], weights_before[1]) + \
             dkl(weights_after[2], weights_after[3], weights_before[2], weights_before[3])
         dkl_changes = torch.tile(dkl_change, rewards.shape)   
-        
-        if(dkl_changes.sum().item() != 0):
-            dkl_change = log(dkl_changes.sum().item())    
         dkl_changes *= masks 
-                        
-        if(self.args.naive_curiosity):
+        if(dkl_changes.sum().item() != 0):
+            dkl_change = dkl_changes.sum().item() * self.args.eta
+                    
+        
+        
+        if(self.args.dkl_change_size == "step"):
+            dkl_changes = torch.zeros(rewards.shape)
+            for episode in range(rewards.shape[0]):
+                for step in range(rewards.shape[1]):
+                    if(masks[episode, step] == 0):
+                        dkl_changes[episode, step] = 0 ; break
+                    self.forward_clone.load_state_dict(old_state_dict)
+                    forward_errors_ = torch.zeros(rewards.shape)
+                    dkl_loss_ = 0
+                    for _ in range(self.args.sample_elbo):
+                        pred_obs_ = self.forward_clone(obs[episode, step], actions[episode, step])            
+                        errors_ = F.mse_loss(pred_obs_, next_obs.detach()[episode, step], reduction = "none") 
+                        errors_ = torch.sum(errors_, -1).unsqueeze(-1)
+                        forward_errors_ += errors_ / self.args.sample_elbo
+                        dkl_loss_ += self.args.dkl_rate * b_kl_loss(self.forward_clone) / self.args.sample_elbo
+                    forward_errors_ *= masks
+                    mse_loss_ = forward_errors_.sum()
+                    forward_loss_ = mse_loss_ + dkl_loss_
+                    #print("\nMSE: {}. KL: {}.\n".format(mse_loss.item(), dkl_loss if type(dkl_loss == int) else dkl_loss.item()))
+            
+                    weights_before = weights(self.forward_clone)
+                
+                    self.clone_opt.zero_grad()
+                    forward_loss_.sum().backward()
+                    self.clone_opt.step()
+                    
+                    weights_after = weights(self.forward_clone)
+                    
+                    dkl_change = dkl(weights_after[0], weights_after[1], weights_before[0], weights_before[1]) + \
+                        dkl(weights_after[2], weights_after[3], weights_before[2], weights_before[3])
+                    dkl_changes[episode, step] = dkl_change
+            dkl_changes *= masks 
+            if(dkl_changes.sum().item() != 0):
+                dkl_change = dkl_changes.sum().item() * self.args.eta
+                    
+        
+        
+        # Get curiosity                
+        if(self.args.naive):
             curiosity = self.args.eta * forward_errors
             #print("\nMSE curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
         else:
             curiosity = self.args.eta * dkl_changes
             #print("\nFEB curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
+        curiosity *= masks.detach()
                         
         extrinsic = torch.mean(rewards*masks.detach()).item()
-        intrinsic_curiosity = torch.mean(curiosity*masks.detach()).item()
+        intrinsic_curiosity = curiosity.sum().item()
         rewards += curiosity
         
         
@@ -125,15 +169,15 @@ class Agent:
         
         Q_1 = self.critic1(obs.detach(), actions.detach()).cpu()
         critic1_loss = 0.5*F.mse_loss(Q_1*masks.detach().cpu(), Q_targets.detach()*masks.detach().cpu())
-        self.critic1_optimizer.zero_grad()
+        self.critic1_opt.zero_grad()
         critic1_loss.backward()
-        self.critic1_optimizer.step()
+        self.critic1_opt.step()
         
         Q_2 = self.critic2(obs.detach(), actions.detach()).cpu()
         critic2_loss = 0.5*F.mse_loss(Q_2*masks.detach().cpu(), Q_targets.detach()*masks.detach().cpu())
-        self.critic2_optimizer.zero_grad()
+        self.critic2_opt.zero_grad()
         critic2_loss.backward()
-        self.critic2_optimizer.step()
+        self.critic2_opt.step()
         
         
         
@@ -142,9 +186,9 @@ class Agent:
             actions_pred, log_pis = self.actor.evaluate(obs.detach())
             alpha_loss = -(self.log_alpha.cpu() * (log_pis.cpu() + self.target_entropy).detach().cpu())*masks.detach().cpu()
             alpha_loss = alpha_loss.sum() / masks.sum()
-            self.alpha_optimizer.zero_grad()
+            self.alpha_opt.zero_grad()
             alpha_loss.backward()
-            self.alpha_optimizer.step()
+            self.alpha_opt.step()
             self.alpha = torch.exp(self.log_alpha) 
         else:
             alpha_loss = None
@@ -172,9 +216,9 @@ class Agent:
             actor_loss = (alpha * log_pis.cpu() - policy_prior_log_probs - Q.cpu())*masks.detach().cpu()
             actor_loss = actor_loss.sum() / masks.sum()
 
-            self.actor_optimizer.zero_grad()
+            self.actor_opt.zero_grad()
             actor_loss.backward()
-            self.actor_optimizer.step()
+            self.actor_opt.step()
 
             self.soft_update(self.critic1, self.critic1_target, self.args.tau)
             self.soft_update(self.critic2, self.critic2_target, self.args.tau)

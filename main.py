@@ -1,27 +1,22 @@
 #%%
 
-from copy import deepcopy
 import os
 from shutil import rmtree
 import pickle
+import argparse
 
 from utils import default_args
 from plotting import plots
 from train import Trainer
 
-# To do: Have it save everything in a folder whose name is based on the args.
-# That'll save time.
 
-
-
-def get_title(bayes = True, dkl_rate = .001, entropy = -2, curiosity = 1, naive = True):
-    args = deepcopy(default_args)
-    args.bayes = bayes
-    args.dkl_rate = dkl_rate
-    if(entropy == False): args.alpha = 0
-    else:                 args.alpha = None ; args.target_entropy = entropy
-    if(curiosity == False):  args.eta = 0
-    else:                    args.eta = curiosity ; args.naive_curiosity = naive
+    
+def get_title(arg_dict):
+    parser = argparse.ArgumentParser()
+    for arg in vars(default_args):
+        if(arg in arg_dict.keys()): parser.add_argument('--{}'.format(arg), default = arg_dict[arg])
+        else:                       parser.add_argument('--{}'.format(arg), default = getattr(default_args, arg))
+    args, _ = parser.parse_known_args()
     title = ""
     first = True
     for arg in vars(args):
@@ -29,6 +24,7 @@ def get_title(bayes = True, dkl_rate = .001, entropy = -2, curiosity = 1, naive 
             if(not first): title += "_"
             title += "{}_{}".format(arg, getattr(args, arg)) ; first = False
     if(len(title) == 0): title = "default"
+    print(arg_dict, title)
     return(args, title)
 
 
@@ -60,11 +56,10 @@ def load_title(title):
 
 
                 
-def get_plots(bayes_list, dkl_rate_list, entropy_list, curiosity_list, naive_list):
+def get_plots(arg_dict_list):
     plot_dicts = [] ; min_max_dicts = [] 
-    num = min([len(bayes_list), len(dkl_rate_list), len(entropy_list), len(curiosity_list), len(naive_list)])
-    for i in range(num):
-        args, title = get_title(bayes_list[i], dkl_rate_list[i], entropy_list[i], curiosity_list[i], naive_list[i])
+    for i, arg_dict in enumerate(arg_dict_list):
+        args, title = get_title(arg_dict)
         try: 
             _, plot_dict, min_max_dict = load_title(title)
             print("{} loaded.".format(title))
@@ -89,12 +84,13 @@ def get_plots(bayes_list, dkl_rate_list, entropy_list, curiosity_list, naive_lis
 
 
 
-bayes_list     = [True] * 6 
-dkl_rate_list  = [.001] * 6
-entropy_list   = [False, -2,    False, -2,   -2]
-curiosity_list = [False, False, 1,     1,    .0001]
-naive_list     = [True,  True,  True,  True, False]
-
-get_plots(bayes_list, dkl_rate_list, entropy_list, curiosity_list, naive_list)
+get_plots([
+    {},
+    {"alpha" : None},
+    {                "eta" : 1},
+    {"alpha" : None, "eta" : 1},
+    {"alpha" : None, "eta" : .0001, "naive" : False},
+    {"alpha" : None, "eta" : .01,   "naive" : False, "dkl_change_size" : "step"}
+])
 
 # %%

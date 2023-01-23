@@ -13,6 +13,7 @@ parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
 
 # Module 
+parser.add_argument('--hidden',             type=int,   default = 32)
 parser.add_argument('--bayes',              type=bool,  default = True)
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--actor_lr',           type=float, default = .01) 
@@ -33,8 +34,8 @@ parser.add_argument("--eta",                type=float, default = 0)    # Scale 
 parser.add_argument("--tau",                type=float, default = .05)  # For soft-updating target critics
 parser.add_argument("--dkl_rate",           type=float, default = .001) # Scale bayesian dkl
 parser.add_argument("--sample_elbo",        type=int,   default = 5)    # Samples for elbo
-parser.add_argument("--naive_curiosity",    type=str,   default = True) # Which kind of curiosity
-parser.add_argument("--dkl_change_size",    type=str,   default = "batch")  # "batch", "episode", "step"
+parser.add_argument("--naive",              type=str,   default = True) # Which kind of curiosity
+parser.add_argument("--dkl_change_size",    type=str,   default = "batch")  # "batch", "step"
 
 default_args, _ = parser.parse_known_args()
 
@@ -42,6 +43,7 @@ default_args, _ = parser.parse_known_args()
 
 import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"
 
 def init_weights(m):
     try:

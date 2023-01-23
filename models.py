@@ -6,19 +6,19 @@ from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 from blitz.modules import BayesianLinear
 
-from utils import device, init_weights
+from utils import device, default_args, init_weights
 
 
 
 class Forward(nn.Module):
     
-    def __init__(self):
+    def __init__(self, args):
         super(Forward, self).__init__()
         
         self.pos_out = nn.Sequential(
-            nn.Linear(8, 64),
-            nn.Linear(64, 64),
-            nn.Linear(64, 6))
+            nn.Linear(8, args.hidden),
+            #nn.Linear(args.hidden, args.hidden),
+            nn.Linear(args.hidden, 6))
         
         self.pos_out.apply(init_weights)
         self.to(device)
@@ -33,13 +33,13 @@ class Forward(nn.Module):
     
 class Bayes_Forward(nn.Module):
     
-    def __init__(self):
+    def __init__(self, args):
         super(Bayes_Forward, self).__init__()
         
         self.pos_out = nn.Sequential(
-            BayesianLinear(8, 64),
-            BayesianLinear(64, 64),
-            BayesianLinear(64, 6))
+            BayesianLinear(8, args.hidden),
+            #BayesianLinear(args.hidden, args.hidden),
+            BayesianLinear(args.hidden, 6))
         
         self.pos_out.apply(init_weights)
         self.to(device)
@@ -54,17 +54,17 @@ class Bayes_Forward(nn.Module):
         
 class Actor(nn.Module):
 
-    def __init__(self, log_std_min=-20, log_std_max=2):
+    def __init__(self, args, log_std_min=-20, log_std_max=2):
         super(Actor, self).__init__()
 
         self.log_std_min = log_std_min ; self.log_std_max = log_std_max
         self.lin = nn.Sequential(
-            nn.Linear(6, 64),
-            nn.LeakyReLU(),
-            nn.Linear(64, 64),
-            nn.LeakyReLU())
-        self.mu = nn.Linear(64, 2)
-        self.log_std_linear = nn.Linear(64, 2)
+            nn.Linear(6, args.hidden),
+            nn.LeakyReLU(),)
+            #nn.Linear(args.hidden, args.hidden),
+            #nn.LeakyReLU())
+        self.mu = nn.Linear(args.hidden, 2)
+        self.log_std_linear = nn.Linear(args.hidden, 2)
 
         self.lin.apply(init_weights)
         self.mu.apply(init_weights)
@@ -102,15 +102,15 @@ class Actor(nn.Module):
     
 class Critic(nn.Module):
 
-    def __init__(self):
+    def __init__(self, args):
         super(Critic, self).__init__()
                 
         self.lin = nn.Sequential(
-            nn.Linear(8, 64),
+            nn.Linear(8, args.hidden),
             nn.LeakyReLU(),
-            nn.Linear(64, 64),
-            nn.LeakyReLU(),
-            nn.Linear(64, 1))
+            #nn.Linear(args.hidden, args.hidden),
+            #nn.LeakyReLU(),
+            nn.Linear(args.hidden, 1))
 
         self.lin.apply(init_weights)
         self.to(device)
@@ -125,37 +125,37 @@ class Critic(nn.Module):
 
 if __name__ == "__main__":
 
-    forward = Forward()
+    forward = Forward(default_args)
     
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((1,2), (1,2))))
+    print(torch_summary(forward, ((1,6), (1,2))))
     
     
     
-    bayes_forward = Bayes_Forward()
+    bayes_forward = Bayes_Forward(default_args)
     
     print("\n\n")
     print(bayes_forward)
     print()
-    print(torch_summary(bayes_forward, ((1,2), (1,2))))
+    print(torch_summary(bayes_forward, ((1,6), (1,2))))
     
 
 
-    actor = Actor()
+    actor = Actor(default_args)
     
     print("\n\n")
     print(actor)
     print()
-    print(torch_summary(actor, ((1,2),)))
+    print(torch_summary(actor, ((1,6),)))
     
     
     
-    critic = Critic()
+    critic = Critic(default_args)
     
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((1,2),(1,2))))
+    print(torch_summary(critic, ((1,6),(1,2))))
 # %%
