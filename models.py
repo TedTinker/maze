@@ -17,7 +17,6 @@ class Forward(nn.Module):
         
         self.pos_out = nn.Sequential(
             nn.Linear(8, args.hidden),
-            #nn.Linear(args.hidden, args.hidden),
             nn.Linear(args.hidden, 6))
         
         self.pos_out.apply(init_weights)
@@ -38,7 +37,6 @@ class Bayes_Forward(nn.Module):
         
         self.pos_out = nn.Sequential(
             BayesianLinear(8, args.hidden),
-            #BayesianLinear(args.hidden, args.hidden),
             BayesianLinear(args.hidden, 6))
         
         self.pos_out.apply(init_weights)
@@ -60,9 +58,7 @@ class Actor(nn.Module):
         self.log_std_min = log_std_min ; self.log_std_max = log_std_max
         self.lin = nn.Sequential(
             nn.Linear(6, args.hidden),
-            nn.LeakyReLU(),)
-            #nn.Linear(args.hidden, args.hidden),
-            #nn.LeakyReLU())
+            nn.LeakyReLU())
         self.mu = nn.Linear(args.hidden, 2)
         self.log_std_linear = nn.Linear(args.hidden, 2)
 
@@ -108,8 +104,6 @@ class Critic(nn.Module):
         self.lin = nn.Sequential(
             nn.Linear(8, args.hidden),
             nn.LeakyReLU(),
-            #nn.Linear(args.hidden, args.hidden),
-            #nn.LeakyReLU(),
             nn.Linear(args.hidden, 1))
 
         self.lin.apply(init_weights)

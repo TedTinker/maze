@@ -37,7 +37,7 @@ class Agent:
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
         if(self.args.dkl_change_size):
-            clone_lr = self.args.forward_lr / self.args.max_steps
+            clone_lr = self.args.clone_lr
             if(self.args.bayes): self.forward_clone = Bayes_Forward(self.args)
             else:                self.forward_clone = Forward(self.args)
             self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=clone_lr, weight_decay=0)
@@ -91,22 +91,21 @@ class Agent:
         
         old_state_dict = self.forward_clone.state_dict() # For curiosity
         weights_before = weights(self.forward)
-    
         self.forward_opt.zero_grad()
         forward_loss.sum().backward()
         self.forward_opt.step()
-        
         weights_after = weights(self.forward)
-        
+                
         dkl_change = dkl(weights_after[0], weights_after[1], weights_before[0], weights_before[1]) + \
             dkl(weights_after[2], weights_after[3], weights_before[2], weights_before[3])
         dkl_changes = torch.tile(dkl_change, rewards.shape)   
-        dkl_changes *= masks 
-        if(dkl_changes.sum().item() != 0):
-            dkl_change = dkl_changes.sum().item() * self.args.eta
-                    
+        dkl_changes *= masks
+        if(dkl_changes.sum().item() != 0): dkl_change = dkl_changes.sum().item()
         
         
+        
+        # Do we need this? We could just calculate dkl_changes using each error! 
+        # But how to combine dkl_loss and mse_loss?
         if(self.args.dkl_change_size == "step"):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
@@ -128,19 +127,16 @@ class Agent:
                     #print("\nMSE: {}. KL: {}.\n".format(mse_loss.item(), dkl_loss if type(dkl_loss == int) else dkl_loss.item()))
             
                     weights_before = weights(self.forward_clone)
-                
                     self.clone_opt.zero_grad()
                     forward_loss_.sum().backward()
                     self.clone_opt.step()
-                    
                     weights_after = weights(self.forward_clone)
                     
                     dkl_change = dkl(weights_after[0], weights_after[1], weights_before[0], weights_before[1]) + \
                         dkl(weights_after[2], weights_after[3], weights_before[2], weights_before[3])
                     dkl_changes[episode, step] = dkl_change
             dkl_changes *= masks 
-            if(dkl_changes.sum().item() != 0):
-                dkl_change = dkl_changes.sum().item() * self.args.eta
+            if(dkl_changes.sum().item() != 0): dkl_change = dkl_changes.sum().item()
                     
         
         
@@ -227,20 +223,13 @@ class Agent:
             intrinsic_entropy = None
             actor_loss = None
         
-        if(mse_loss != None): mse_loss = log(mse_loss.item())
-        if(dkl_loss != None): 
-            try: dkl_loss = log(dkl_loss.item())
-            except: dkl_loss = 0
+        if(mse_loss != None): mse_loss = mse_loss.item()
+        if(dkl_loss != None): dkl_loss = dkl_loss.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
-        if(critic1_loss != None): critic1_loss = log(critic1_loss.item())
-        if(critic2_loss != None): critic2_loss = log(critic2_loss.item())
+        if(critic1_loss != None): critic1_loss = critic1_loss.item()
+        if(critic2_loss != None): critic2_loss = critic2_loss.item()
         losses = np.array([[mse_loss, dkl_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
-        
-        try:    intrinsic_entropy = (1 if intrinsic_entropy >= 0 else -1) * abs(intrinsic_entropy)**.5
-        except: pass
-        try:    intrinsic_curiosity = log(intrinsic_curiosity)
-        except: pass
         
         return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change)
                      

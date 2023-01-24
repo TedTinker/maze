@@ -90,7 +90,8 @@ get_plots([
     {                "eta" : 1},
     {"alpha" : None, "eta" : 1},
     {"alpha" : None, "eta" : .0001, "naive" : False},
-    {"alpha" : None, "eta" : .01,   "naive" : False, "dkl_change_size" : "step"}
+    {"alpha" : None, "eta" : .05,   "naive" : False, "dkl_change_size" : "step"},
+    {"alpha" : None, "eta" : .05,   "naive" : False, "dkl_change_size" : "step", "clone_lr" : .01}
 ])
 
 # %%
