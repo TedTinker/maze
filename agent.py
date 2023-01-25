@@ -89,7 +89,7 @@ class Agent:
         forward_loss = mse_loss + dkl_loss
         #print("\nMSE: {}. KL: {}.\n".format(mse_loss.item(), dkl_loss if type(dkl_loss == int) else dkl_loss.item()))
         
-        old_state_dict = self.forward_clone.state_dict() # For curiosity
+        old_state_dict = self.forward.state_dict() # For curiosity
         weights_before = weights(self.forward)
         self.forward_opt.zero_grad()
         forward_loss.sum().backward()
@@ -105,7 +105,6 @@ class Agent:
         
         
         # Do we need this? We could just calculate dkl_changes using each error! 
-        # But how to combine dkl_loss and mse_loss?
         if(self.args.dkl_change_size == "step"):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
