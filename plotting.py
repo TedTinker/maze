@@ -55,6 +55,7 @@ def plots(plot_dicts, min_max_dict):
         # Cumulative rewards
         rew_dict = get_quantiles(plot_dict, "rewards")
         max_rewards = [10*i for i in range(len(plot_dict["rewards"][0]))]
+        min_rewards = [-1*i for i in range(len(plot_dict["rewards"][0]))]
         
         ax = axs[0,i] if len(plot_dicts) > 1 else axs[0]
         awesome_plot(ax, rew_dict, "turquoise", "Reward")
@@ -66,7 +67,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, rew_dict, "turquoise", "Reward", min_max_dict["rewards"])
         ax.axhline(y = 0, color = "black", linestyle = '--', alpha = .2)
         ax.plot(max_rewards, color = "black", label = "Max Reward")
-        ax.legend()
+        ax.plot(min_rewards, color = "black", label = "Max Reward")
         ax.set_ylabel("Reward")
         ax.set_title(plot_dict["title"] + "\nCumulative Rewards, shared min/max")
     

@@ -84,7 +84,7 @@ class Agent:
             errors = torch.sum(errors, -1).unsqueeze(-1)
             forward_errors += errors / self.args.sample_elbo
             dkl_loss += self.args.dkl_rate * b_kl_loss(self.forward) / self.args.sample_elbo
-        forward_errors *= masks
+        forward_errors *= masks.detach()
         mse_loss = forward_errors.sum()
         forward_loss = mse_loss + dkl_loss
         #print("\nMSE: {}. KL: {}.\n".format(mse_loss.item(), dkl_loss if type(dkl_loss == int) else dkl_loss.item()))
@@ -109,8 +109,7 @@ class Agent:
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
                 for step in range(rewards.shape[1]):
-                    if(masks[episode, step] == 0):
-                        dkl_changes[episode, step] = 0 ; break
+                    if(masks[episode, step] == 0): dkl_changes[episode, step] = 0 ; break
                     self.forward_clone.load_state_dict(old_state_dict)
                     forward_errors_ = torch.zeros(rewards.shape)
                     dkl_loss_ = 0
@@ -120,7 +119,7 @@ class Agent:
                         errors_ = torch.sum(errors_, -1).unsqueeze(-1)
                         forward_errors_ += errors_ / self.args.sample_elbo
                         dkl_loss_ += self.args.dkl_rate * b_kl_loss(self.forward_clone) / self.args.sample_elbo
-                    forward_errors_ *= masks
+                    forward_errors_ *= masks.detach()
                     mse_loss_ = forward_errors_.sum()
                     forward_loss_ = mse_loss_ + dkl_loss_
                     #print("\nMSE: {}. KL: {}.\n".format(mse_loss.item(), dkl_loss if type(dkl_loss == int) else dkl_loss.item()))
