@@ -48,7 +48,7 @@ def many_min_max(min_max_list):
 
 
 def plots(plot_dicts, min_max_dict):
-    fig, axs = plt.subplots(11, len(plot_dicts), figsize = (10*len(plot_dicts), 75))
+    fig, axs = plt.subplots(12, len(plot_dicts), figsize = (10*len(plot_dicts), 75))
                 
     for i, plot_dict in enumerate(plot_dicts):
     
@@ -147,29 +147,35 @@ def plots(plot_dicts, min_max_dict):
         ent_dict = get_quantiles(plot_dict, "intrinsic_entropy")
         
         ax = axs[7,i] if len(plot_dicts) > 1 else axs[7]
-        h1 = awesome_plot(ax, ext_dict, "red", "Extrinsic")
+        handles = []
+        handles.append(awesome_plot(ax, ext_dict, "red", "Extrinsic"))
         ax.set_ylabel("Extrinsic")
-        ax2 = ax.twinx()
-        h2 = awesome_plot(ax2, cur_dict, "green", "Curiosity")
-        ax2.set_ylabel("Curiosity")
-        ax3 = ax.twinx()
-        ax3.spines["right"].set_position(("axes", 1.08))
-        h3 = awesome_plot(ax3, ent_dict, "blue", "Entropy")
-        ax3.set_ylabel("Entropy")
-        ax.legend(handles = [h1, h2, h3])
+        if((cur_dict["min"] != cur_dict["max"]).all()):
+            ax2 = ax.twinx()
+            handles.append(awesome_plot(ax2, cur_dict, "green", "Curiosity"))
+            ax2.set_ylabel("Curiosity")
+        if((ent_dict["min"] != ent_dict["max"]).all()):
+            ax3 = ax.twinx()
+            ax3.spines["right"].set_position(("axes", 1.08))
+            handles.append(awesome_plot(ax3, ent_dict, "blue", "Entropy"))
+            ax3.set_ylabel("Entropy")
+        ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nExtrinsic and Intrinsic Rewards")
         
         ax = axs[8,i] if len(plot_dicts) > 1 else axs[8]
-        h1 = awesome_plot(ax, ext_dict, "red", "Extrinsic", min_max_dict["extrinsic"])
+        handles = []
+        handles.append(awesome_plot(ax, ext_dict, "red", "Extrinsic", min_max_dict["extrinsic"]))
         ax.set_ylabel("Extrinsic")
-        ax2 = ax.twinx()
-        h2 = awesome_plot(ax2, cur_dict, "green", "Curiosity", min_max_dict["intrinsic_curiosity"])
-        ax2.set_ylabel("Curiosity")
-        ax3 = ax.twinx()
-        ax3.spines["right"].set_position(("axes", 1.08))
-        h3 = awesome_plot(ax3, ent_dict, "blue", "Entropy", min_max_dict["intrinsic_entropy"])
-        ax3.set_ylabel("Entropy")
-        ax.legend(handles = [h1, h2, h3])
+        if((cur_dict["min"] != cur_dict["max"]).all()):
+            ax2 = ax.twinx()
+            handles.append(awesome_plot(ax2, cur_dict, "green", "Curiosity", min_max_dict["intrinsic_curiosity"]))
+            ax2.set_ylabel("Curiosity")
+        if((ent_dict["min"] != ent_dict["max"]).all()):
+            ax3 = ax.twinx()
+            ax3.spines["right"].set_position(("axes", 1.08))
+            handles.append(awesome_plot(ax3, ent_dict, "blue", "Entropy", min_max_dict["intrinsic_entropy"]))
+            ax3.set_ylabel("Entropy")
+        ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nExtrinsic and Intrinsic Rewards, shared min/max")
         
         
@@ -186,6 +192,20 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, dkl_dict, "green", "DKL", min_max_dict["dkl_change"])
         ax.set_ylabel("DKL")
         ax.set_title(plot_dict["title"] + "\nDKL, shared min/max")
+        
+        
+        
+        # Curiosities
+        naive_dict = get_quantiles(plot_dict, "naive")
+        friston_dict = get_quantiles(plot_dict, "friston")
+        min_max = many_min_max([min_max_dict["naive"], min_max_dict["friston"]])
+    
+        ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
+        awesome_plot(ax, naive_dict, "green", "Naive", min_max)
+        awesome_plot(ax, friston_dict, "red", "Friston", min_max)
+        ax.legend()
+        ax.set_ylabel("Curiosities")
+        ax.set_title(plot_dict["title"] + "\nCuriosities, shared min/max")
 
     
     

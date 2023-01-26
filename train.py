@@ -5,7 +5,7 @@ import enlighten
 from itertools import accumulate
 from copy import deepcopy
 
-from utils import device, default_args
+from utils import default_args
 from maze import T_Maze
 from agent import Agent
 
@@ -25,7 +25,6 @@ def episode(agent, push = True, verbose = False):
             no = t_maze.obs()
             steps += 1
             if(steps >= agent.args.max_steps): done = True ; r = -1
-            if(device == "cuda"): torch.cuda.synchronize(device=device)
             if(push): agent.memory.push(o, a, r, no, done, done, agent)
     if(verbose): print(t_maze)
     return(r, spot_name)
@@ -49,7 +48,8 @@ class Trainer():
             "alpha" : [[] for agent in self.agents], "actor" : [[] for agent in self.agents], 
             "critic_1" : [[] for agent in self.agents], "critic_2" : [[] for agent in self.agents], 
             "extrinsic" : [[] for agent in self.agents], "intrinsic_curiosity" : [[] for agent in self.agents], 
-            "intrinsic_entropy" : [[] for agent in self.agents], "dkl_change" : [[] for agent in self.agents]}
+            "intrinsic_entropy" : [[] for agent in self.agents], "dkl_change" : [[] for agent in self.agents],
+            "naive" : [[] for agent in self.agents], "friston" : [[] for agent in self.agents]}
 
     def train(self):
         for agent in self.agents: agent.train()
@@ -60,7 +60,7 @@ class Trainer():
             self.e += 1
             for i, agent in enumerate(self.agents):
                 r, spot_name = episode(agent)
-                l, e, ic, ie, dkl = agent.learn(batch_size = self.args.batch_size)
+                l, e, ic, ie, dkl, naive, friston = agent.learn(batch_size = self.args.batch_size)
                 self.plot_dict["rewards"][i].append(r)
                 self.plot_dict["spot_names"][i].append(spot_name)
                 self.plot_dict["mse"][i].append(l[0][0])
@@ -73,6 +73,8 @@ class Trainer():
                 self.plot_dict["intrinsic_curiosity"][i].append(ic)
                 self.plot_dict["intrinsic_entropy"][i].append(ie)
                 self.plot_dict["dkl_change"][i].append(dkl)
+                self.plot_dict["naive"][i].append(naive)
+                self.plot_dict["friston"][i].append(friston)
             if(self.e >= self.args.epochs): 
                 break
         for i, rewards in enumerate(self.plot_dict["rewards"]):

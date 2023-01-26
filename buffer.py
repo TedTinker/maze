@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from collections import namedtuple
-from utils import default_args, device
+from utils import default_args
 
 
 RecurrentBatch = namedtuple('RecurrentBatch', 'o a r d m')
@@ -99,9 +99,9 @@ class RecurrentReplayBuffer:
             
             # reset curiosity weights if needed
             if(self.args.selection == "curiosity" or self.args.replacement == "curiosity"):
-                o = torch.from_numpy(self.o).to(device)
-                a = torch.from_numpy(self.a).to(device)
-                m = torch.from_numpy(self.m).to(device)
+                o = torch.from_numpy(self.o).to(self.args.device)
+                a = torch.from_numpy(self.a).to(self.args.device)
+                m = torch.from_numpy(self.m).to(self.args.device)
                 curiosity = agent.transitioner.DKL(
                     o[:,:-1], a,
                     o[:,1:], m).cpu().numpy().squeeze(-1)

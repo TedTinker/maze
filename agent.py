@@ -11,7 +11,7 @@ from math import log
 
 from utils import default_args, dkl, weights
 from buffer import RecurrentReplayBuffer
-from models import Forward, Bayes_Forward, Actor, Critic
+from models import Forward, Actor, Critic
 
 
 
@@ -32,14 +32,12 @@ class Agent:
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        if(self.args.bayes): self.forward = Bayes_Forward(self.args)
-        else:                self.forward = Forward(self.args)
+        self.forward = Forward(self.args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
         if(self.args.dkl_change_size):
             clone_lr = self.args.clone_lr
-            if(self.args.bayes): self.forward_clone = Bayes_Forward(self.args)
-            else:                self.forward_clone = Forward(self.args)
+            self.forward_clone = Forward(self.args)
             self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=clone_lr, weight_decay=0)
                            
         self.actor = Actor(self.args)
@@ -138,15 +136,20 @@ class Agent:
                     
         
         
-        # Get curiosity                
-        if(self.args.naive):
-            curiosity = self.args.eta * forward_errors
+        # Get curiosity          
+        naive_curiosity   = self.args.naive_eta   * forward_errors   
+        naive_curiosity *= masks.detach() 
+        friston_curiosity = self.args.friston_eta * dkl_changes  
+        friston_curiosity *= masks.detach()
+        if(self.args.curiosity == "naive"):
+            curiosity = naive_curiosity
             #print("\nMSE curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
-        else:
-            curiosity = self.args.eta * dkl_changes
+        elif(self.args.curiosity == "friston"):
+            curiosity = friston_curiosity
             #print("\nFEB curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
-        curiosity *= masks.detach()
-                        
+        else:
+            curiosity = torch.zeros(rewards.shape)
+        
         extrinsic = torch.mean(rewards*masks.detach()).item()
         intrinsic_curiosity = curiosity.sum().item()
         rewards += curiosity
@@ -229,7 +232,7 @@ class Agent:
         if(critic2_loss != None): critic2_loss = critic2_loss.item()
         losses = np.array([[mse_loss, dkl_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
-        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change)
+        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change, naive_curiosity.sum().detach(), friston_curiosity.sum().detach())
                      
     def soft_update(self, local_model, target_model, tau):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):

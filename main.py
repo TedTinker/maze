@@ -3,29 +3,10 @@
 import os
 from shutil import rmtree
 import pickle
-import argparse
 
-from utils import default_args
+from utils import get_title
 from plotting import plots
 from train import Trainer
-
-
-    
-def get_title(arg_dict):
-    parser = argparse.ArgumentParser()
-    for arg in vars(default_args):
-        if(arg in arg_dict.keys()): parser.add_argument('--{}'.format(arg), default = arg_dict[arg])
-        else:                       parser.add_argument('--{}'.format(arg), default = getattr(default_args, arg))
-    args, _ = parser.parse_known_args()
-    title = ""
-    first = True
-    for arg in vars(args):
-        if(getattr(args, arg) != getattr(default_args, arg)):
-            if(not first): title += "_"
-            title += "{}_{}".format(arg, getattr(args, arg)) ; first = False
-    if(len(title) == 0): title = "default"
-    print(arg_dict, title)
-    return(args, title)
 
 
 
@@ -87,11 +68,10 @@ def get_plots(arg_dict_list):
 get_plots([
     {},
     {"alpha" : None},
-    {                "eta" : 1},
-    {"alpha" : None, "eta" : 1},
-    {"alpha" : None, "eta" : .0001, "naive" : False},
-    {"alpha" : None, "eta" : .05,   "naive" : False, "dkl_change_size" : "step"},
-    {"alpha" : None, "eta" : .05,   "naive" : False, "dkl_change_size" : "step", "clone_lr" : .01}
+    {                "curiosity" : "naive"},
+    {"alpha" : None, "curiosity" : "naive"},
+    {"alpha" : None, "curiosity" : "friston"},
+    {"alpha" : None, "curiosity" : "friston", "friston_eta" : .05, "dkl_change_size" : "step"}
 ])
 
 # %%
