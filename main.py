@@ -71,7 +71,7 @@ get_plots([
     {                "curiosity" : "naive"},
     {"alpha" : None, "curiosity" : "naive"},
     {"alpha" : None, "curiosity" : "friston"},
-    {"alpha" : None, "curiosity" : "friston", "friston_eta" : .05, "dkl_change_size" : "step"}
+    #{"alpha" : None, "curiosity" : "friston", "friston_eta" : .05, "dkl_change_size" : "step"}
 ])
 
 # %%

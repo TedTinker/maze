@@ -37,33 +37,39 @@ class DKL_Guesser(nn.Module):
     def __init__(self, args):
         super(DKL_Guesser, self).__init__()
         
-        self.error_in = nn.Linear(1, args.dkl_hidden)
-        self.w_mu     = nn.Linear(args.hidden * 8 + args.hidden * 6, args.dkl_hidden)
-        self.w_sigma  = nn.Linear(args.hidden * 8 + args.hidden * 6, args.dkl_hidden)
-        self.b_mu     = nn.Linear(args.hidden + 6, args.dkl_hidden)
-        self.b_sigma  = nn.Linear(args.hidden + 6, args.dkl_hidden)
-        self.DKL_out  = nn.Linear(args.dkl_hidden * 5, 1)
+        self.weights = nn.Linear(2, args.hidden)
+        self.bias = nn.Linear(2, args.hidden)
+        self.dkl_out = nn.Linear(1 + 2*args.hidden, 1)
         
-        self.error_in.apply(init_weights)
-        self.w_mu.apply(init_weights)
-        self.w_sigma.apply(init_weights)
-        self.b_mu.apply(init_weights)
-        self.b_sigma.apply(init_weights)
+        self.weights.apply(init_weights)
+        self.bias.apply(init_weights)
+        self.dkl_out.apply(init_weights)
         self.to(args.device)
         
-    def forward(self, errors, weights_mu, weights_sigma, bias_mu, bias_sigma):
-        errors  = self.error_in(errors) 
-        w_mu    = self.w_mu(weights_mu)
-        w_sigma = self.w_sigma(weights_sigma)
-        b_mu    = self.b_mu(bias_mu)
-        b_sigma = self.b_sigma(bias_sigma) 
-        w_mu    = torch.tile(w_mu, (1, errors.shape[1], errors.shape[2], 1))
-        w_sigma = torch.tile(w_sigma, (1, errors.shape[1], errors.shape[2], 1))
-        b_mu    = torch.tile(b_mu, (1, errors.shape[1], errors.shape[2], 1))
-        b_sigma = torch.tile(b_sigma, (1, errors.shape[1], errors.shape[2], 1))
-        x = torch.cat([errors, w_mu, w_sigma, b_mu, b_sigma], -1)
-        x = self.DKL_out(x).to("cpu")
-        return(x)
+    def forward(self, errors, 
+                before_w_mu, before_w_sigma, before_b_mu, before_b_sigma,
+                after_w_mu, after_w_sigma, after_b_mu, after_b_sigma):
+        
+        change_w_mu  = after_w_mu - before_w_mu
+        change_w_sigma = after_w_sigma - before_w_sigma
+        weights = torch.cat([
+            torch.cat([before_w_mu.unsqueeze(-1), change_w_mu.unsqueeze(-1)], dim = -2), 
+            torch.cat([before_w_sigma.unsqueeze(-1), change_w_sigma.unsqueeze(-1)], dim = -2),], dim = -1)
+        weights = self.weights(weights)
+        weights = torch.mean(weights, 1, False)
+        weights = weights.tile((1, errors.shape[1], errors.shape[2], 1))
+        
+        change_b_mu  = after_b_mu - before_b_mu
+        change_b_sigma = after_b_sigma - before_b_sigma
+        bias = torch.cat([
+            torch.cat([before_b_mu.unsqueeze(-1), change_b_mu.unsqueeze(-1)], dim = -2), 
+            torch.cat([before_b_sigma.unsqueeze(-1), change_b_sigma.unsqueeze(-1)], dim = -2),], dim = -1)
+        bias = self.bias(bias)
+        bias = torch.mean(bias, 1, False)
+        bias = bias.tile((1, errors.shape[1], errors.shape[2], 1))
+                
+        dkl_out = self.dkl_out(torch.cat([errors, weights, bias], dim = -1))
+        return(dkl_out)
     
         
         
@@ -152,17 +158,20 @@ if __name__ == "__main__":
     
     
     errors_shape  = (1, 8, 10, 1)
-    w_mu_shape    = (1, 1, 1, 448)
-    w_sigma_shape = (1, 1, 1, 448)
-    b_mu_shape    = (1, 1, 1, 38)
-    b_sigma_shape = (1, 1, 1, 38)
+    w_mu_shape    = (1, 8 * args.hidden + 6 * args.hidden)
+    w_sigma_shape = (1, 8 * args.hidden + 6 * args.hidden)
+    b_mu_shape    = (1, args.hidden + 6)
+    b_sigma_shape = (1, args.hidden + 6)
 
     dkl_guesser = DKL_Guesser(args)
 
     print("\n\n")
     print(dkl_guesser)
     print()
-    print(torch_summary(dkl_guesser, (errors_shape, w_mu_shape, w_sigma_shape, b_mu_shape, b_sigma_shape)))
+    print(torch_summary(dkl_guesser, (
+        errors_shape, 
+        w_mu_shape, w_sigma_shape, b_mu_shape, b_sigma_shape,
+        w_mu_shape, w_sigma_shape, b_mu_shape, b_sigma_shape)))
     
 
 
