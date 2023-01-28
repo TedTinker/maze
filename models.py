@@ -18,8 +18,8 @@ class Forward(nn.Module):
         self.args = args
         
         self.pos_out = nn.Sequential(
-            BayesianLinear(8, args.hidden, bias = args.bias),
-            BayesianLinear(args.hidden, 6, bias = args.bias))
+            BayesianLinear(12 + 4, args.hidden, bias = args.bias),
+            BayesianLinear(args.hidden, 12, bias = args.bias))
         
         self.pos_out.apply(init_weights)
         self.to(args.device)
@@ -56,7 +56,7 @@ class DKL_Guesser(nn.Module):
             torch.cat([before_w_mu.unsqueeze(-1), change_w_mu.unsqueeze(-1)], dim = -2), 
             torch.cat([before_w_sigma.unsqueeze(-1), change_w_sigma.unsqueeze(-1)], dim = -2),], dim = -1)
         weights = self.weights(weights)
-        weights = torch.mean(weights, 1, False)
+        weights = torch.mean(weights, 1, False) # I bet it'll help to have more metrics
         weights = weights.tile((1, errors.shape[1], errors.shape[2], 1))
         
         change_b_mu  = after_b_mu - before_b_mu
@@ -82,10 +82,10 @@ class Actor(nn.Module):
 
         self.log_std_min = log_std_min ; self.log_std_max = log_std_max
         self.lin = nn.Sequential(
-            nn.Linear(6, args.hidden),
+            nn.Linear(12, args.hidden),
             nn.LeakyReLU())
-        self.mu = nn.Linear(args.hidden, 2)
-        self.log_std_linear = nn.Linear(args.hidden, 2)
+        self.mu = nn.Linear(args.hidden, 4)
+        self.log_std_linear = nn.Linear(args.hidden, 4)
 
         self.lin.apply(init_weights)
         self.mu.apply(init_weights)
@@ -129,7 +129,7 @@ class Critic(nn.Module):
         self.args = args
                 
         self.lin = nn.Sequential(
-            nn.Linear(8, args.hidden),
+            nn.Linear(12 + 4, args.hidden),
             nn.LeakyReLU(),
             nn.Linear(args.hidden, 1))
 
@@ -153,15 +153,15 @@ if __name__ == "__main__":
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((1,6), (1,2))))
+    print(torch_summary(forward, ((1, 12), (1, 4))))
     
     
     
     errors_shape  = (1, 8, 10, 1)
-    w_mu_shape    = (1, 8 * args.hidden + 6 * args.hidden)
-    w_sigma_shape = (1, 8 * args.hidden + 6 * args.hidden)
-    b_mu_shape    = (1, args.hidden + 6)
-    b_sigma_shape = (1, args.hidden + 6)
+    w_mu_shape    = (1, (12 + 4) * args.hidden + 12 * args.hidden)
+    w_sigma_shape = (1, (12 + 4) * args.hidden + 12 * args.hidden)
+    b_mu_shape    = (1, args.hidden + 12)
+    b_sigma_shape = (1, args.hidden + 12)
 
     dkl_guesser = DKL_Guesser(args)
 
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(actor)
     print()
-    print(torch_summary(actor, ((1,6),)))
+    print(torch_summary(actor, ((1,12),)))
     
     
     
@@ -189,5 +189,5 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((1,6),(1,2))))
+    print(torch_summary(critic, ((1,12),(1,4))))
 # %%

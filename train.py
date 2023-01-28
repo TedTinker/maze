@@ -21,7 +21,7 @@ def episode(agent, push = True, verbose = False):
             if(verbose): print(t_maze)
             o = t_maze.obs()
             a = agent.act(o)
-            r, spot_name, done = t_maze.action(a[0], a[1])
+            r, spot_name, done = t_maze.action(a.tolist())
             no = t_maze.obs()
             steps += 1
             if(steps >= agent.args.max_steps): done = True ; r = -1

@@ -21,7 +21,7 @@ class Agent:
         
         self.args = args
         self.steps = 0
-        self.action_size = 2
+        self.action_size = 4
         
         self.target_entropy = self.args.target_entropy # -dim(A)
         self.alpha = 1
@@ -75,7 +75,7 @@ class Agent:
                             
         # Train forward
         forward_errors = torch.zeros(rewards.shape)
-        dkl_loss = 0
+        dkl_loss = 4
         for _ in range(self.args.sample_elbo):
             pred_obs = self.forward(obs, actions)            
             errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none") 
@@ -201,7 +201,7 @@ class Agent:
 
             if self._action_prior == "normal":
                 loc = torch.zeros(self.action_size, dtype=torch.float64)
-                scale_tril = torch.tensor([[1, 0], [1, 1]], dtype=torch.float64)
+                scale_tril = torch.tensor([[1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]], dtype=torch.float64)
                 policy_prior = MultivariateNormal(loc=loc, scale_tril=scale_tril)
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred.cpu()).unsqueeze(-1)
             elif self._action_prior == "uniform":

@@ -39,8 +39,8 @@ class RecurrentReplayBuffer:
         # hyper-parameters
       
         self.capacity = self.args.capacity
-        self.o_dim = 6
-        self.a_dim = 2
+        self.o_dim = 12
+        self.a_dim = 4
       
         self.max_episode_len = args.max_steps + 1
       

@@ -17,21 +17,22 @@ class T_Maze:
         self.agent_pos = (0, 0)
         
     def obs(self):
+        pos = [1 if spot.pos == self.agent_pos else 0 for spot in self.maze]
         right = 0 ; left = 0 ; up = 0 ; down = 0 
-        for spot in self.maze:
+        for i, spot in enumerate(self.maze):
             if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
             if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1 
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1 
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1 
-        return(torch.tensor((self.agent_pos[0], self.agent_pos[1], right, left, up, down)).unsqueeze(0).float())
+        pos += [right, left, up, down]
+        return(torch.tensor(pos).unsqueeze(0).float())
         
-    def action(self, x = 0, y = 0):
-        if(abs(x) > abs(y)):
-            if(x < 0): x = -1 ; y = 0 
-            else:      x = 1  ; y = 0
-        else:
-            if(y < 0): x = 0  ; y = -1 
-            else:      x = 0  ; y = 1
+    def action(self, rlud):
+        mix_index = rlud.index(max(rlud))
+        if(0 == mix_index): x = 1  ; y = 0
+        if(1 == mix_index): x = -1 ; y = 0
+        if(2 == mix_index): x = 0  ; y = 1
+        if(3 == mix_index): x = 0  ; y = -1
         new_pos = (self.agent_pos[0] + x, self.agent_pos[1] + y)
         for spot in self.maze:
             if(spot.pos == new_pos):
@@ -65,17 +66,17 @@ if __name__ == "__main__":
     print(t_maze)
     print(t_maze.obs())
     
-    reward, name, done = t_maze.action(1, 0)
+    reward, name, done = t_maze.action([1, 0, 0, 0])
     print(t_maze)
     print(reward, name, done, "\n")
     print(t_maze.obs())
     
-    reward, name, done = t_maze.action(0, 1)
+    reward, name, done = t_maze.action([0, 0, 1, 0])
     print(t_maze)
     print(reward, name, done, "\n")
     print(t_maze.obs())
     
-    reward, name, done = t_maze.action(-1, 0)
+    reward, name, done = t_maze.action([0, 1, 0, 0])
     print(t_maze)
     print(reward, name, done, "\n")
     print(t_maze.obs())
