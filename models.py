@@ -6,13 +6,13 @@ from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 from blitz.modules import BayesianLinear
 
-from utils import init_weights, get_title
+from utils import init_weights, get_title, default_args
 
     
     
 class Forward(nn.Module):
     
-    def __init__(self, args):
+    def __init__(self, args = default_args):
         super(Forward, self).__init__()
         
         self.args = args
@@ -32,14 +32,27 @@ class Forward(nn.Module):
     
     
     
+def get_stats(stats, args = default_args):
+    mean   = torch.mean(stats, 1, False)
+    q      = torch.quantile(stats, q = torch.tensor([0, .25, .5, .75, 1]).to(args.device), dim = 1).permute(1, 2, 0).flatten(1)
+    var    = torch.var(stats, dim = 1) 
+    stats = torch.cat([mean, q, var], dim = 1)
+    return(stats)
+
+new_dims = get_stats(torch.zeros((1,1,1))).shape[-1]
+
+
+    
 class DKL_Guesser(nn.Module):
     
-    def __init__(self, args):
+    def __init__(self, args = default_args):
         super(DKL_Guesser, self).__init__()
         
-        self.weights = nn.Linear(2, args.hidden)
-        self.bias = nn.Linear(2, args.hidden)
-        self.dkl_out = nn.Linear(1 + 2*args.hidden, 1)
+        self.args = args
+        
+        self.weights = nn.Linear(2, args.dkl_hidden)
+        self.bias = nn.Linear(2, args.dkl_hidden)
+        self.dkl_out = nn.Linear(1 + 2 * new_dims * args.dkl_hidden, 1)
         
         self.weights.apply(init_weights)
         self.bias.apply(init_weights)
@@ -56,8 +69,7 @@ class DKL_Guesser(nn.Module):
             torch.cat([before_w_mu.unsqueeze(-1), change_w_mu.unsqueeze(-1)], dim = -2), 
             torch.cat([before_w_sigma.unsqueeze(-1), change_w_sigma.unsqueeze(-1)], dim = -2),], dim = -1)
         weights = self.weights(weights)
-        weights = torch.mean(weights, 1, False) # I bet it'll help to have more metrics
-        weights = weights.tile((1, errors.shape[1], errors.shape[2], 1))
+        weights = get_stats(weights, self.args)
         
         change_b_mu  = after_b_mu - before_b_mu
         change_b_sigma = after_b_sigma - before_b_sigma
@@ -65,17 +77,19 @@ class DKL_Guesser(nn.Module):
             torch.cat([before_b_mu.unsqueeze(-1), change_b_mu.unsqueeze(-1)], dim = -2), 
             torch.cat([before_b_sigma.unsqueeze(-1), change_b_sigma.unsqueeze(-1)], dim = -2),], dim = -1)
         bias = self.bias(bias)
-        bias = torch.mean(bias, 1, False)
-        bias = bias.tile((1, errors.shape[1], errors.shape[2], 1))
-                
-        dkl_out = self.dkl_out(torch.cat([errors, weights, bias], dim = -1))
+        bias = get_stats(bias, self.args)
+        
+        stats = torch.cat([weights, bias], dim = -1)
+        stats = stats.tile((1, errors.shape[1], errors.shape[2], 1))
+    
+        dkl_out = self.dkl_out(torch.cat([errors, stats], dim = -1))
         return(dkl_out)
     
         
         
 class Actor(nn.Module):
 
-    def __init__(self, args, log_std_min=-20, log_std_max=2):
+    def __init__(self, args = default_args, log_std_min=-20, log_std_max=2):
         super(Actor, self).__init__()
         
         self.args = args
@@ -123,7 +137,7 @@ class Actor(nn.Module):
     
 class Critic(nn.Module):
 
-    def __init__(self, args):
+    def __init__(self, args = default_args):
         super(Critic, self).__init__()
         
         self.args = args
