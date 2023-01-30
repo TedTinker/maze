@@ -75,10 +75,13 @@ def plots(plot_dicts, min_max_dict):
     
         # Ending spot
         ax = axs[2,i] if len(plot_dicts) > 1 else axs[2]
-        kinds = ["NONE", "BAD", "GOOD"]
-        ax.scatter([0 for _ in kinds], kinds, color = (0,0,0,0))
+        kinds = {"NONE" : {}, "BAD" : {}, "GOOD" : {}}
         for j, spot_names in enumerate(plot_dict["spot_names"]):
-            ax.scatter(range(len(spot_names)), spot_names, color = "gray", alpha = .1/len(plot_dict["spot_names"]))
+            for kind in ["NONE", "BAD", "GOOD"]:
+                kinds[kind][j] = [k for k in range(len(spot_names)) if spot_names[k] == kind]
+        for kind in ["NONE", "BAD", "GOOD"]:
+            for j, spot_names in enumerate(plot_dict["spot_names"]):
+                ax.scatter(kinds[kind][j], [kind + "_{}".format(j) for _ in kinds[kind][j]], color = "gray", alpha = .1)
         ax.set_ylabel("Ending Spot")
         ax.set_title(plot_dict["title"] + "\nEnding Spots")
         
