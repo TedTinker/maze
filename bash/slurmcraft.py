@@ -1,6 +1,7 @@
 #%%
 import argparse
 parser = argparse.ArgumentParser()
+parser.add_argument("--comp",         type=str,  default = "deigo")
 parser.add_argument("--name",         type=str,  default = "no_entropy_no_curiosity")
 parser.add_argument("--explore_type", type=str,  default = "no_entropy_no_curiosity")
 parser.add_argument("--post",         type=str,  default = "False")
@@ -8,8 +9,20 @@ try:    args = parser.parse_args()
 except: args, _ = parser.parse_known_args()
 
 import os 
-try:    os.chdir("easy_maze/bash/deigo")
+try:    os.chdir("easy_maze/bash")
 except: pass
+
+if(args.comp == "deigo"):
+	partition = """
+#SBATCH --partition=compute
+"""
+
+if(args.comp == "saion"):
+	partition = """
+#SBATCH --partition=taniu
+#SBATCH --gres=gpu:1
+"""
+
 
 if(args.post == "False"):
     slurm_dict = {}
@@ -25,27 +38,27 @@ if(args.post == "False"):
         f.write(
 """
 #!/bin/bash -l
-#SBATCH --partition=compute
+{}
 #SBATCH --time 48:00:00
 #SBATCH --mem=32G
 ##SBATCH --constraint 32
 
 module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --id ${{SLURM_ARRAY_TASK_ID}} --explore_type {} {}
-    """.format(args.name, slurm_dict[args.name])[1:])
+    """.format(partition, args.name, slurm_dict[args.name])[1:])
         
 if(args.post == "True"):
     with open("post_{}.slurm".format(args.name), "a") as f:
         f.write(
 """
 #!/bin/bash -l
-#SBATCH --partition=compute
+{}
 #SBATCH --time 48:00:00
 #SBATCH --mem=32G
 ##SBATCH --constraint 32
 
 module load singularity
 singularity exec t_maze.sif python easy_maze/post_main.py --explore_type {}
-""".format(args.explore_type)[1:])
+""".format(partition, args.explore_type)[1:])
 # %%
 
