@@ -1,3 +1,4 @@
+#%%
 from random import choice
 import torch
 
@@ -66,17 +67,13 @@ if __name__ == "__main__":
     print(t_maze)
     print(t_maze.obs())
     
-    reward, name, done = t_maze.action([1, 0, 0, 0])
-    print(t_maze)
-    print(reward, name, done, "\n")
-    print(t_maze.obs())
-    
-    reward, name, done = t_maze.action([0, 0, 1, 0])
-    print(t_maze)
-    print(reward, name, done, "\n")
-    print(t_maze.obs())
-    
-    reward, name, done = t_maze.action([0, 1, 0, 0])
-    print(t_maze)
-    print(reward, name, done, "\n")
-    print(t_maze.obs())
+    actions = [[1,0,0,0], [0,0,1,0], [0,1,0,0]]
+    for action in actions:
+        reward, name, done = t_maze.action(action)
+        print("\n\n\n")
+        print("Action: {}.".format(action), "\n") 
+        print(t_maze)
+        print("Reward: {}. Exit type: {}. Done: {}.".format(reward, name, done))
+        print(t_maze.obs())
+
+# %%

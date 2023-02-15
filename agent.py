@@ -7,7 +7,6 @@ import torch.optim as optim
 from blitz.losses import kl_divergence_from_nn as b_kl_loss
 
 import numpy as np
-from math import log
 
 from utils import default_args, dkl, weights
 from buffer import RecurrentReplayBuffer
@@ -75,7 +74,7 @@ class Agent:
                             
         # Train forward
         forward_errors = torch.zeros(rewards.shape)
-        dkl_loss = 4
+        dkl_loss = 0
         for _ in range(self.args.sample_elbo):
             pred_obs = self.forward(obs, actions)            
             errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none") 
@@ -272,5 +271,4 @@ class Agent:
         self.critic2.train()
         self.critic2_target.train()
         
-print("agent.py loaded.")
 # %%

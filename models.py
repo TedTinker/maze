@@ -6,7 +6,7 @@ from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 from blitz.modules import BayesianLinear
 
-from utils import init_weights, get_title, default_args
+from utils import default_args, init_weights
 
     
     
@@ -31,7 +31,7 @@ class Forward(nn.Module):
         return(x) 
     
     
-    
+
 def get_stats(stats, args = default_args):
     mean   = torch.mean(stats, 1, False)
     q      = torch.quantile(stats, q = torch.tensor([0, .25, .5, .75, 1]).to(args.device), dim = 1).permute(1, 2, 0).flatten(1)
@@ -42,7 +42,7 @@ def get_stats(stats, args = default_args):
 new_dims = get_stats(torch.zeros((1,1,1))).shape[-1]
 
 
-    
+
 class DKL_Guesser(nn.Module):
     
     def __init__(self, args = default_args):
@@ -160,8 +160,9 @@ class Critic(nn.Module):
 
 if __name__ == "__main__":
     
-    args, _ = get_title({"device" : "cuda"})
-
+    args = default_args
+    args.device = "cuda"
+    
     forward = Forward(args)
     
     print("\n\n")
@@ -204,4 +205,5 @@ if __name__ == "__main__":
     print(critic)
     print()
     print(torch_summary(critic, ((1,12),(1,4))))
+
 # %%

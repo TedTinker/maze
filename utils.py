@@ -1,18 +1,27 @@
 #%% 
+import pickle
+import argparse
+#import sys ; sys.argv=[''] ; del sys
+import os 
+
+if(os.getcwd().split("/")[-1] != "easy_maze"): os.chdir("easy_maze")
+print(os.getcwd())
 
 import torch
+from blitz.modules.base_bayesian_module import BayesianModule
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-import sys ; sys.argv=[''] ; del sys
-import argparse
 
 parser = argparse.ArgumentParser()
 
+# Meta 
+parser.add_argument("--explore_type",       type=str,   default = "default") 
+parser.add_argument("--id",                 type=int,   default = 0)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
-# Training 
-parser.add_argument('--agents',             type=int,   default = 10)
+# Maze 
 parser.add_argument('--max_steps',          type=int,   default = 10)
+
+# Training 
 parser.add_argument('--epochs',             type=int,   default = 1000)
 parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
@@ -34,48 +43,58 @@ parser.add_argument('--selection',          type=str,   default = "uniform")
 parser.add_argument('--power',              type=float, default = 1)
 
 # Training
-parser.add_argument("--d",                  type=int,   default = 2)    # Delay to train actors
-parser.add_argument("--alpha",              type=float, default = 0)    # Soft-Actor-Critic entropy aim
-parser.add_argument("--target_entropy",     type=float, default = -2)   # Soft-Actor-Critic entropy aim
-parser.add_argument("--naive_eta",          type=float, default = 1)    # Scale curiosity
-parser.add_argument("--friston_eta",        type=float, default = .0001)# Scale curiosity
-parser.add_argument("--tau",                type=float, default = .05)  # For soft-updating target critics
-parser.add_argument("--dkl_rate",           type=float, default = .001) # Scale bayesian dkl
-parser.add_argument("--sample_elbo",        type=int,   default = 5)    # Samples for elbo
-parser.add_argument("--curiosity",          type=str,   default = "none") # Which kind of curiosity
+parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors
+parser.add_argument("--alpha",              type=str,   default = 0)        # Soft-Actor-Critic entropy aim
+parser.add_argument("--target_entropy",     type=float, default = -2)       # Soft-Actor-Critic entropy aim
+parser.add_argument("--naive_eta",          type=float, default = 1)        # Scale curiosity
+parser.add_argument("--friston_eta",        type=float, default = .005)     # Scale curiosity
+parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
+parser.add_argument("--dkl_rate",           type=float, default = .001)     # Scale bayesian dkl
+parser.add_argument("--sample_elbo",        type=int,   default = 5)        # Samples for elbo
+parser.add_argument("--curiosity",          type=str,   default = "none")   # Which kind of curiosity
 parser.add_argument("--dkl_change_size",    type=str,   default = "batch")  # "batch", "step"
 
-default_args, _ = parser.parse_known_args()
 
 
+if __name__ == "__main__":
+    print("\n\nSaving default arguments.\n\n")
+    try:    default_args    = parser.parse_args()
+    except: default_args, _ = parser.parse_known_args()
+    with open("saved/default_args.pickle", "wb") as handle:
+        pickle.dump(default_args, handle)
+    args = default_args
+else:
+    print("\n\nGetting new arguments.\n\n")
+    try:    args    = parser.parse_args()
+    except: args, _ = parser.parse_known_args()
+    with open("saved/default_args.pickle", "rb") as handle:
+        default_args = pickle.load(handle)
+    folder = "saved/" + args.explore_type
+    if(args.explore_type[:3] != "___" and args.explore_type != "default"):
+        try: os.mkdir(folder)
+        except: pass
+if(default_args.alpha == "None"): default_args.alpha = None
+if(args.alpha == "None"):         args.alpha = None
 
-def get_title(arg_dict):
-    parser = argparse.ArgumentParser()
+if(args == default_args): print("Using default arguments.")
+else:
     for arg in vars(default_args):
-        if(arg in arg_dict.keys()): parser.add_argument('--{}'.format(arg), default = arg_dict[arg])
-        else:                       parser.add_argument('--{}'.format(arg), default = getattr(default_args, arg))
-    args, _ = parser.parse_known_args()
-    title = ""
-    first = True
-    for arg in vars(args):
-        if(getattr(args, arg) != getattr(default_args, arg)):
-            if(not first): title += "_"
-            title += "{}_{}".format(arg, getattr(args, arg)) ; first = False
-    if(len(title) == 0): title = "default"
-    print(arg_dict, title)
-    return(args, title)
+        default, this_time = getattr(default_args, arg), getattr(args, arg)
+        if(this_time == default): pass
+        else: print("{}:\n\tDefault:\t{}\n\tThis time:\t{}".format(arg, default, this_time))
+print("\n\n")
 
 
 
 def init_weights(m):
+    if isinstance(m, (BayesianModule)):
+        print("Not working on Bayesian yet!")
     try:
         torch.nn.init.xavier_normal_(m.weight)
         m.bias.data.fill_(0.01)
     except: pass
     
     
-
-from blitz.modules.base_bayesian_module import BayesianModule
 
 def weights(model):
     weight_mu = [] ; weight_sigma = []
@@ -111,9 +130,9 @@ def dkl(mu_1, sigma_1, mu_2, sigma_2):
 if __name__ == "__main__":
 
     mu_1 = torch.tensor([0])
-    mu_2 = torch.tensor([10])
+    mu_2 = torch.tensor([1])
     sigma_1 = torch.tensor([2])
-    sigma_2 = torch.tensor([30])
+    sigma_2 = torch.tensor([3])
 
     print(dkl(mu_1, sigma_1, mu_2, sigma_2))
 

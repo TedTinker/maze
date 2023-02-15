@@ -1,10 +1,14 @@
-# TO DO: Make it alternate between plotting normally and plotting with universal min/max.
-
 import os 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Without this, pyplot crashes the kernal
 
 import matplotlib.pyplot as plt 
 import numpy as np
+import datetime 
+
+def duration(start_time):
+    change_time = datetime.datetime.now() - start_time
+    change_time = change_time - datetime.timedelta(microseconds=change_time.microseconds)
+    return(change_time)
 
 
 
@@ -48,7 +52,8 @@ def many_min_max(min_max_list):
 
 
 def plots(plot_dicts, min_max_dict):
-    fig, axs = plt.subplots(12, len(plot_dicts), figsize = (10*len(plot_dicts), 75))
+    start_time = datetime.datetime.now()
+    fig, axs = plt.subplots(13, len(plot_dicts), figsize = (10*len(plot_dicts), 75))
                 
     for i, plot_dict in enumerate(plot_dicts):
     
@@ -72,15 +77,15 @@ def plots(plot_dicts, min_max_dict):
         ax.set_title(plot_dict["title"] + "\nCumulative Rewards, shared min/max")
     
     
-        
+    
         # Ending spot
         ax = axs[2,i] if len(plot_dicts) > 1 else axs[2]
         kinds = ["NONE", "BAD", "GOOD"]
         for kind in kinds:
             for j, spot_names in enumerate(plot_dict["spot_names"]):
-                ax.scatter([0], [kind + "_{}".format(j)], color = (0,0,0,0))
+                ax.scatter([0], [kind + "_{}".format(str(j+1).zfill(3))], color = (0,0,0,0))
                 is_kind = [k for k, spot_name in enumerate(spot_names) if spot_name == kind]
-                ax.scatter(is_kind, [kind + "_{}".format(j) for _ in is_kind], color = "gray", alpha = .1)
+                ax.scatter(is_kind, [kind + "_{}".format(str(j+1).zfill(3)) for _ in is_kind], color = "gray", alpha = .1)
         ax.set_ylabel("Ending Spot")
         ax.set_title(plot_dict["title"] + "\nEnding Spots")
         
@@ -200,19 +205,28 @@ def plots(plot_dicts, min_max_dict):
         # Curiosities
         naive_dict = get_quantiles(plot_dict, "naive")
         friston_dict = get_quantiles(plot_dict, "friston")
-        min_max = many_min_max([min_max_dict["naive"], min_max_dict["friston"]])
-    
+        
         ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
+        awesome_plot(ax, naive_dict, "green", "Naive")
+        awesome_plot(ax, friston_dict, "red", "Friston")
+        ax.legend()
+        ax.set_ylabel("Curiosities")
+        ax.set_title(plot_dict["title"] + "\nCuriosities")
+        
+        min_max = many_min_max([min_max_dict["naive"], min_max_dict["friston"]])
+        ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
         awesome_plot(ax, naive_dict, "green", "Naive", min_max)
         awesome_plot(ax, friston_dict, "red", "Friston", min_max)
         ax.legend()
         ax.set_ylabel("Curiosities")
         ax.set_title(plot_dict["title"] + "\nCuriosities, shared min/max")
+        
+        print(i, plot_dict["title"], duration(start_time))
 
     
     
     # Done!
     fig.tight_layout(pad=1.0)
-    plt.savefig("plot.png",bbox_inches='tight')
+    plt.savefig("saved/plot.png", bbox_inches = "tight")
     plt.show()
     plt.close()
