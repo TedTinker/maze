@@ -21,6 +21,7 @@ def duration():
     return(change_time)
 
 
+
 trainer = Trainer(args, "{}_{}".format(args.name, args.id))
 plot_dict, min_max_dict = trainer.train()
 

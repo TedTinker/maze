@@ -10,7 +10,7 @@ import numpy as np
 
 from utils import default_args, dkl, weights
 from buffer import RecurrentReplayBuffer
-from models import Forward, Actor, Critic
+from models import Forward, DKL_Guesser, Actor, Critic
 
 
 
@@ -35,6 +35,7 @@ class Agent:
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
         if(self.args.curiosity == "friston"):
+            dkl_guesser = DKL_Guesser(self.args)
             clone_lr = self.args.clone_lr
             self.forward_clone = Forward(self.args)
             self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=clone_lr, weight_decay=0)
@@ -60,6 +61,8 @@ class Agent:
     def act(self, pos):
         action = self.actor.get_action(pos).detach()
         return action
+    
+    
     
     def learn(self, batch_size,):
                 

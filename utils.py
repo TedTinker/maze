@@ -59,7 +59,7 @@ parser.add_argument("--curiosity",          type=str,   default = "none")   # Wh
 def get_args_name(default_args, args):
     name = "" ; first = True
     for arg in vars(default_args):
-        if(arg == "id"): pass 
+        if(arg in ["arg_title", "id"]): pass 
         else: 
             default, this_time = getattr(default_args, arg), getattr(args, arg)
             if(this_time == default): pass

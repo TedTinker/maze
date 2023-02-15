@@ -13,13 +13,15 @@ except: pass
 
 if(args.comp == "deigo"):
 	partition = """
-#SBATCH --partition=compute
+#SBATCH --partition=short
+#SBATCH --time 2:00:00
 """
 
 if(args.comp == "saion"):
 	partition = """
 #SBATCH --partition=taniu
 #SBATCH --gres=gpu:1
+#SBATCH --time 48:00:00
 """
 
 slurm_dict = {}
@@ -37,7 +39,6 @@ if(args.post == "False"):
 """
 #!/bin/bash -l
 {}
-#SBATCH --time 48:00:00
 #SBATCH --mem=32G
 ##SBATCH --constraint 32
 
@@ -55,7 +56,6 @@ if(args.post == "True"):
 """
 #!/bin/bash -l
 {}
-#SBATCH --time 48:00:00
 #SBATCH --mem=32G
 ##SBATCH --constraint 32
 
