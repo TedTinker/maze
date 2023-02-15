@@ -1,8 +1,8 @@
-no_entropy_no_curiosity  : 
-yes_entropy_no_curiosity : --alpha None
+d   : 
+e   : --alpha None
 
-no_entropy_naive_curiosity   : --curiosity naive
-yes_entropy_naive_curiosity : --alpha None --curiosity naive
+n   : --curiosity naive
+e_n : --alpha None --curiosity naive
 
-no_entropy_friston_curiosity   : --curiosity friston --dkl_change_size step
-yes_entropy_friston_curiosity : --alpha None --curiosity friston --dkl_change_size step
+f   : --curiosity friston
+e_f : --alpha None --curiosity friston

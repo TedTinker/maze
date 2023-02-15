@@ -34,7 +34,7 @@ class Agent:
         self.forward = Forward(self.args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
-        if(self.args.dkl_change_size):
+        if(self.args.curiosity == "friston"):
             clone_lr = self.args.clone_lr
             self.forward_clone = Forward(self.args)
             self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=clone_lr, weight_decay=0)
@@ -102,7 +102,7 @@ class Agent:
         
         
         # Do we need this? We could just calculate dkl_changes using each error! 
-        if(self.args.dkl_change_size == "step"):
+        if(self.args.curiosity == "friston"):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
                 for step in range(rewards.shape[1]):
