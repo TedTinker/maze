@@ -15,12 +15,12 @@ do
     then
         :
     else
-        singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --name $job --explore_type $job
+        singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --arg_title $job
         jid=$(sbatch --array=1-${agents} easy_maze/bash/main_$job.slurm)
         echo $jid
         jid=(${jid// / })
         jid=${jid[3]}     
-        singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --name $job --explore_type $job --post True
+        singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --arg_title $job --post True
         jid=$(sbatch --dependency afterok:$jid easy_maze/bash/post_$job.slurm)
         echo $jid
         jid=(${jid// / })
@@ -43,6 +43,6 @@ do
 done
 order+="___"
 
-singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --name final --explore_type $order --post True
+singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --arg_title $order --post True
 jid=$(sbatch --dependency afterok:$(echo ${jid_list[*]} | tr ' ' :) easy_maze/bash/post_final.slurm)
 echo $jid

@@ -6,9 +6,7 @@ import pickle
 from utils import args, folder
 from plotting import plots
 
-
-
-if(args.explore_type[:3] != "___"):
+if(args.arg_title[:3] != "___"):
         
     plot_dict = {} ; min_max_dict = {}
     files = os.listdir(folder) ; files.sort()
@@ -21,7 +19,7 @@ if(args.explore_type[:3] != "___"):
         for key in saved_d.keys(): 
             if(not key in d): d[key] = []
             d[key].append(saved_d[key])
-    d["title"] = "".join(folder.split("/")[1:])
+    d["title"] = args.name
         
     for key in min_max_dict.keys():
         if(not key in ["title", "spot_names"]):
@@ -38,19 +36,20 @@ if(args.explore_type[:3] != "___"):
     with open(folder + "/min_max_dict.pickle", "wb") as handle:
         pickle.dump(min_max_dict, handle)
             
-    print("Done with {}!".format(args.explore_type))
+    print("Done with {}!".format(args.name))
     
 else:
     
     plot_dicts = [] ; min_max_dicts = []
     
-    order = args.explore_type[3:-3]
+    order = args.name[3:-3]
     order = order.split("+")
     order = [o for o in order if o != "break"]
-    for explore_type in order:
-        with open("saved/" + explore_type + "/" + "plot_dict.pickle", "rb") as handle: 
+
+    for name in order:
+        with open("saved/" + name + "/" + "plot_dict.pickle", "rb") as handle: 
             plot_dicts.append(pickle.load(handle))
-        with open("saved/" + explore_type + "/" + "min_max_dict.pickle", "rb") as handle: 
+        with open("saved/" + name + "/" + "min_max_dict.pickle", "rb") as handle: 
             min_max_dicts.append(pickle.load(handle))
             
     min_max_dict = {}
@@ -64,5 +63,6 @@ else:
                     if(maximum == None):             maximum = mm_dict[key][1]
                     elif(maximum < mm_dict[key][1]): maximum = mm_dict[key][1]
             min_max_dict[key] = (minimum, maximum)
+            
     plots(plot_dicts, min_max_dict)
     print("Finished!")

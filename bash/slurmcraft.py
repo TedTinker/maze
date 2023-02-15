@@ -2,8 +2,7 @@
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--comp",         type=str,  default = "deigo")
-parser.add_argument("--name",         type=str,  default = "no_entropy_no_curiosity")
-parser.add_argument("--explore_type", type=str,  default = "no_entropy_no_curiosity")
+parser.add_argument("--arg_title",    type=str,  default = "default")
 parser.add_argument("--post",         type=str,  default = "False")
 try:    args = parser.parse_args()
 except: args, _ = parser.parse_known_args()
@@ -23,18 +22,17 @@ if(args.comp == "saion"):
 #SBATCH --gres=gpu:1
 """
 
-
+slurm_dict = {}
+f = open("slurms.txt", "r")
+slurms = f.readlines()
+for line in slurms:
+    if(line == "\n"): pass 
+    else:
+        arg_title, text = line.split(":")
+        slurm_dict[arg_title.strip()] = text.strip()
+        
 if(args.post == "False"):
-    slurm_dict = {}
-    f = open("slurms.txt", "r")
-    slurms = f.readlines()
-    for line in slurms:
-        if(line == "\n"): pass 
-        else:
-            name, text = line.split(":")
-            slurm_dict[name.strip()] = text.strip()
-            
-    with open("main_{}.slurm".format(args.name), "a") as f:
+    with open("main_{}.slurm".format(args.arg_title), "a") as f:
         f.write(
 """
 #!/bin/bash -l
@@ -44,11 +42,15 @@ if(args.post == "False"):
 ##SBATCH --constraint 32
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/main.py --id ${{SLURM_ARRAY_TASK_ID}} --explore_type {} {}
-    """.format(partition, args.name, slurm_dict[args.name])[1:])
+singularity exec t_maze.sif python easy_maze/main.py --id ${{SLURM_ARRAY_TASK_ID}} --arg_title {} {}
+    """.format(partition, args.arg_title, slurm_dict[args.arg_title])[1:])
         
 if(args.post == "True"):
-    with open("post_{}.slurm".format(args.name), "a") as f:
+    if(args.arg_title[:3] == "___"): 
+        slurm_dict[args.arg_title] = "--name {}".format(args.arg_title)
+        name = "final"
+    else: name = args.arg_title
+    with open("post_{}.slurm".format(name), "a") as f:
         f.write(
 """
 #!/bin/bash -l
@@ -58,7 +60,7 @@ if(args.post == "True"):
 ##SBATCH --constraint 32
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/post_main.py --explore_type {}
-""".format(partition, args.explore_type)[1:])
+singularity exec t_maze.sif python easy_maze/post_main.py --arg_title {} {}
+""".format(partition, args.arg_title, slurm_dict[args.arg_title])[1:])
 # %%
 

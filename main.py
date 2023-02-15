@@ -5,7 +5,7 @@ import pickle
 from utils import args, folder
 from train import Trainer
 
-print("name:", args.explore_type + "_" + str(args.id))
+print("name + id: {}_{}".format(args.name, args.id))
 
 import datetime 
 start_time = datetime.datetime.now()
@@ -21,7 +21,7 @@ def duration():
     return(change_time)
 
 
-trainer = Trainer(args, "{}_{}".format(args.explore_type, args.id))
+trainer = Trainer(args, "{}_{}".format(args.name, args.id))
 plot_dict, min_max_dict = trainer.train()
 
 with open(folder + "/plot_dict_{}.pickle".format(   str(args.id).zfill(3)), "wb") as handle:

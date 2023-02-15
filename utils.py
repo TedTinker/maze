@@ -14,7 +14,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser()
 
 # Meta 
-parser.add_argument("--explore_type",       type=str,   default = "default") 
+parser.add_argument("--arg_title",          type=str,   default = "default") 
+parser.add_argument("--name",               type=str,   default = "default") 
 parser.add_argument("--id",                 type=int,   default = 0)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
@@ -56,6 +57,22 @@ parser.add_argument("--dkl_change_size",    type=str,   default = "batch")  # "b
 
 
 
+def get_args_name(default_args, args):
+    name = "" ; first = True
+    for arg in vars(default_args):
+        if(arg == "id"): pass 
+        else: 
+            default, this_time = getattr(default_args, arg), getattr(args, arg)
+            if(this_time == default): pass
+            else: 
+                if first: first = False
+                else: name += "_"
+                name += "{}_{}".format(arg, this_time)
+    if(name == ""): name = "default" 
+    return(name)
+
+
+
 if __name__ == "__main__":
     print("\n\nSaving default arguments.\n\n")
     try:    default_args    = parser.parse_args()
@@ -69,8 +86,13 @@ else:
     except: args, _ = parser.parse_known_args()
     with open("saved/default_args.pickle", "rb") as handle:
         default_args = pickle.load(handle)
-    folder = "saved/" + args.explore_type
-    if(args.explore_type[:3] != "___" and args.explore_type != "default"):
+    
+    if(args.name[:3] != "___"):
+        name = get_args_name(default_args, args)
+        args.name = name
+    
+    folder = "saved/" + args.arg_title
+    if(args.arg_title[:3] != "___"):
         try: os.mkdir(folder)
         except: pass
 if(default_args.alpha == "None"): default_args.alpha = None
