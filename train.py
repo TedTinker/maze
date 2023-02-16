@@ -53,7 +53,7 @@ class Trainer():
 
     def train(self):
         self.agent.train()
-        manager = enlighten.Manager()
+        manager = enlighten.Manager(width = 100)
         E = manager.counter(total = self.args.epochs, desc = "{}:".format(self.title), unit = "ticks", color = "blue")
         while(True):
             E.update()

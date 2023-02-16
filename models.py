@@ -3,6 +3,7 @@
 import torch
 from torch import nn 
 from torch.distributions import Normal
+import torch.nn.functional as F
 from torchinfo import summary as torch_summary
 from blitz.modules import BayesianLinear
 
@@ -123,6 +124,7 @@ class Actor(nn.Module):
         log_prob = Normal(mu, std).log_prob(mu + e * std) - \
             torch.log(1 - action.pow(2) + epsilon)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
+        action = F.softmax(action)
         return action, log_prob
 
     def get_action(self, pos):
@@ -131,6 +133,7 @@ class Actor(nn.Module):
         dist = Normal(0, 1)
         e      = dist.sample(std.shape).to(self.args.device)
         action = torch.tanh(mu + e * std).cpu()
+        action = F.softmax(action)
         return action[0]
     
     
