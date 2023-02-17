@@ -88,10 +88,10 @@ def plots(plot_dicts, min_max_dict):
             counts = np.count_nonzero(spot_names == kind, 0)
             counts = [count + (j*agents*1.1) for count in counts]
             ax.fill_between(xs, [j*agents*1.1 for _ in xs], counts, color = "black", linewidth = 0)
-        if(j != len(kinds)-1):
-            ax.plot(xs, [j*agents*1.05], color = "black", linestyle = "--")
-        #y_space = which/len(kinds)/2
-        #ax.set_yticks([y_space + 2*y_space*j for j in range(len(kinds))], kinds, rotation='vertical')
+            if(j != len(kinds)-1):
+                ax.plot(xs, [agents*1.05 + j*agents*1.1 for _ in xs], color = "black", linestyle = "--")
+        ax.set_yticks([agents/2 + j*agents for j in range(len(kinds))], kinds, rotation='vertical')
+        ax.tick_params(left = False)
         ax.set_ylim([-1, len(kinds)*agents*1.1])
         ax.set_ylabel("Ending Spot")
         ax.set_title(plot_dict["title"] + "\nEnding Spots")
