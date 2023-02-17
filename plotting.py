@@ -81,7 +81,6 @@ def plots(plot_dicts, min_max_dict):
         # Ending spot
         ax = axs[2,i] if len(plot_dicts) > 1 else axs[2]
         kinds = ["NONE", "BAD", "GOOD"]
-        per = len(kinds) * len(plot_dict["spot_names"])
         which = 0
         for j, kind in enumerate(kinds):
             for spot_names in plot_dict["spot_names"]:
@@ -214,19 +213,23 @@ def plots(plot_dicts, min_max_dict):
         friston_dict = get_quantiles(plot_dict, "friston")
         
         ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
-        awesome_plot(ax, naive_dict, "green", "Naive")
-        awesome_plot(ax, friston_dict, "red", "Friston")
-        ax.legend()
-        ax.set_ylabel("Curiosities")
+        handles = []
+        handles.append(awesome_plot(ax, naive_dict, "green", "Naive"))
+        ax.set_ylabel("Naive")
+        ax2 = ax.twinx()
+        handles.append(awesome_plot(ax2, friston_dict, "red", "Friston"))
+        ax2.set_ylabel("Friston")
+        ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nCuriosities")
         
-        min_max = many_min_max([min_max_dict["naive"], min_max_dict["friston"]])
         ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
-        awesome_plot(ax, naive_dict, "green", "Naive", min_max)
-        awesome_plot(ax, friston_dict, "red", "Friston", min_max)
-        ax.legend()
-        ax.set_ylabel("Curiosities")
-        ax.set_title(plot_dict["title"] + "\nCuriosities, shared min/max")
+        handles = []
+        handles.append(awesome_plot(ax, naive_dict, "green", "Naive", min_max_dict["naive"]))
+        ax.set_ylabel("Naive")
+        ax2 = ax.twinx()
+        handles.append(awesome_plot(ax2, friston_dict, "red", "Friston", min_max_dict["friston"]))
+        ax2.set_ylabel("Friston")
+        ax.legend(handles = handles)
         
         print(i, plot_dict["title"], duration(start_time))
 

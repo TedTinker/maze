@@ -34,11 +34,12 @@ class Agent:
         self.forward = Forward(self.args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
+        self.dkl_guesser = DKL_Guesser(self.args)
+        self.dkl_guesser_opt = optim.Adam(self.dkl_guesser.parameters(), lr=self.args.dkl_guesser_lr, weight_decay=0)
+        
         if(self.args.curiosity == "friston"):
-            dkl_guesser = DKL_Guesser(self.args)
-            clone_lr = self.args.clone_lr
             self.forward_clone = Forward(self.args)
-            self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=clone_lr, weight_decay=0)
+            self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=self.args.clone_lr, weight_decay=0)
                            
         self.actor = Actor(self.args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=self.args.actor_lr, weight_decay=0)     
@@ -104,10 +105,10 @@ class Agent:
         
         
         
-        dkl_guess = self.dkl_guesser(
-            forward_errors,
-            weights_after[0], weights_after[1], weights_before[0], weights_before[1],
-            weights_after[2], weights_after[3], weights_before[2], weights_before[3])
+        #dkl_guess = self.dkl_guesser(
+        #    forward_errors,
+        #    weights_before[0], weights_before[1], weights_before[2], weights_before[3],
+        #    weights_after[0],  weights_after[1],  weights_after[3],  weights_after[3])
         
         
         
