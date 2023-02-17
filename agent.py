@@ -92,7 +92,7 @@ class Agent:
         old_state_dict = self.forward.state_dict() # For curiosity
         weights_before = weights(self.forward)
         self.forward_opt.zero_grad()
-        forward_loss.sum().backward()
+        forward_loss.backward()
         self.forward_opt.step()
         weights_after = weights(self.forward)
                 
@@ -101,6 +101,13 @@ class Agent:
         dkl_changes = torch.tile(dkl_change, rewards.shape)   
         dkl_changes *= masks
         if(dkl_changes.sum().item() != 0): dkl_change = dkl_changes.sum().item()
+        
+        
+        
+        dkl_guess = self.dkl_guesser(
+            forward_errors,
+            weights_after[0], weights_after[1], weights_before[0], weights_before[1],
+            weights_after[2], weights_after[3], weights_before[2], weights_before[3])
         
         
         
@@ -124,14 +131,14 @@ class Agent:
                     forward_loss_ = mse_loss_ + dkl_loss_
                     #print("\nMSE: {}. KL: {}.\n".format(mse_loss.item(), dkl_loss if type(dkl_loss == int) else dkl_loss.item()))
             
-                    weights_before = weights(self.forward_clone)
+                    weights_before_ = weights(self.forward_clone)
                     self.clone_opt.zero_grad()
-                    forward_loss_.sum().backward()
+                    forward_loss_.backward()
                     self.clone_opt.step()
-                    weights_after = weights(self.forward_clone)
+                    weights_after_ = weights(self.forward_clone)
                     
-                    dkl_change = dkl(weights_after[0], weights_after[1], weights_before[0], weights_before[1]) + \
-                        dkl(weights_after[2], weights_after[3], weights_before[2], weights_before[3])
+                    dkl_change = dkl(weights_after_[0], weights_after_[1], weights_before_[0], weights_before_[1]) + \
+                        dkl(weights_after_[2], weights_after_[3], weights_before_[2], weights_before_[3])
                     dkl_change, torch.exp(dkl_change)
                     dkl_changes[episode, step] = dkl_change
             dkl_changes *= masks 

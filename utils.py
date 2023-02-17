@@ -29,13 +29,15 @@ parser.add_argument('--GAMMA',              type=int,   default = .99)
 
 # Module 
 parser.add_argument('--hidden',             type=int,   default = 32)
-parser.add_argument('--dkl_hidden',         type=int,   default = 4)
-parser.add_argument('--bias',               type=bool,  default = True)
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--clone_lr',           type=float, default = .001)
 parser.add_argument('--actor_lr',           type=float, default = .01) 
 parser.add_argument('--critic_lr',          type=float, default = .01) 
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
+
+# DKL Guesser 
+parser.add_argument('--dkl_hidden',         type=int,   default = 16)
+parser.add_argument('--dkl_guesser_lr',     type=float, default = .01) 
 
 # Memory buffer
 parser.add_argument('--capacity',           type=int,   default = 100)

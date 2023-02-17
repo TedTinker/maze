@@ -19,8 +19,8 @@ class Forward(nn.Module):
         self.args = args
         
         self.pos_out = nn.Sequential(
-            BayesianLinear(12 + 4, args.hidden, bias = args.bias),
-            BayesianLinear(args.hidden, 12, bias = args.bias))
+            BayesianLinear(12 + 4, args.hidden),
+            BayesianLinear(args.hidden, 12))
         
         self.pos_out.apply(init_weights)
         self.to(args.device)
@@ -34,6 +34,7 @@ class Forward(nn.Module):
     
 
 def get_stats(stats, args = default_args):
+    if(len(stats.shape) == 4): stats = stats.view(stats.shape[0], stats.shape[1]*stats.shape[2], stats.shape[3])
     mean   = torch.mean(stats, 1, False)
     q      = torch.quantile(stats, q = torch.tensor([0, .25, .5, .75, 1]).to(args.device), dim = 1).permute(1, 2, 0).flatten(1)
     var    = torch.var(stats, dim = 1) 
@@ -51,10 +52,12 @@ class DKL_Guesser(nn.Module):
         
         self.args = args
         
-        self.weights = nn.Linear(2, args.dkl_hidden)
-        self.bias = nn.Linear(2, args.dkl_hidden)
-        self.dkl_out = nn.Linear(1 + 2 * new_dims * args.dkl_hidden, 1)
+        self.errors = nn.Linear(1, args.dkl_hidden)
+        self.weights = nn.Linear(4, args.dkl_hidden)
+        self.bias = nn.Linear(4, args.dkl_hidden)
+        self.dkl_out = nn.Linear((3 * new_dims + 1) * args.dkl_hidden, 1)
         
+        self.errors.apply(init_weights)
         self.weights.apply(init_weights)
         self.bias.apply(init_weights)
         self.dkl_out.apply(init_weights)
@@ -64,27 +67,47 @@ class DKL_Guesser(nn.Module):
                 before_w_mu, before_w_sigma, before_b_mu, before_b_sigma,
                 after_w_mu, after_w_sigma, after_b_mu, after_b_sigma):
         
+        print("ERRORS:")
+        print(errors.shape)
+        errors = self.errors(errors)
+        print(errors.shape)
+        errors_stats = get_stats(errors, self.args)
+        print(errors_stats.shape)
+        
+        print("\n\nWeights:")
         change_w_mu  = after_w_mu - before_w_mu
         change_w_sigma = after_w_sigma - before_w_sigma
         weights = torch.cat([
-            torch.cat([before_w_mu.unsqueeze(-1), change_w_mu.unsqueeze(-1)], dim = -2), 
-            torch.cat([before_w_sigma.unsqueeze(-1), change_w_sigma.unsqueeze(-1)], dim = -2),], dim = -1)
+            before_w_mu.unsqueeze(-1), change_w_mu.unsqueeze(-1),
+            before_w_sigma.unsqueeze(-1), change_w_sigma.unsqueeze(-1)], dim = -1)
+        print(weights.shape)
         weights = self.weights(weights)
-        weights = get_stats(weights, self.args)
+        print(weights.shape)
+        weights_stats = get_stats(weights, self.args)
+        print(weights_stats.shape)
         
+        print("\n\nBias:")
         change_b_mu  = after_b_mu - before_b_mu
         change_b_sigma = after_b_sigma - before_b_sigma
         bias = torch.cat([
-            torch.cat([before_b_mu.unsqueeze(-1), change_b_mu.unsqueeze(-1)], dim = -2), 
-            torch.cat([before_b_sigma.unsqueeze(-1), change_b_sigma.unsqueeze(-1)], dim = -2),], dim = -1)
+            before_b_mu.unsqueeze(-1), change_b_mu.unsqueeze(-1), 
+            before_b_sigma.unsqueeze(-1), change_b_sigma.unsqueeze(-1)], dim = -1)
+        print(bias.shape)
         bias = self.bias(bias)
-        bias = get_stats(bias, self.args)
+        print(bias.shape)
+        bias_stats = get_stats(bias, self.args)
+        print(bias_stats.shape)
         
-        stats = torch.cat([weights, bias], dim = -1)
+        print("\n\nTogether:")
+        stats = torch.cat([errors_stats, weights_stats, bias_stats], dim = -1).unsqueeze(1).unsqueeze(1)
+        print(stats.shape)
         stats = stats.tile((1, errors.shape[1], errors.shape[2], 1))
+        print(stats.shape)
+        together = torch.cat([errors, stats], dim = -1)
+        print(together.shape)
     
-        dkl_out = self.dkl_out(torch.cat([errors, stats], dim = -1))
-        return(dkl_out)
+        dkl_out = self.dkl_out(together)
+        return(F.softplus(dkl_out))
     
         
         
@@ -175,11 +198,11 @@ if __name__ == "__main__":
     
     
     
-    errors_shape  = (1, 8, 10, 1)
-    w_mu_shape    = (1, (12 + 4) * args.hidden + 12 * args.hidden)
-    w_sigma_shape = (1, (12 + 4) * args.hidden + 12 * args.hidden)
-    b_mu_shape    = (1, args.hidden + 12)
-    b_sigma_shape = (1, args.hidden + 12)
+    errors_shape  = (3, 8, 10, 1)
+    w_mu_shape    = (3, (12 + 4) * args.hidden + 12 * args.hidden)
+    w_sigma_shape = (3, (12 + 4) * args.hidden + 12 * args.hidden)
+    b_mu_shape    = (3, args.hidden + 12)
+    b_sigma_shape = (3, args.hidden + 12)
 
     dkl_guesser = DKL_Guesser(args)
 

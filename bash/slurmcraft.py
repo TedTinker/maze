@@ -39,7 +39,7 @@ if(args.post == "False"):
 """
 #!/bin/bash -l
 {}
-#SBATCH --mem=32G
+#SBATCH --mem=2G
 ##SBATCH --constraint 32
 
 module load singularity
@@ -56,7 +56,7 @@ if(args.post == "True"):
 """
 #!/bin/bash -l
 {}
-#SBATCH --mem=32G
+#SBATCH --mem=2G
 ##SBATCH --constraint 32
 
 module load singularity
