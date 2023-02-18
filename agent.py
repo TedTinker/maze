@@ -105,14 +105,13 @@ class Agent:
         
         
         
-        #dkl_guess = self.dkl_guesser(
-        #    forward_errors,
-        #    weights_before[0], weights_before[1], weights_before[2], weights_before[3],
-        #    weights_after[0],  weights_after[1],  weights_after[3],  weights_after[3])
+        dkl_guess = self.dkl_guesser(
+            forward_errors.unsqueeze(0),
+            weights_before[0].unsqueeze(0), weights_before[1].unsqueeze(0), weights_before[2].unsqueeze(0), weights_before[3].unsqueeze(0),
+            weights_after[0].unsqueeze(0),  weights_after[1].unsqueeze(0),  weights_after[3].unsqueeze(0),  weights_after[3].unsqueeze(0))
         
         
         
-        # Do we need this? We could just calculate dkl_changes using each error! 
         if(self.args.curiosity == "friston"):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
