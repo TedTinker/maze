@@ -37,8 +37,11 @@ parser.add_argument('--critic_lr',          type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
 
 # DKL Guesser 
+parser.add_argument('--use_guesser',        type=bool,  default = False)
 parser.add_argument('--dkl_hidden',         type=int,   default = 16)
 parser.add_argument('--dkl_guesser_lr',     type=float, default = .01) 
+parser.add_argument('--dkl_collect',        type=int,   default = 1) 
+parser.add_argument('--dkl_buffer_capacity',type=int,   default = 16) 
 
 # Memory buffer
 parser.add_argument('--capacity',           type=int,   default = 100)

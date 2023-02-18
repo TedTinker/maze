@@ -7,6 +7,20 @@ from collections import namedtuple
 from utils import default_args
 
 
+
+class DKL_Buffer:
+    
+    def __init__(self, args = default_args):
+        self.args = args 
+
+    def push(self, *args):
+        pass
+        
+    def sample(self, *args):
+        return(None, None, None, None)
+        
+
+
 RecurrentBatch = namedtuple('RecurrentBatch', 'o a r d m')
 
 def as_probas(positive_values: np.array) -> np.array:

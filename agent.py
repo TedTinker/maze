@@ -9,7 +9,7 @@ from blitz.losses import kl_divergence_from_nn as b_kl_loss
 import numpy as np
 
 from utils import default_args, dkl, weights
-from buffer import RecurrentReplayBuffer
+from buffer import RecurrentReplayBuffer, DKL_Buffer
 from models import Forward, DKL_Guesser, Actor, Critic
 
 
@@ -57,6 +57,7 @@ class Agent:
         self.restart_memory()
         
     def restart_memory(self):
+        self.dkl_buffer = DKL_Buffer(self.args)
         self.memory = RecurrentReplayBuffer(self.args)
 
     def act(self, pos):
@@ -65,7 +66,7 @@ class Agent:
     
     
     
-    def learn(self, batch_size,):
+    def learn(self, batch_size, epochs):
                 
         self.steps += 1
 
@@ -105,14 +106,7 @@ class Agent:
         
         
         
-        dkl_guess = self.dkl_guesser(
-            forward_errors.unsqueeze(0),
-            weights_before[0].unsqueeze(0), weights_before[1].unsqueeze(0), weights_before[2].unsqueeze(0), weights_before[3].unsqueeze(0),
-            weights_after[0].unsqueeze(0),  weights_after[1].unsqueeze(0),  weights_after[3].unsqueeze(0),  weights_after[3].unsqueeze(0))
-        
-        
-        
-        if(self.args.curiosity == "friston"):
+        if(self.args.curiosity == "friston" and epochs % self.args.dkl_collect == 0):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
                 for step in range(rewards.shape[1]):
@@ -143,7 +137,22 @@ class Agent:
                     dkl_changes[episode, step] = dkl_change
             dkl_changes *= masks 
             if(dkl_changes.sum().item() != 0): dkl_change = dkl_changes.sum().item()
+            
+            self.dkl_buffer.push(forward_errors, weights_before, weights_after, dkl_changes)
+            
+            
+            
+        forward_errors_, weights_before_, weights_after_, dkl_changes_ = self.dkl_buffer.sample()
+        # Use them to train dkl_guesser!
+            
+            
                     
+        dkl_guess = self.dkl_guesser(
+            forward_errors.unsqueeze(0),
+            weights_before[0].unsqueeze(0), weights_before[1].unsqueeze(0), weights_before[2].unsqueeze(0), weights_before[3].unsqueeze(0),
+            weights_after[0].unsqueeze(0),  weights_after[1].unsqueeze(0),  weights_after[3].unsqueeze(0),  weights_after[3].unsqueeze(0))
+        
+        if(self.args.use_guesser): dkl_changes = dkl_guess
         
         
         # Get curiosity          

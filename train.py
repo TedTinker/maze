@@ -57,9 +57,8 @@ class Trainer():
         E = manager.counter(total = self.args.epochs, desc = "{}:".format(self.title), unit = "ticks", color = "blue")
         while(True):
             E.update()
-            self.e += 1
             r, spot_name = episode(self.agent)
-            l, e, ic, ie, dkl, naive, friston = self.agent.learn(batch_size = self.args.batch_size)
+            l, e, ic, ie, dkl, naive, friston = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
             self.plot_dict["rewards"].append(r)
             self.plot_dict["spot_names"].append(spot_name)
             self.plot_dict["mse"].append(l[0][0])
@@ -74,6 +73,7 @@ class Trainer():
             self.plot_dict["dkl_change"].append(dkl)
             self.plot_dict["naive"].append(naive)
             self.plot_dict["friston"].append(friston)
+            self.e += 1
             if(self.e >= self.args.epochs): 
                 print("\n\nDone training!")
                 break
