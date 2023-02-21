@@ -254,11 +254,12 @@ class Agent:
         
         if(mse_loss != None): mse_loss = mse_loss.item()
         if(dkl_loss != None): dkl_loss = dkl_loss.item()
+        if(guesser_loss != None): guesser_loss = guesser_loss.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): critic1_loss = critic1_loss.item()
         if(critic2_loss != None): critic2_loss = critic2_loss.item()
-        losses = np.array([[mse_loss, dkl_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
+        losses = np.array([[mse_loss, dkl_loss, guesser_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change, naive_curiosity.sum().detach(), friston_curiosity.sum().detach())
                      

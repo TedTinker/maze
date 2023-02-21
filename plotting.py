@@ -194,26 +194,11 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        # DKL
-        dkl_dict = get_quantiles(plot_dict, "dkl_change")
-    
-        ax = axs[9,i] if len(plot_dicts) > 1 else axs[9]
-        awesome_plot(ax, dkl_dict, "green", "DKL")
-        ax.set_ylabel("DKL")
-        ax.set_title(plot_dict["title"] + "\nDKL")
-        
-        ax = axs[10,i] if len(plot_dicts) > 1 else axs[10]
-        awesome_plot(ax, dkl_dict, "green", "DKL", min_max_dict["dkl_change"])
-        ax.set_ylabel("DKL")
-        ax.set_title(plot_dict["title"] + "\nDKL, shared min/max")
-        
-        
-        
         # Curiosities
         naive_dict = get_quantiles(plot_dict, "naive")
         friston_dict = get_quantiles(plot_dict, "friston")
         
-        ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
+        ax = axs[9,i] if len(plot_dicts) > 1 else axs[9]
         handles = []
         handles.append(awesome_plot(ax, naive_dict, "green", "Naive"))
         ax.set_ylabel("Naive")
@@ -223,7 +208,7 @@ def plots(plot_dicts, min_max_dict):
         ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nCuriosities")
         
-        ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
+        ax = axs[10,i] if len(plot_dicts) > 1 else axs[10]
         handles = []
         handles.append(awesome_plot(ax, naive_dict, "green", "Naive", min_max_dict["naive"]))
         ax.set_ylabel("Naive")
@@ -231,6 +216,22 @@ def plots(plot_dicts, min_max_dict):
         handles.append(awesome_plot(ax2, friston_dict, "red", "Friston", min_max_dict["friston"]))
         ax2.set_ylabel("Friston")
         ax.legend(handles = handles)
+        ax.set_title(plot_dict["title"] + "\nCuriosities, shared min/max")
+
+        
+        
+        # DKL-Guessing
+        guesser_dict = get_quantiles(plot_dict, "guesser")
+        
+        ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
+        awesome_plot(ax, guesser_dict, "green", "Loss")
+        ax.set_ylabel("Loss")
+        ax.set_title(plot_dict["title"] + "\nDKL Guesser Loss")
+        
+        ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
+        awesome_plot(ax, guesser_dict, "green", "Guesser Loss", min_max_dict["guesser"])
+        ax.set_ylabel("Loss")
+        ax.set_title(plot_dict["title"] + "\nDKL Guesser Loss, shared min/max")
         
         print(i, plot_dict["title"], duration(start_time))
 

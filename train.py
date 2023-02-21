@@ -44,7 +44,7 @@ class Trainer():
         self.plot_dict = {
             "title" : self.title,
             "rewards" : [], "spot_names" : [], 
-            "mse" : [], "dkl" : [], 
+            "mse" : [], "dkl" : [], "guesser" : [],
             "alpha" : [], "actor" : [], 
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
@@ -63,10 +63,11 @@ class Trainer():
             self.plot_dict["spot_names"].append(spot_name)
             self.plot_dict["mse"].append(l[0][0])
             self.plot_dict["dkl"].append(l[0][1])
-            self.plot_dict["alpha"].append(l[0][2])
-            self.plot_dict["actor"].append(l[0][3])
-            self.plot_dict["critic_1"].append(l[0][4])
-            self.plot_dict["critic_2"].append(l[0][5])
+            self.plot_dict["guesser"].append(l[0][2])
+            self.plot_dict["alpha"].append(l[0][3])
+            self.plot_dict["actor"].append(l[0][4])
+            self.plot_dict["critic_1"].append(l[0][5])
+            self.plot_dict["critic_2"].append(l[0][6])
             self.plot_dict["extrinsic"].append(e)
             self.plot_dict["intrinsic_curiosity"].append(ic)
             self.plot_dict["intrinsic_entropy"].append(ie)
