@@ -161,7 +161,7 @@ class Agent:
             weights_before[0].unsqueeze(0), weights_before[1].unsqueeze(0), weights_before[2].unsqueeze(0), weights_before[3].unsqueeze(0),
             weights_after[0].unsqueeze(0),  weights_after[1].unsqueeze(0),  weights_after[3].unsqueeze(0),  weights_after[3].unsqueeze(0))
                 
-        if(self.args.use_guesser): dkl_changes = dkl_guess
+        if(self.args.use_guesser == "True"): dkl_changes = dkl_guess
         
         
         # Get curiosity          
