@@ -19,7 +19,7 @@ class T_Maze:
         
     def obs(self):
         pos = [1 if spot.pos == self.agent_pos else 0 for spot in self.maze]
-        right = 0 ; left = 0 ; up = 0 ; down = 0 
+        right = 0 ; left = 0 ; up = 0 ; down = 0
         for i, spot in enumerate(self.maze):
             if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
             if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1 
@@ -45,7 +45,6 @@ class T_Maze:
                         return(choice(spot.exit_reward), spot.name, True)
                     else:
                         return(spot.exit_reward, spot.name, True)
-                break
         return(-1, "NONE", False)    
     
     def __str__(self):

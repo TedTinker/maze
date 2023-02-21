@@ -34,12 +34,11 @@ class Agent:
         self.forward = Forward(self.args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
+        self.forward_clone = Forward(self.args)
+        self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=self.args.clone_lr, weight_decay=0)
+        
         self.dkl_guesser = DKL_Guesser(self.args)
         self.dkl_guesser_opt = optim.Adam(self.dkl_guesser.parameters(), lr=self.args.dkl_guesser_lr, weight_decay=0)
-        
-        if(self.args.curiosity == "friston"):
-            self.forward_clone = Forward(self.args)
-            self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=self.args.clone_lr, weight_decay=0)
                            
         self.actor = Actor(self.args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=self.args.actor_lr, weight_decay=0)     
@@ -106,7 +105,7 @@ class Agent:
         
         
         
-        if(self.args.curiosity == "friston" and epochs % self.args.dkl_collect == 0):
+        if(epochs == 0 or (self.args.curiosity == "friston" and epochs % self.args.dkl_collect == 0)):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
                 for step in range(rewards.shape[1]):
@@ -141,9 +140,19 @@ class Agent:
             self.dkl_buffer.push(forward_errors, weights_before, weights_after, dkl_changes)
             
             
-            
+        
+        # Train DKL Guesser
         forward_errors_, weights_before_, weights_after_, dkl_changes_ = self.dkl_buffer.sample()
-        # Use them to train dkl_guesser!
+        dkl_guess_ = self.dkl_guesser(
+            forward_errors_,
+            weights_before_[0], weights_before_[1], weights_before_[2], weights_before_[3],
+            weights_after_[0],  weights_after_[1],  weights_after_[3],  weights_after_[3])
+        
+        guesser_loss = F.mse_loss(dkl_guess_, dkl_changes_)
+        
+        self.dkl_guesser_opt.zero_grad()
+        guesser_loss.backward()
+        self.dkl_guesser_opt.step()
             
             
                     
@@ -151,7 +160,7 @@ class Agent:
             forward_errors.unsqueeze(0),
             weights_before[0].unsqueeze(0), weights_before[1].unsqueeze(0), weights_before[2].unsqueeze(0), weights_before[3].unsqueeze(0),
             weights_after[0].unsqueeze(0),  weights_after[1].unsqueeze(0),  weights_after[3].unsqueeze(0),  weights_after[3].unsqueeze(0))
-        
+                
         if(self.args.use_guesser): dkl_changes = dkl_guess
         
         

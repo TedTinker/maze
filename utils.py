@@ -22,6 +22,7 @@ parser.add_argument('--device',             type=str,   default = "cpu")
 
 # Maze 
 parser.add_argument('--max_steps',          type=int,   default = 10)
+parser.add_argument('--wall_punishment',    type=int,   default = -1)
 
 # Training 
 parser.add_argument('--epochs',             type=int,   default = 1000)

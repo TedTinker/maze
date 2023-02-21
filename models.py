@@ -67,44 +67,28 @@ class DKL_Guesser(nn.Module):
                 before_w_mu, before_w_sigma, before_b_mu, before_b_sigma,
                 after_w_mu, after_w_sigma, after_b_mu, after_b_sigma):
         
-        print("ERRORS:")
-        print(errors.shape)
         errors = self.errors(errors)
-        print(errors.shape)
         errors_stats = get_stats(errors, self.args)
-        print(errors_stats.shape)
         
-        print("\n\nWeights:")
         change_w_mu  = after_w_mu - before_w_mu
         change_w_sigma = after_w_sigma - before_w_sigma
         weights = torch.cat([
             before_w_mu.unsqueeze(-1), change_w_mu.unsqueeze(-1),
             before_w_sigma.unsqueeze(-1), change_w_sigma.unsqueeze(-1)], dim = -1)
-        print(weights.shape)
         weights = self.weights(weights)
-        print(weights.shape)
         weights_stats = get_stats(weights, self.args)
-        print(weights_stats.shape)
         
-        print("\n\nBias:")
         change_b_mu  = after_b_mu - before_b_mu
         change_b_sigma = after_b_sigma - before_b_sigma
         bias = torch.cat([
             before_b_mu.unsqueeze(-1), change_b_mu.unsqueeze(-1), 
             before_b_sigma.unsqueeze(-1), change_b_sigma.unsqueeze(-1)], dim = -1)
-        print(bias.shape)
         bias = self.bias(bias)
-        print(bias.shape)
         bias_stats = get_stats(bias, self.args)
-        print(bias_stats.shape)
         
-        print("\n\nTogether:")
         stats = torch.cat([errors_stats, weights_stats, bias_stats], dim = -1).unsqueeze(1).unsqueeze(1)
-        print(stats.shape)
         stats = stats.tile((1, errors.shape[1], errors.shape[2], 1))
-        print(stats.shape)
         together = torch.cat([errors, stats], dim = -1)
-        print(together.shape)
     
         dkl_out = self.dkl_out(together)
         return(F.softplus(dkl_out))
@@ -203,6 +187,8 @@ if __name__ == "__main__":
     w_sigma_shape = (3, (12 + 4) * args.hidden + 12 * args.hidden)
     b_mu_shape    = (3, args.hidden + 12)
     b_sigma_shape = (3, args.hidden + 12)
+    
+    print(errors_shape, w_mu_shape, w_sigma_shape, b_mu_shape, b_sigma_shape)
 
     dkl_guesser = DKL_Guesser(args)
 
