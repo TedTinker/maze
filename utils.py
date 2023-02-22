@@ -65,6 +65,14 @@ parser.add_argument("--curiosity",          type=str,   default = "none")   # Wh
 # Saving data
 parser.add_argument('--keep_data',          type=int,   default = 10)
 
+default_args = parser.parse_args([])
+
+try:    args    = parser.parse_args()
+except: args, _ = parser.parse_known_args()
+
+if(default_args.alpha == "None"): default_args.alpha = None
+if(args.alpha == "None"):         args.alpha = None
+
 
 
 def get_args_name(default_args, args):
@@ -83,28 +91,14 @@ def get_args_name(default_args, args):
 
 
 
-if __name__ == "__main__":
-    print("\nSaving default arguments.\n")
-    try:    default_args    = parser.parse_args()
-    except: default_args, _ = parser.parse_known_args()
-    with open("saved/default_args.pickle", "wb") as handle:
-        pickle.dump(default_args, handle)
-    args = default_args
-else:
-    print("\nGetting new arguments.\n")
-    try:    args    = parser.parse_args()
-    except: args, _ = parser.parse_known_args()
-    with open("saved/default_args.pickle", "rb") as handle:
-        default_args = pickle.load(handle)
-    
-    if(args.name[:3] != "___"):
-        name = get_args_name(default_args, args)
-        args.name = name
-    
-    folder = "saved/" + args.arg_title
-    if(args.arg_title[:3] != "___"):
-        try: os.mkdir(folder)
-        except: pass
+if(args.name[:3] != "___"):
+    name = get_args_name(default_args, args)
+    args.name = name
+
+folder = "saved/" + args.arg_title
+if(args.arg_title[:3] != "___"):
+    try: os.mkdir(folder)
+    except: pass
 if(default_args.alpha == "None"): default_args.alpha = None
 if(args.alpha == "None"):         args.alpha = None
 
@@ -156,17 +150,6 @@ def dkl(mu_1, sigma_1, mu_2, sigma_2):
     out = (.5 * (term_1 + term_2 - term_3 - 1)).sum()
     out = torch.nan_to_num(out)
     return(out)
-
-
-
-if __name__ == "__main__":
-
-    mu_1 = torch.tensor([0])
-    mu_2 = torch.tensor([1])
-    sigma_1 = torch.tensor([2])
-    sigma_2 = torch.tensor([3])
-
-    print(dkl(mu_1, sigma_1, mu_2, sigma_2))
 
 
 # %%
