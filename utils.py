@@ -1,8 +1,7 @@
 #%% 
 
-import pickle
 import argparse
-#import sys ; sys.argv=[''] ; del sys
+#import sys ; sys.argv=[''] ; del sys           # Comment this out when using bash
 import os 
 
 if(os.getcwd().split("/")[-1] != "easy_maze"): os.chdir("easy_maze")
@@ -65,6 +64,8 @@ parser.add_argument("--curiosity",          type=str,   default = "none")   # Wh
 # Saving data
 parser.add_argument('--keep_data',          type=int,   default = 10)
 
+
+
 default_args = parser.parse_args([])
 
 try:    args    = parser.parse_args()
@@ -113,8 +114,6 @@ print("\n\n")
 
 
 def init_weights(m):
-    if isinstance(m, (BayesianModule)):
-        print("Not working on Bayesian yet!")
     try:
         torch.nn.init.xavier_normal_(m.weight)
         m.bias.data.fill_(0.01)
