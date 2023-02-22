@@ -164,6 +164,7 @@ class Agent:
         if(self.args.use_guesser == "True"): dkl_changes = dkl_guess
         
         
+        
         # Get curiosity          
         naive_curiosity   = self.args.naive_eta   * forward_errors   
         naive_curiosity *= masks.detach() 

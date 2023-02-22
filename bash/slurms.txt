@@ -7,11 +7,6 @@ e_n : --alpha None --curiosity naive
 e_f : --alpha None --curiosity friston
 
 e_f_g_1 : --alpha None --curiosity friston --use_guesser True
-e_f_g_2 : --alpha None --curiosity friston --use_guesser True --dkl_collect 10
-e_f_g_3 : --alpha None --curiosity friston --use_guesser True --dkl_collect 10 --dkl_guesser_lr .1
-e_f_g_4 : --alpha None --curiosity friston --use_guesser True --dkl_collect 10 --dkl_guesser_lr .5
-e_f_g_5 : --alpha None --curiosity friston --use_guesser True --dkl_collect 10 --dkl_guesser_lr 1
-e_f_g_6 : --alpha None --curiosity friston --use_guesser True --dkl_collect 10 --dkl_guesser_lr .1 --dkl_hidden 64
-e_f_g_7 : --alpha None --curiosity friston --use_guesser True --dkl_collect 10 --dkl_guesser_lr .1 --dkl_hidden 128
-e_f_g_8 : --alpha None --curiosity friston --use_guesser True --dkl_collect 10 --dkl_guesser_lr .1 --dkl_hidden 256
+e_f_g_2 : --alpha None --curiosity friston --use_guesser True --dkl_collect 2
+
 
