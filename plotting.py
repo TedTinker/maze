@@ -16,7 +16,7 @@ def get_quantiles(plot_dict, name):
     xs = [i for i, x in enumerate(plot_dict[name][0]) if x != None]
     lists = np.array(plot_dict[name], dtype=float)    
     lists = lists[:,xs]
-    quantile_dict = {"xs" : xs}
+    quantile_dict = {"xs" : [x * plot_dict["args"][0].keep_data for x in xs]}
     quantile_dict["min"] = np.min(lists, 0)
     quantile_dict["q10"] = np.quantile(lists, .1, 0)
     quantile_dict["q20"] = np.quantile(lists, .2, 0)
@@ -59,8 +59,8 @@ def plots(plot_dicts, min_max_dict):
     
         # Cumulative rewards
         rew_dict = get_quantiles(plot_dict, "rewards")
-        max_rewards = [10*i for i in range(len(plot_dict["rewards"][0]))]
-        min_rewards = [-1*i for i in range(len(plot_dict["rewards"][0]))]
+        max_rewards = [10*x for x in range(rew_dict["xs"][-1])]
+        min_rewards = [-1*x for x in range(rew_dict["xs"][-1])]
         
         ax = axs[0,i] if len(plot_dicts) > 1 else axs[0]
         awesome_plot(ax, rew_dict, "turquoise", "Reward")
@@ -240,5 +240,4 @@ def plots(plot_dicts, min_max_dict):
     # Done!
     fig.tight_layout(pad=1.0)
     plt.savefig("saved/plot.png", bbox_inches = "tight")
-    plt.show()
     plt.close()

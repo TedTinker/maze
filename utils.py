@@ -62,6 +62,9 @@ parser.add_argument("--dkl_rate",           type=float, default = .00005)   # Sc
 parser.add_argument("--sample_elbo",        type=int,   default = 5)        # Samples for elbo
 parser.add_argument("--curiosity",          type=str,   default = "none")   # Which kind of curiosity
 
+# Saving data
+parser.add_argument('--keep_data',          type=int,   default = 10)
+
 
 
 def get_args_name(default_args, args):
@@ -81,14 +84,14 @@ def get_args_name(default_args, args):
 
 
 if __name__ == "__main__":
-    print("\n\nSaving default arguments.\n\n")
+    print("\nSaving default arguments.\n")
     try:    default_args    = parser.parse_args()
     except: default_args, _ = parser.parse_known_args()
     with open("saved/default_args.pickle", "wb") as handle:
         pickle.dump(default_args, handle)
     args = default_args
 else:
-    print("\n\nGetting new arguments.\n\n")
+    print("\nGetting new arguments.\n")
     try:    args    = parser.parse_args()
     except: args, _ = parser.parse_known_args()
     with open("saved/default_args.pickle", "rb") as handle:

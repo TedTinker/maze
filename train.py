@@ -42,6 +42,7 @@ class Trainer():
         self.e = 0
         self.agent = Agent(args = self.args)
         self.plot_dict = {
+            "args" : self.args,
             "title" : self.title,
             "rewards" : [], "spot_names" : [], 
             "mse" : [], "dkl" : [], "guesser" : [],
@@ -79,9 +80,15 @@ class Trainer():
                 print("\n\nDone training!")
                 break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
+        
+        for key in self.plot_dict.keys():
+            if(key in ["args", "title"]): pass 
+            else:
+                self.plot_dict[key] = [v for i, v in enumerate(self.plot_dict[key]) if (i+1)%self.args.keep_data==0 or i==0 or (i+1)==len(self.plot_dict[key])]
+        
         min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in min_max_dict.keys():
-            if(not key in ["title", "spot_names"]):
+            if(not key in ["args", "title", "spot_names"]):
                 minimum = None ; maximum = None 
                 l = self.plot_dict[key]
                 l = deepcopy(l)

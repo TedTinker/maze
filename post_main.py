@@ -9,14 +9,14 @@ from plotting import plots
 if(args.arg_title[:3] != "___"):
     
     try:
-        print("\nTrying to load already-processed values...\n")
+        print("Trying to load already-processed values...\n")
         with open("saved/" + args.arg_title + "/" + "plot_dict.pickle", "rb") as handle: 
             plot_dict = pickle.load(handle)
         with open("saved/" + args.arg_title + "/" + "min_max_dict.pickle", "rb") as handle: 
             min_max_dict = pickle.load(handle)
-        print("\nAlready processed!\n")
+        print("Already processed!\n")
     except:
-        print("\nNo already-processed values. Processing!\n")
+        print("No already-processed values. Processing!\n")
         plot_dict = {} ; min_max_dict = {}
         files = os.listdir(folder) ; files.sort()
         
@@ -31,7 +31,7 @@ if(args.arg_title[:3] != "___"):
         d["title"] = args.name
             
         for key in min_max_dict.keys():
-            if(not key in ["title", "spot_names"]):
+            if(not key in ["args", "title", "spot_names"]):
                 minimum = None ; maximum = None
                 for min_max in min_max_dict[key]:
                     if(minimum == None):        minimum = min_max[0]

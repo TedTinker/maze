@@ -27,9 +27,9 @@ try:
         plot_dict = pickle.load(handle)
     with open("saved/" + args.arg_title + "/" + "min_max_dict.pickle", "rb") as handle: 
         min_max_dict = pickle.load(handle)
-    print("\nAlready trained!\n")
+    print("Already trained!\n")
 except: 
-    print("\nNo already-trained values. Training!\n")
+    print("No already-trained values. Training!\n")
     trainer = Trainer(args, "{}_{}".format(args.name, args.id))
     plot_dict, min_max_dict = trainer.train()
 
