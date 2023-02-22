@@ -1,6 +1,7 @@
 #%%
 
 import pickle
+import os
 
 from utils import args, folder
 from train import Trainer
@@ -20,15 +21,22 @@ def duration():
     change_time = change_time - datetime.timedelta(microseconds=change_time.microseconds)
     return(change_time)
 
+try:
+    print("\nTrying to load already-trained values...\n")
+    with open("saved/" + args.arg_title + "/" + "plot_dict.pickle", "rb") as handle: 
+        plot_dict = pickle.load(handle)
+    with open("saved/" + args.arg_title + "/" + "min_max_dict.pickle", "rb") as handle: 
+        min_max_dict = pickle.load(handle)
+    print("\nAlready trained!\n")
+except: 
+    print("\nNo already-trained values. Training!\n")
+    trainer = Trainer(args, "{}_{}".format(args.name, args.id))
+    plot_dict, min_max_dict = trainer.train()
 
-
-trainer = Trainer(args, "{}_{}".format(args.name, args.id))
-plot_dict, min_max_dict = trainer.train()
-
-with open(folder + "/plot_dict_{}.pickle".format(   str(args.id).zfill(3)), "wb") as handle:
-    pickle.dump(plot_dict, handle)
-with open(folder + "/min_max_dict_{}.pickle".format(str(args.id).zfill(3)), "wb") as handle:
-    pickle.dump(min_max_dict, handle)
+    with open(folder + "/plot_dict_{}.pickle".format(   str(args.id).zfill(3)), "wb") as handle:
+        pickle.dump(plot_dict, handle)
+    with open(folder + "/min_max_dict_{}.pickle".format(str(args.id).zfill(3)), "wb") as handle:
+        pickle.dump(min_max_dict, handle)
     
 print("Duration: {}".format(duration()))
 

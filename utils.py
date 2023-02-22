@@ -30,7 +30,7 @@ parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
 
 # Module 
-parser.add_argument('--hidden',             type=int,   default = 32)
+parser.add_argument('--hidden',             type=int,   default = 16)
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--clone_lr',           type=float, default = .001)
 parser.add_argument('--actor_lr',           type=float, default = .01) 
@@ -39,7 +39,7 @@ parser.add_argument('--alpha_lr',           type=float, default = .01)
 
 # DKL Guesser 
 parser.add_argument('--use_guesser',        type=bool,  default = False)
-parser.add_argument('--dkl_hidden',         type=int,   default = 16)
+parser.add_argument('--dkl_hidden',         type=int,   default = 32)
 parser.add_argument('--dkl_batch_size',     type=int,   default = 16)
 parser.add_argument('--dkl_guesser_lr',     type=float, default = .01) 
 parser.add_argument('--dkl_collect',        type=int,   default = 1) 

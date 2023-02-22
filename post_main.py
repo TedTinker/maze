@@ -7,36 +7,45 @@ from utils import args, folder
 from plotting import plots
 
 if(args.arg_title[:3] != "___"):
-        
-    plot_dict = {} ; min_max_dict = {}
-    files = os.listdir(folder) ; files.sort()
     
-    for file in files:
-        if(file.split("_")[0] == "plot"): d = plot_dict
-        if(file.split("_")[0] == "min"):  d = min_max_dict
-        with open(folder + "/" + file, "rb") as handle: 
-            saved_d = pickle.load(handle) ; os.remove(folder + "/" + file)
-        for key in saved_d.keys(): 
-            if(not key in d): d[key] = []
-            d[key].append(saved_d[key])
-    d["title"] = args.name
+    try:
+        print("\nTrying to load already-processed values...\n")
+        with open("saved/" + args.arg_title + "/" + "plot_dict.pickle", "rb") as handle: 
+            plot_dict = pickle.load(handle)
+        with open("saved/" + args.arg_title + "/" + "min_max_dict.pickle", "rb") as handle: 
+            min_max_dict = pickle.load(handle)
+        print("\nAlready processed!\n")
+    except:
+        print("\nNo already-processed values. Processing!\n")
+        plot_dict = {} ; min_max_dict = {}
+        files = os.listdir(folder) ; files.sort()
         
-    for key in min_max_dict.keys():
-        if(not key in ["title", "spot_names"]):
-            minimum = None ; maximum = None
-            for min_max in min_max_dict[key]:
-                if(minimum == None):        minimum = min_max[0]
-                elif(minimum > min_max[0]): minimum = min_max[0]
-                if(maximum == None):        maximum = min_max[1]
-                elif(maximum < min_max[1]): maximum = min_max[1]
-            min_max_dict[key] = (minimum, maximum)
-    
-    with open(folder + "/plot_dict.pickle", "wb") as handle:
-        pickle.dump(plot_dict, handle)
-    with open(folder + "/min_max_dict.pickle", "wb") as handle:
-        pickle.dump(min_max_dict, handle)
+        for file in files:
+            if(file.split("_")[0] == "plot"): d = plot_dict
+            if(file.split("_")[0] == "min"):  d = min_max_dict
+            with open(folder + "/" + file, "rb") as handle: 
+                saved_d = pickle.load(handle) ; os.remove(folder + "/" + file)
+            for key in saved_d.keys(): 
+                if(not key in d): d[key] = []
+                d[key].append(saved_d[key])
+        d["title"] = args.name
             
-    print("Done with {}!".format(args.name))
+        for key in min_max_dict.keys():
+            if(not key in ["title", "spot_names"]):
+                minimum = None ; maximum = None
+                for min_max in min_max_dict[key]:
+                    if(minimum == None):        minimum = min_max[0]
+                    elif(minimum > min_max[0]): minimum = min_max[0]
+                    if(maximum == None):        maximum = min_max[1]
+                    elif(maximum < min_max[1]): maximum = min_max[1]
+                min_max_dict[key] = (minimum, maximum)
+        
+        with open(folder + "/plot_dict.pickle", "wb") as handle:
+            pickle.dump(plot_dict, handle)
+        with open(folder + "/min_max_dict.pickle", "wb") as handle:
+            pickle.dump(min_max_dict, handle)
+                
+        print("Done with {}!".format(args.name))
     
 else:
     
