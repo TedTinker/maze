@@ -1,13 +1,13 @@
 #%% 
 
 import argparse
-#import sys ; sys.argv=[''] ; del sys           # Comment this out when using bash
 import os 
 
 if(os.getcwd().split("/")[-1] != "easy_maze"): os.chdir("easy_maze")
 print(os.getcwd())
 
 import torch
+from blitz.modules import BayesianLinear, BayesianLSTM
 from blitz.modules.base_bayesian_module import BayesianModule
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -62,14 +62,18 @@ parser.add_argument("--sample_elbo",        type=int,   default = 5)        # Sa
 parser.add_argument("--curiosity",          type=str,   default = "none")   # Which kind of curiosity
 
 # Saving data
-parser.add_argument('--keep_data',          type=int,   default = 10)
+parser.add_argument('--keep_data',          type=int,   default = 1)
 
 
-
-default_args = parser.parse_args([])
-
-try:    args    = parser.parse_args()
-except: args, _ = parser.parse_known_args()
+try:
+    default_args = parser.parse_args([])
+    try:    args    = parser.parse_args()
+    except: args, _ = parser.parse_known_args()
+except:
+    import sys ; sys.argv=[''] ; del sys           # Comment this out when using bash
+    default_args = parser.parse_args([])
+    try:    args    = parser.parse_args()
+    except: args, _ = parser.parse_known_args()
 
 if(default_args.alpha == "None"): default_args.alpha = None
 if(args.alpha == "None"):         args.alpha = None
@@ -97,7 +101,7 @@ if(args.name[:3] != "___"):
     args.name = name
 
 folder = "saved/" + args.arg_title
-if(args.arg_title[:3] != "___"):
+if(args.arg_title[:3] != "___" and args.arg_title != "default"):
     try: os.mkdir(folder)
     except: pass
 if(default_args.alpha == "None"): default_args.alpha = None
@@ -126,10 +130,18 @@ def weights(model):
     bias_mu = [] ;   bias_sigma = []
     for module in model.modules():
         if isinstance(module, (BayesianModule)):
-            weight_mu.append(module.weight_sampler.mu.clone().flatten())
-            weight_sigma.append(torch.log1p(torch.exp(module.weight_sampler.rho.clone().flatten())))
-            bias_mu.append(module.bias_sampler.mu.clone().flatten()) 
-            bias_sigma.append(torch.log1p(torch.exp(module.bias_sampler.rho.clone().flatten())))
+            if isinstance(module, (BayesianLinear)):
+                weight_mu.append(module.weight_sampler.mu.clone().flatten())
+                weight_sigma.append(torch.log1p(torch.exp(module.weight_sampler.rho.clone().flatten())))
+                bias_mu.append(module.bias_sampler.mu.clone().flatten()) 
+                bias_sigma.append(torch.log1p(torch.exp(module.bias_sampler.rho.clone().flatten())))
+            if isinstance(module, (BayesianLSTM)):
+                weight_mu.append(module.weight_ih_sampler.mu.clone().flatten())
+                weight_sigma.append(torch.log1p(torch.exp(module.weight_ih_sampler.rho.clone().flatten())))
+                weight_mu.append(module.weight_hh_sampler.mu.clone().flatten())
+                weight_sigma.append(torch.log1p(torch.exp(module.weight_hh_sampler.rho.clone().flatten())))
+                bias_mu.append(module.bias_sampler.mu.clone().flatten()) 
+                bias_sigma.append(torch.log1p(torch.exp(module.bias_sampler.rho.clone().flatten())))
     if(weight_mu == []):
         return(torch.zeros([1]), torch.zeros([1]), torch.zeros([1]), torch.zeros([1]))
     return(

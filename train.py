@@ -11,17 +11,19 @@ from agent import Agent
 
 
 
-def episode(agent, push = True, verbose = False):
+def episode(agent, push = True, verbose = True):
     done = False
     t_maze = T_Maze()
     steps = 0
     if(verbose): print("\nSTART!\n")
     with torch.no_grad():
+        h = None ; a = torch.zeros((1,4))
         while(done == False):
             if(verbose): print(t_maze)
             o = t_maze.obs()
-            a = agent.act(o)
-            r, spot_name, done = t_maze.action(a.tolist())
+            print(o.shape, a.shape)
+            a, h = agent.act(o, a, h)
+            r, spot_name, done = t_maze.action(a.squeeze(0).tolist(), verbose)
             no = t_maze.obs()
             steps += 1
             if(steps >= agent.args.max_steps): done = True ; r = -1
