@@ -8,6 +8,7 @@ from torchinfo import summary as torch_summary
 from blitz.modules import BayesianLinear, BayesianLSTM
 
 from utils import default_args, init_weights
+from maze import obs_size, action_size
 
 
 
@@ -23,7 +24,7 @@ class Summarizer(nn.Module):
         #    out_features = self.args.hidden)
         
         self.lstm = nn.LSTM(
-            input_size = 4 + 4,
+            input_size = obs_size + action_size,
             hidden_size = self.args.hidden,
             batch_first = True)
         
@@ -48,7 +49,7 @@ class Forward(nn.Module):
         self.sum = Summarizer(self.args)
     
         self.lin = nn.Sequential(
-            BayesianLinear(args.hidden + 4, 4))
+            BayesianLinear(args.hidden + action_size, obs_size))
                 
         
         self.lin.apply(init_weights)
@@ -58,7 +59,7 @@ class Forward(nn.Module):
         action = action.to(self.args.device)
         inner_state, hidden = self.sum(obs, prev_action, hidden)
         x = torch.cat([inner_state, action], -1)
-        pred_obs = F.sigmoid(self.lin(x))   
+        pred_obs = self.lin(x) # With sigma?
         return(pred_obs, inner_state, hidden)
 
 
@@ -139,8 +140,8 @@ class Actor(nn.Module):
         self.lin = nn.Sequential(
             nn.Linear(args.hidden, args.hidden),
             nn.LeakyReLU())
-        self.mu = nn.Linear(args.hidden, 4)
-        self.log_std_linear = nn.Linear(args.hidden, 4)
+        self.mu = nn.Linear(args.hidden, action_size)
+        self.log_std_linear = nn.Linear(args.hidden, action_size)
 
         self.lin.apply(init_weights)
         self.mu.apply(init_weights)
@@ -188,7 +189,7 @@ class Critic(nn.Module):
         self.sum = Summarizer(self.args)
                 
         self.lin = nn.Sequential(
-            nn.Linear(args.hidden + 4, args.hidden),
+            nn.Linear(args.hidden + action_size, args.hidden),
             nn.LeakyReLU(),
             nn.Linear(args.hidden, 1))
 
@@ -213,7 +214,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((1, 10, 4), (1, 10, 4), (1, 10, 4))))
+    print(torch_summary(forward, ((1, 10, obs_size), (1, 10, action_size), (1, 10, action_size))))
     
     
     
@@ -240,7 +241,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(actor)
     print()
-    print(torch_summary(actor, ((1, 10, 4), (1, 10, 4))))
+    print(torch_summary(actor, ((1, 10, obs_size), (1, 10, action_size))))
     
     
     
@@ -249,6 +250,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((1, 10, 4), (1, 10, 4), (1, 10, 4))))
+    print(torch_summary(critic, ((1, 10, obs_size), (1, 10, action_size), (1, 10, action_size))))
 
 # %%

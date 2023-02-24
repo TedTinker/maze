@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 from collections import namedtuple
 from utils import default_args
+from maze import obs_size, action_size
 
 
 
@@ -102,8 +103,8 @@ class RecurrentReplayBuffer:
         # hyper-parameters
       
         self.capacity = self.args.capacity
-        self.o_dim = 4
-        self.a_dim = 4
+        self.o_dim = obs_size
+        self.a_dim = action_size
       
         self.max_episode_len = args.max_steps + 1
       

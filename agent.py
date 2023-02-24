@@ -9,6 +9,7 @@ from blitz.losses import kl_divergence_from_nn as b_kl_loss
 import numpy as np
 
 from utils import default_args, dkl, weights
+from maze import action_size
 from buffer import RecurrentReplayBuffer, DKL_Buffer
 from models import Forward, DKL_Guesser, Actor, Critic
 
@@ -20,7 +21,7 @@ class Agent:
         
         self.args = args
         self.steps = 0
-        self.action_size = 4
+        self.action_size = action_size
         
         self.target_entropy = self.args.target_entropy # -dim(A)
         self.alpha = 1
@@ -123,7 +124,7 @@ class Agent:
                             prev_actions[episode, step].unsqueeze(0).unsqueeze(0), 
                             actions[episode, step].unsqueeze(0).unsqueeze(0), 
                             hidden if hidden == None else (hidden[0].detach(), hidden[1].detach()))            
-                        errors_ = F.mse_loss(pred_obs_, next_obs.detach()[episode, step], reduction = "none") 
+                        errors_ = F.mse_loss(pred_obs_, next_obs.detach()[episode, step].unsqueeze(0).unsqueeze(0), reduction = "none") 
                         errors_ = torch.sum(errors_, -1).unsqueeze(-1)
                         forward_errors_ += errors_ / self.args.sample_elbo
                         dkl_loss_ += self.args.dkl_rate * b_kl_loss(self.forward_clone) / self.args.sample_elbo
@@ -247,7 +248,7 @@ class Agent:
 
             if self._action_prior == "normal":
                 loc = torch.zeros(self.action_size, dtype=torch.float64)
-                scale_tril = torch.tensor([[1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]], dtype=torch.float64)
+                scale_tril = torch.tensor([[1, 0], [1, 1]], dtype=torch.float64)
                 policy_prior = MultivariateNormal(loc=loc, scale_tril=scale_tril)
                 policy_prior_log_probs = policy_prior.log_prob(actions.cpu()).unsqueeze(-1)
             elif self._action_prior == "uniform":
