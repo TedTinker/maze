@@ -28,7 +28,7 @@ slurm_dict = {}
 f = open("slurms.txt", "r")
 slurms = f.readlines()
 for line in slurms:
-    if(line == "\n"): pass 
+    if(line[0] in ["\n", "#"]): pass 
     else:
         arg_title, text = line.split(":")
         slurm_dict[arg_title.strip()] = text.strip()

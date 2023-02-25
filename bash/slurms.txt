@@ -4,9 +4,18 @@ e   : --alpha None
 n   : --curiosity naive
 e_n : --alpha None --curiosity naive
 
-e_f : --alpha None --curiosity friston
+e_f : --alpha None --curiosity free
+e_f_2 : --alpha None --curiosity free --forward_sum_bayes True --dkl_rate .000005
 
-e_f_g_1 : --alpha None --curiosity friston --use_guesser True
-e_f_g_2 : --alpha None --curiosity friston --use_guesser True --dkl_collect 2
+
+
+
+
+
+
+
+# Can we get a dkl_guesser working? Could save LOTS of time.
+e_f_g_1 : --alpha None --curiosity free --use_guesser True
+e_f_g_2 : --alpha None --curiosity free --use_guesser True --dkl_collect 2
 
 

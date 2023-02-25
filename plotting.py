@@ -196,15 +196,15 @@ def plots(plot_dicts, min_max_dict):
         
         # Curiosities
         naive_dict = get_quantiles(plot_dict, "naive")
-        friston_dict = get_quantiles(plot_dict, "friston")
+        free_dict = get_quantiles(plot_dict, "free")
         
         ax = axs[9,i] if len(plot_dicts) > 1 else axs[9]
         handles = []
         handles.append(awesome_plot(ax, naive_dict, "green", "Naive"))
         ax.set_ylabel("Naive")
         ax2 = ax.twinx()
-        handles.append(awesome_plot(ax2, friston_dict, "red", "Friston"))
-        ax2.set_ylabel("Friston")
+        handles.append(awesome_plot(ax2, free_dict, "red", "Free"))
+        ax2.set_ylabel("Free")
         ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nCuriosities")
         
@@ -213,8 +213,8 @@ def plots(plot_dicts, min_max_dict):
         handles.append(awesome_plot(ax, naive_dict, "green", "Naive", min_max_dict["naive"]))
         ax.set_ylabel("Naive")
         ax2 = ax.twinx()
-        handles.append(awesome_plot(ax2, friston_dict, "red", "Friston", min_max_dict["friston"]))
-        ax2.set_ylabel("Friston")
+        handles.append(awesome_plot(ax2, free_dict, "red", "Free", min_max_dict["free"]))
+        ax2.set_ylabel("Free")
         ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nCuriosities, shared min/max")
 

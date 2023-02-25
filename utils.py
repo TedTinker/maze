@@ -23,18 +23,34 @@ parser.add_argument('--device',             type=str,   default = "cpu")
 parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--wall_punishment',    type=int,   default = -1)
 
-# Training 
-parser.add_argument('--epochs',             type=int,   default = 1000)
-parser.add_argument('--batch_size',         type=int,   default = 8)
-parser.add_argument('--GAMMA',              type=int,   default = .99)
-
 # Module 
 parser.add_argument('--hidden',             type=int,   default = 16)
+parser.add_argument('--forward_sum_bayes',  type=bool,  default = False)
+parser.add_argument("--dkl_rate",           type=float, default = .00005)   # Scale bayesian dkl
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--clone_lr',           type=float, default = .001)
 parser.add_argument('--actor_lr',           type=float, default = .01) 
 parser.add_argument('--critic_lr',          type=float, default = .01) 
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
+
+# Memory buffer
+parser.add_argument('--capacity',           type=int,   default = 100)
+parser.add_argument('--replacement',        type=str,   default = "index")
+parser.add_argument('--selection',          type=str,   default = "uniform")
+parser.add_argument('--power',              type=float, default = 1)
+
+# Training 
+parser.add_argument('--epochs',             type=int,   default = 1000)
+parser.add_argument('--batch_size',         type=int,   default = 8)
+parser.add_argument('--GAMMA',              type=int,   default = .99)
+parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors
+parser.add_argument("--alpha",              type=str,   default = 0)        # Soft-Actor-Critic entropy aim
+parser.add_argument("--target_entropy",     type=float, default = -2)       # Soft-Actor-Critic entropy aim
+parser.add_argument("--naive_eta",          type=float, default = 1)        # Scale curiosity
+parser.add_argument("--free_eta",        type=float, default = .01)      # Scale curiosity
+parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
+parser.add_argument("--sample_elbo",        type=int,   default = 5)        # Samples for elbo
+parser.add_argument("--curiosity",          type=str,   default = "none")   # Which kind of curiosity
 
 # DKL Guesser 
 parser.add_argument('--use_guesser',        type=bool,  default = False)
@@ -43,23 +59,6 @@ parser.add_argument('--dkl_batch_size',     type=int,   default = 16)
 parser.add_argument('--dkl_guesser_lr',     type=float, default = .01) 
 parser.add_argument('--dkl_collect',        type=int,   default = 1) 
 parser.add_argument('--dkl_buffer_capacity',type=int,   default = 128) 
-
-# Memory buffer
-parser.add_argument('--capacity',           type=int,   default = 100)
-parser.add_argument('--replacement',        type=str,   default = "index")
-parser.add_argument('--selection',          type=str,   default = "uniform")
-parser.add_argument('--power',              type=float, default = 1)
-
-# Training
-parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors
-parser.add_argument("--alpha",              type=str,   default = 0)        # Soft-Actor-Critic entropy aim
-parser.add_argument("--target_entropy",     type=float, default = -2)       # Soft-Actor-Critic entropy aim
-parser.add_argument("--naive_eta",          type=float, default = 1)        # Scale curiosity
-parser.add_argument("--friston_eta",        type=float, default = .01)      # Scale curiosity
-parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
-parser.add_argument("--dkl_rate",           type=float, default = .00005)   # Scale bayesian dkl
-parser.add_argument("--sample_elbo",        type=int,   default = 5)        # Samples for elbo
-parser.add_argument("--curiosity",          type=str,   default = "none")   # Which kind of curiosity
 
 # Saving data
 parser.add_argument('--keep_data',          type=int,   default = 1)

@@ -11,7 +11,7 @@ from agent import Agent
 
 
 
-def episode(agent, push = True, verbose = True):
+def episode(agent, push = True, verbose = False):
     done = False
     t_maze = T_Maze()
     steps = 0
@@ -21,10 +21,10 @@ def episode(agent, push = True, verbose = True):
         while(done == False):
             if(verbose): print(t_maze)
             o = t_maze.obs()
-            print(o.shape, a.shape)
+            if(verbose): print(o.shape, a.shape)
             a, h = agent.act(o, a, h)
             action = a.squeeze(0).tolist()
-            print(action)
+            if(verbose): print(action)
             r, spot_name, done = t_maze.action(action[0], action[1], verbose)
             no = t_maze.obs()
             steps += 1
@@ -54,7 +54,7 @@ class Trainer():
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
             "intrinsic_entropy" : [], "dkl_change" : [],
-            "naive" : [], "friston" : []}
+            "naive" : [], "free" : []}
 
     def train(self):
         self.agent.train()
@@ -63,7 +63,7 @@ class Trainer():
         while(True):
             E.update()
             r, spot_name = episode(self.agent)
-            l, e, ic, ie, dkl, naive, friston = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
+            l, e, ic, ie, dkl, naive, free = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
             self.plot_dict["rewards"].append(r)
             self.plot_dict["spot_names"].append(spot_name)
             self.plot_dict["mse"].append(l[0][0])
@@ -78,7 +78,7 @@ class Trainer():
             self.plot_dict["intrinsic_entropy"].append(ie)
             self.plot_dict["dkl_change"].append(dkl)
             self.plot_dict["naive"].append(naive)
-            self.plot_dict["friston"].append(friston)
+            self.plot_dict["free"].append(free)
             self.e += 1
             if(self.e >= self.args.epochs): 
                 print("\n\nDone training!")

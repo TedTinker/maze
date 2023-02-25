@@ -109,7 +109,7 @@ class Agent:
         
         
         
-        if(epochs == 0 or (self.args.curiosity == "friston" and epochs % self.args.dkl_collect == 0)):
+        if(epochs == 0 or (self.args.curiosity == "free" and epochs % self.args.dkl_collect == 0)):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
                 hidden = None
@@ -177,13 +177,13 @@ class Agent:
         # Get curiosity          
         naive_curiosity   = self.args.naive_eta   * forward_errors   
         naive_curiosity *= masks.detach() 
-        friston_curiosity = self.args.friston_eta * dkl_changes  
-        friston_curiosity *= masks.detach()
+        free_curiosity = self.args.free_eta * dkl_changes  
+        free_curiosity *= masks.detach()
         if(self.args.curiosity == "naive"):
             curiosity = naive_curiosity
             #print("\nMSE curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
-        elif(self.args.curiosity == "friston"):
-            curiosity = friston_curiosity
+        elif(self.args.curiosity == "free"):
+            curiosity = free_curiosity
             #print("\nFEB curiosity: {}, {}.\n".format(curiosity.shape, torch.sum(curiosity)))
         else:
             curiosity = torch.zeros(rewards.shape)
@@ -280,7 +280,7 @@ class Agent:
         if(critic2_loss != None): critic2_loss = critic2_loss.item()
         losses = np.array([[mse_loss, dkl_loss, guesser_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
-        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change, naive_curiosity.sum().detach(), friston_curiosity.sum().detach())
+        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, dkl_change, naive_curiosity.sum().detach(), free_curiosity.sum().detach())
                      
     def soft_update(self, local_model, target_model, tau):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):

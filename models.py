@@ -14,27 +14,30 @@ from maze import obs_size, action_size
 
 class Summarizer(nn.Module):
     
-    def __init__(self, args = default_args):
+    def __init__(self, args = default_args, bayes = False):
         super(Summarizer, self).__init__()
         
         self.args = args
         
-        #self.lstm = BayesianLSTM(
-        #    in_features = 4 + 4,
-        #    out_features = self.args.hidden)
-        
-        self.lstm = nn.LSTM(
-            input_size = obs_size + action_size,
-            hidden_size = self.args.hidden,
-            batch_first = True)
+        self.bayes = bayes
+        if(bayes):
+            self.lstm = BayesianLSTM(
+                in_features = obs_size + action_size,
+                out_features = self.args.hidden)
+        else:
+            self.lstm = nn.LSTM(
+                input_size = obs_size + action_size,
+                hidden_size = self.args.hidden,
+                batch_first = True)
         
         self.lstm.apply(init_weights)
         
     def forward(self, obs, prev_action, hidden = None):
         obs = obs.to(self.args.device) ; prev_action = prev_action.to(self.args.device)
         x = torch.cat([obs, prev_action], -1)
-        #inner_state, hidden = self.lstm(x, hidden, None)    
-        inner_state, hidden = self.lstm(x, hidden)    
+        #print(x.shape, hidden if hidden == None else (hidden[0].shape, hidden[1].shape))
+        if(self.bayes): inner_state, hidden = self.lstm(x, hidden, None)    
+        else:           inner_state, hidden = self.lstm(x, hidden)    
         return(inner_state, hidden)
     
     
@@ -46,7 +49,7 @@ class Forward(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args)
+        self.sum = Summarizer(self.args, args.forward_sum_bayes)
     
         self.lin = nn.Sequential(
             BayesianLinear(args.hidden + action_size, obs_size))
@@ -97,6 +100,8 @@ class DKL_Guesser(nn.Module):
     def forward(self, errors, 
                 before_w_mu, before_w_sigma, before_b_mu, before_b_sigma,
                 after_w_mu, after_w_sigma, after_b_mu, after_b_sigma):
+        
+        #print(errors.shape, before_w_mu.shape, before_w_sigma.shape, before_b_mu.shape, before_b_sigma.shape)
         
         errors = self.errors(errors)
         errors_stats = get_stats(errors)

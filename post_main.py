@@ -55,9 +55,6 @@ else:
     order = order.split("+")
     order = [o for o in order if o != "break"]
 
-    print("\n\n")
-    print(os.listdir())
-    print("\n\n")
     for name in order:
         with open("saved/" + name + "/" + "plot_dict.pickle", "rb") as handle: 
             plot_dicts.append(pickle.load(handle))
