@@ -5,7 +5,7 @@ n   : --curiosity naive
 e_n : --alpha None --curiosity naive
 
 e_f : --alpha None --curiosity free
-e_f_2 : --alpha None --curiosity free --forward_sum_bayes True --dkl_rate .000005
+e_f_2 : --alpha None --curiosity free --forward_sum_bayes True --dkl_rate .000004
 
 
 
