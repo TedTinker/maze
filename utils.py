@@ -25,7 +25,7 @@ parser.add_argument('--wall_punishment',    type=int,   default = -1)
 
 # Module 
 parser.add_argument('--hidden',             type=int,   default = 16)
-parser.add_argument('--forward_sum_bayes',  type=bool,  default = False)
+parser.add_argument('--forward_sum_bayes',  type=bool,  default = True)
 parser.add_argument("--dkl_rate",           type=float, default = .00005)   # Scale bayesian dkl
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--clone_lr',           type=float, default = .001)
@@ -47,7 +47,7 @@ parser.add_argument("--d",                  type=int,   default = 2)        # De
 parser.add_argument("--alpha",              type=str,   default = 0)        # Soft-Actor-Critic entropy aim
 parser.add_argument("--target_entropy",     type=float, default = -2)       # Soft-Actor-Critic entropy aim
 parser.add_argument("--naive_eta",          type=float, default = 1)        # Scale curiosity
-parser.add_argument("--free_eta",        type=float, default = .01)      # Scale curiosity
+parser.add_argument("--free_eta",           type=float, default = .01)      # Scale curiosity
 parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
 parser.add_argument("--sample_elbo",        type=int,   default = 5)        # Samples for elbo
 parser.add_argument("--curiosity",          type=str,   default = "none")   # Which kind of curiosity

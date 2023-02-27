@@ -54,6 +54,8 @@ else:
     order = args.name[3:-3]
     order = order.split("+")
     order = [o for o in order if o != "break"]
+    
+    print(order)
 
     for name in order:
         with open("saved/" + name + "/" + "plot_dict.pickle", "rb") as handle: 

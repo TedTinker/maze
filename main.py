@@ -1,7 +1,6 @@
 #%%
 
 import pickle
-import os
 
 from utils import args, folder
 from train import Trainer

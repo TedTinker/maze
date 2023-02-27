@@ -11,18 +11,22 @@ import os
 try:    os.chdir("easy_maze/bash")
 except: pass
 
+
+
 if(args.comp == "deigo"):
 	partition = """
 #SBATCH --partition=short
 #SBATCH --time 2:00:00
 """
 
-if(args.comp == "saion"):
+elif(args.comp == "saion"):
 	partition = """
 #SBATCH --partition=taniu
 #SBATCH --gres=gpu:1
 #SBATCH --time 48:00:00
 """
+
+
 
 slurm_dict = {}
 f = open("slurms.txt", "r")
@@ -33,8 +37,10 @@ for line in slurms:
         arg_title, text = line.split(":")
         slurm_dict[arg_title.strip()] = text.strip()
         
+        
+        
 if(args.post == "False"):
-    with open("main_{}.slurm".format(args.arg_title), "a") as f:
+    with open("main_{}.slurm".format(args.arg_title), "a") as f: # First empty it!
         f.write(
 """
 #!/bin/bash -l
@@ -46,12 +52,14 @@ module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --id ${{SLURM_ARRAY_TASK_ID}} --arg_title {} {}
     """.format(partition, args.arg_title, slurm_dict[args.arg_title])[1:])
         
-if(args.post == "True"):
+        
+        
+else:
     if(args.arg_title[:3] == "___"): 
         slurm_dict[args.arg_title] = "--name {}".format(args.arg_title)
         name = "final"
     else: name = args.arg_title
-    with open("post_{}.slurm".format(name), "a") as f:
+    with open("post_{}.slurm".format(name), "a") as f: # First empty it!
         f.write(
 """
 #!/bin/bash -l
