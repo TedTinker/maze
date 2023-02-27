@@ -194,11 +194,11 @@ class Agent:
         
         
         
-        ## Get inner states 
-        #with torch.no_grad():
-        #    inner_states, _ = self.forward.forward_1(all_obs, all_actions)
-        #    next_inner_states = inner_states[:,1:]
-        #    inner_states = inner_states[:,:-1]
+        # Get inner states 
+        with torch.no_grad():
+            all_inner_states, _ = self.forward.sum(all_obs, all_actions)
+            next_inner_states = all_inner_states[:,1:]
+            inner_states = all_inner_states[:,:-1]
         
                 
                 

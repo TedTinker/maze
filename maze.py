@@ -2,11 +2,15 @@
 from random import choice
 import torch
 
+
+
 class Spot:
     
     def __init__(self, pos, exit_reward = None, name = "NONE"):
         self.pos = pos ; self.exit_reward = exit_reward
         self.name = name
+        
+        
 
 class T_Maze:
     

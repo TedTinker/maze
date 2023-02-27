@@ -53,7 +53,6 @@ class Forward(nn.Module):
     
         self.lin = nn.Sequential(
             BayesianLinear(args.hidden + action_size, obs_size))
-                
         
         self.lin.apply(init_weights)
         self.to(args.device)
