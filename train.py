@@ -6,7 +6,7 @@ from itertools import accumulate
 from copy import deepcopy
 
 from utils import default_args
-from maze import T_Maze, action_size
+from maze import T_Maze
 from agent import Agent
 
 
@@ -17,14 +17,11 @@ def episode(agent, push = True, verbose = False):
     steps = 0
     if(verbose): print("\nSTART!\n")
     with torch.no_grad():
-        h = None ; a = torch.zeros((1,action_size))
         while(done == False):
             if(verbose): print(t_maze)
             o = t_maze.obs()
-            if(verbose): print(o.shape, a.shape)
-            a, h = agent.act(o, a, h)
+            a = agent.act(o)
             action = a.squeeze(0).tolist()
-            if(verbose): print(action)
             r, spot_name, done = t_maze.action(action[0], action[1], verbose)
             no = t_maze.obs()
             steps += 1
@@ -46,7 +43,6 @@ class Trainer():
         self.e = 0
         self.agent = Agent(args = self.args)
         self.plot_dict = {
-            "args" : self.args,
             "title" : self.title,
             "rewards" : [], "spot_names" : [], 
             "mse" : [], "dkl" : [], "guesser" : [],
@@ -54,7 +50,7 @@ class Trainer():
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
             "intrinsic_entropy" : [], "dkl_change" : [],
-            "naive" : [], "free" : []}
+            "naive" : [], "friston" : []}
 
     def train(self):
         self.agent.train()
@@ -63,7 +59,7 @@ class Trainer():
         while(True):
             E.update()
             r, spot_name = episode(self.agent)
-            l, e, ic, ie, dkl, naive, free = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
+            l, e, ic, ie, dkl, naive, friston = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
             self.plot_dict["rewards"].append(r)
             self.plot_dict["spot_names"].append(spot_name)
             self.plot_dict["mse"].append(l[0][0])
@@ -78,21 +74,15 @@ class Trainer():
             self.plot_dict["intrinsic_entropy"].append(ie)
             self.plot_dict["dkl_change"].append(dkl)
             self.plot_dict["naive"].append(naive)
-            self.plot_dict["free"].append(free)
+            self.plot_dict["friston"].append(friston)
             self.e += 1
             if(self.e >= self.args.epochs): 
                 print("\n\nDone training!")
                 break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
-        
-        for key in self.plot_dict.keys():
-            if(key in ["args", "title"]): pass 
-            else:
-                self.plot_dict[key] = [v for i, v in enumerate(self.plot_dict[key]) if (i+1)%self.args.keep_data==0 or i==0 or (i+1)==len(self.plot_dict[key])]
-        
         min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in min_max_dict.keys():
-            if(not key in ["args", "title", "spot_names"]):
+            if(not key in ["title", "spot_names"]):
                 minimum = None ; maximum = None 
                 l = self.plot_dict[key]
                 l = deepcopy(l)

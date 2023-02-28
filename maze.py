@@ -22,13 +22,15 @@ class T_Maze:
         self.agent_pos = (0, 0)
         
     def obs(self):
+        pos = [1 if spot.pos == self.agent_pos else 0 for spot in self.maze]
         right = 0 ; left = 0 ; up = 0 ; down = 0
-        for spot in self.maze:
+        for i, spot in enumerate(self.maze):
             if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
             if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1 
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1 
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1 
-        return(torch.tensor([right, left, up, down]).unsqueeze(0).float())
+        pos += [right, left, up, down]
+        return(torch.tensor(pos).unsqueeze(0).float())
         
     def action(self, x, y, verbose = False):
         if(verbose): print(x, y)
@@ -73,9 +75,9 @@ if __name__ == "__main__":
     print(t_maze)
     print(t_maze.obs())
     
-    actions = [[1,0,0,0], [0,0,1,0], [0,1,0,0]]
+    actions = [[1,0], [0,1], [-1,0]]
     for action in actions:
-        reward, name, done = t_maze.action(action)
+        reward, name, done = t_maze.action(action[0], action[1])
         print("\n\n\n")
         print("Action: {}.".format(action), "\n") 
         print(t_maze)
