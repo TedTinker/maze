@@ -112,24 +112,19 @@ class Agent:
         if(epochs == 0 or (self.args.curiosity == "free" and epochs % self.args.dkl_collect == 0)):
             dkl_changes = torch.zeros(rewards.shape)
             for episode in range(rewards.shape[0]):
-                hidden = None
                 for step in range(rewards.shape[1]):
                     if(masks[episode, step] == 0): dkl_changes[episode, step] = 0 ; break
                     self.forward_clone.load_state_dict(old_state_dict)
-                    forward_errors_ = torch.zeros(rewards.shape)
+                    forward_errors_ = 0
                     dkl_loss_ = 0
                     for _ in range(self.args.sample_elbo):
-                        pred_obs_, _, new_hidden = self.forward_clone(
-                            obs[episode, step].unsqueeze(0).unsqueeze(0), 
-                            prev_actions[episode, step].unsqueeze(0).unsqueeze(0), 
-                            actions[episode, step].unsqueeze(0).unsqueeze(0), 
-                            hidden if hidden == None else (hidden[0].detach(), hidden[1].detach()))            
-                        errors_ = F.mse_loss(pred_obs_, next_obs.detach()[episode, step].unsqueeze(0).unsqueeze(0), reduction = "none") 
-                        errors_ = torch.sum(errors_, -1).unsqueeze(-1)
+                        pred_obs_, _, _ = self.forward_clone(
+                            obs[episode, 0:step+1].unsqueeze(0), 
+                            prev_actions[episode, 0:step+1].unsqueeze(0), 
+                            actions[episode, 0:step+1].unsqueeze(0))
+                        errors_ = F.mse_loss(pred_obs_[:,step], next_obs.detach()[episode, step].unsqueeze(0)) 
                         forward_errors_ += errors_ / self.args.sample_elbo
                         dkl_loss_ += self.args.dkl_rate * b_kl_loss(self.forward_clone) / self.args.sample_elbo
-                    hidden = new_hidden
-                    forward_errors_ *= masks.detach()
                     mse_loss_ = forward_errors_.sum()
                     forward_loss_ = mse_loss_ + dkl_loss_
             

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torchinfo import summary as torch_summary
 from blitz.modules import BayesianLinear, BayesianLSTM
 
-from utils import default_args, init_weights
+from utils import default_args, init_weights, weights
 from maze import obs_size, action_size
 
 
@@ -35,7 +35,6 @@ class Summarizer(nn.Module):
     def forward(self, obs, prev_action, hidden = None):
         obs = obs.to(self.args.device) ; prev_action = prev_action.to(self.args.device)
         x = torch.cat([obs, prev_action], -1)
-        #print(x.shape, hidden if hidden == None else (hidden[0].shape, hidden[1].shape))
         if(self.bayes): inner_state, hidden = self.lstm(x, hidden, None)    
         else:           inner_state, hidden = self.lstm(x, hidden)    
         return(inner_state, hidden)
@@ -58,10 +57,9 @@ class Forward(nn.Module):
         self.to(args.device)
         
     def forward(self, obs, prev_action, action, hidden = None):
-        action = action.to(self.args.device)
         inner_state, hidden = self.sum(obs, prev_action, hidden)
         x = torch.cat([inner_state, action], -1)
-        pred_obs = self.lin(x) # With sigma?
+        pred_obs = self.lin(x) # With sigmoid?
         return(pred_obs, inner_state, hidden)
 
 
@@ -99,9 +97,7 @@ class DKL_Guesser(nn.Module):
     def forward(self, errors, 
                 before_w_mu, before_w_sigma, before_b_mu, before_b_sigma,
                 after_w_mu, after_w_sigma, after_b_mu, after_b_sigma):
-        
-        #print(errors.shape, before_w_mu.shape, before_w_sigma.shape, before_b_mu.shape, before_b_sigma.shape)
-        
+                
         errors = self.errors(errors)
         errors_stats = get_stats(errors)
         
@@ -169,7 +165,6 @@ class Actor(nn.Module):
         log_prob = Normal(mu, std).log_prob(mu + e * std) - \
             torch.log(1 - action.pow(2) + epsilon)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
-        #action = F.softmax(action, -1)
         return(action, log_prob, hidden)
 
     def get_action(self, obs, prev_action, hidden = None):
@@ -178,7 +173,6 @@ class Actor(nn.Module):
         dist = Normal(0, 1)
         e      = dist.sample(std.shape).to(self.args.device)
         action = torch.tanh(mu + e * std).cpu()
-        #action = F.softmax(action, -1)
         return(action[0], hidden)
     
     
@@ -222,11 +216,13 @@ if __name__ == "__main__":
     
     
     
+    w_mu, w_sigma, b_mu, b_sigma = weights(forward)
+    
     errors_shape  = (3, 8, 10, 1)
-    w_mu_shape    = (3, (12 + 4) * args.hidden + 12 * args.hidden)
-    w_sigma_shape = (3, (12 + 4) * args.hidden + 12 * args.hidden)
-    b_mu_shape    = (3, args.hidden + 12)
-    b_sigma_shape = (3, args.hidden + 12)
+    w_mu_shape    = (3, w_mu.shape[0])
+    w_sigma_shape = (3, w_sigma.shape[0])
+    b_mu_shape    = (3, b_mu.shape[0])
+    b_sigma_shape = (3, b_sigma.shape[0])
     
     dkl_guesser = DKL_Guesser(args)
 
