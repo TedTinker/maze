@@ -76,14 +76,14 @@ class Agent:
         # Train forward
         pred_obs, mu_b, std_b = self.forward(obs, actions)   
         errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none").sum(-1).unsqueeze(-1)
-        complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape), torch.ones(std_b.shape))
+        complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape), torch.ones(std_b.shape) * self.args.sigma)
                 
         errors = errors * masks.detach()
         error_loss = errors.mean()
         complexity = complexity * masks.detach()
         complexity_loss = complexity.mean()
-        forward_loss = error_loss + self.args.complexity * complexity_loss
-        if(self.args.complexity == 0): complexity = None ; complexity_loss = None
+        forward_loss = error_loss + self.args.beta * complexity_loss
+        if(self.args.beta == 0): complexity = None ; complexity_loss = None
         
         self.forward_opt.zero_grad()
         forward_loss.backward()
@@ -93,7 +93,7 @@ class Agent:
         
         # Get curiosity  
         naive_curiosity = curiosity = self.args.naive_eta * errors
-        if(self.args.complexity == 0):         
+        if(self.args.beta == 0):         
             dkl_changes = torch.zeros(rewards.shape)
         else:
             _, mu_a, std_a = self.forward(obs, actions)    
@@ -189,7 +189,7 @@ class Agent:
         if(complexity_loss != None): 
             complexity_loss = complexity_loss.item()
             complexity_loss = log(complexity_loss) if complexity_loss > 0 else complexity_loss
-            if(self.args.complexity == 0): dkl_loss = None
+            if(self.args.beta == 0): dkl_loss = None
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): 
