@@ -6,14 +6,12 @@ from torch.distributions import Normal
 import torch.nn.functional as F
 from torchinfo import summary as torch_summary
 
-import numpy as np
-
 from utils import default_args, init_weights
 from maze import obs_size, action_size
 
 
 
-class Summarizer(nn.Module):
+class Summarizer(nn.Module): # For recurrency, not implemented yet.
     
     def __init__(self, args = default_args):
         super(Summarizer, self).__init__()
@@ -42,9 +40,11 @@ class Forward(nn.Module):
         
         self.args = args
         
+        self.sum = Summarizer(self.args)
         self.lin = nn.Linear(obs_size + action_size, args.hidden)
         self.mu = nn.Sequential(
-            nn.Linear(args.hidden, args.hidden))
+            nn.Linear(args.hidden, args.hidden),
+            nn.Tanh())
         self.rho = nn.Sequential(
             nn.Linear(args.hidden, args.hidden))
         self.lin_2 = nn.Linear(args.hidden, obs_size)
@@ -74,6 +74,7 @@ class Actor(nn.Module):
         
         self.args = args
         
+        self.sum = Summarizer(self.args)
         self.lin = nn.Sequential(
             nn.Linear(obs_size, args.hidden),
             nn.LeakyReLU())
@@ -106,7 +107,8 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
         
         self.args = args
-                
+        
+        self.sum = Summarizer(self.args)
         self.lin = nn.Sequential(
             nn.Linear(obs_size + action_size, args.hidden),
             nn.LeakyReLU(),
