@@ -16,7 +16,7 @@ def get_quantiles(plot_dict, name):
     xs = [i for i, x in enumerate(plot_dict[name][0]) if x != None]
     lists = np.array(plot_dict[name], dtype=float)    
     lists = lists[:,xs]
-    quantile_dict = {"xs" : xs}
+    quantile_dict = {"xs" : [x * plot_dict["args"][0].keep_data for x in xs]}
     quantile_dict["min"] = np.min(lists, 0)
     quantile_dict["q10"] = np.quantile(lists, .1, 0)
     quantile_dict["q20"] = np.quantile(lists, .2, 0)
@@ -45,22 +45,22 @@ def awesome_plot(here, quantile_dict, color, label, min_max = None, line_transpa
     
     
 def many_min_max(min_max_list):
-    mins = [min_max[0] for min_max in min_max_list]
-    maxs = [min_max[1] for min_max in min_max_list]
+    mins = [min_max[0] for min_max in min_max_list if min_max[0] != None]
+    maxs = [min_max[1] for min_max in min_max_list if min_max[1] != None]
     return((min(mins), max(maxs)))
 
 
 
 def plots(plot_dicts, min_max_dict):
     start_time = datetime.datetime.now()
-    fig, axs = plt.subplots(13, len(plot_dicts), figsize = (10*len(plot_dicts), 75))
+    fig, axs = plt.subplots(11, len(plot_dicts), figsize = (10*len(plot_dicts), 75))
                 
     for i, plot_dict in enumerate(plot_dicts):
     
         # Cumulative rewards
         rew_dict = get_quantiles(plot_dict, "rewards")
-        max_rewards = [10*i for i in range(len(plot_dict["rewards"][0]))]
-        min_rewards = [-1*i for i in range(len(plot_dict["rewards"][0]))]
+        max_rewards = [10*x/plot_dict["args"][0].keep_data for x in range(rew_dict["xs"][-1])]
+        min_rewards = [-1*x/plot_dict["args"][0].keep_data for x in range(rew_dict["xs"][-1])]
         
         ax = axs[0,i] if len(plot_dicts) > 1 else axs[0]
         awesome_plot(ax, rew_dict, "turquoise", "Reward")
@@ -99,28 +99,28 @@ def plots(plot_dicts, min_max_dict):
         
         
         # Losses
-        mse_dict = get_quantiles(plot_dict, "mse")
-        dkl_dict = get_quantiles(plot_dict, "dkl")
+        error_dict = get_quantiles(plot_dict, "error")
+        comp_dict  = get_quantiles(plot_dict, "complexity")
         alpha_dict = get_quantiles(plot_dict, "alpha")
         actor_dict = get_quantiles(plot_dict, "actor")
         crit1_dict = get_quantiles(plot_dict, "critic_1")
         crit2_dict = get_quantiles(plot_dict, "critic_2")
         
         ax = axs[3,i] if len(plot_dicts) > 1 else axs[3]
-        h1 = awesome_plot(ax, mse_dict, "green", "MSE")
-        ax.set_ylabel("MSE Loss")
+        h1 = awesome_plot(ax, error_dict, "green", "log Error")
+        ax.set_ylabel("log Error Loss")
         ax2 = ax.twinx()
-        h2 = awesome_plot(ax2, dkl_dict, "red", "DKL")
-        ax2.set_ylabel("DKL Loss")
+        h2 = awesome_plot(ax2, comp_dict, "red", "log Complexity")
+        ax2.set_ylabel("log Complexity Loss")
         ax.legend(handles = [h1, h2])
         ax.set_title(plot_dict["title"] + "\nForward Losses")
         
         ax = axs[4,i] if len(plot_dicts) > 1 else axs[4]
-        h1 = awesome_plot(ax, mse_dict, "green", "MSE", min_max_dict["mse"])
-        ax.set_ylabel("MSE Loss")
+        h1 = awesome_plot(ax, error_dict, "green", "log Error", min_max_dict["error"])
+        ax.set_ylabel("log Error Loss")
         ax2 = ax.twinx()
-        h2 = awesome_plot(ax2, dkl_dict, "red", "DKL", min_max_dict["dkl"])
-        ax2.set_ylabel("DKL Loss")
+        h2 = awesome_plot(ax2, comp_dict, "red", "log Complexity", min_max_dict["complexity"])
+        ax2.set_ylabel("log Complexity Loss")
         ax.legend(handles = [h1, h2])
         ax.set_title(plot_dict["title"] + "\nForward Losses, shared min/max")
         
@@ -128,9 +128,9 @@ def plots(plot_dicts, min_max_dict):
         h1 = awesome_plot(ax, actor_dict, "red", "Actor")
         ax.set_ylabel("Actor Loss")
         ax2 = ax.twinx()
-        h2 = awesome_plot(ax2, crit1_dict, "blue", "Critic")
-        awesome_plot(ax2, crit2_dict, "blue", "Critic")
-        ax2.set_ylabel("Critic Losses")
+        h2 = awesome_plot(ax2, crit1_dict, "blue", "log Critic")
+        awesome_plot(ax2, crit2_dict, "blue", "log Critic")
+        ax2.set_ylabel("log Critic Losses")
         ax3 = ax.twinx()
         ax3.spines["right"].set_position(("axes", 1.08))
         h3 = awesome_plot(ax3, alpha_dict, "black", "Alpha")
@@ -143,9 +143,9 @@ def plots(plot_dicts, min_max_dict):
         h1 = awesome_plot(ax, actor_dict, "red", "Actor", min_max_dict["actor"])
         ax.set_ylabel("Actor Loss")
         ax2 = ax.twinx()
-        h2 = awesome_plot(ax2, crit1_dict, "blue", "Critic", min_max)
-        awesome_plot(ax2, crit2_dict, "blue", "Critic", min_max)
-        ax2.set_ylabel("Critic Losses")
+        h2 = awesome_plot(ax2, crit1_dict, "blue", "log Critic", min_max)
+        awesome_plot(ax2, crit2_dict, "blue", "log Critic", min_max)
+        ax2.set_ylabel("log Critic Losses")
         ax3 = ax.twinx()
         ax3.spines["right"].set_position(("axes", 1.08))
         h3 = awesome_plot(ax3, alpha_dict, "black", "Alpha", min_max_dict["alpha"])
@@ -166,12 +166,12 @@ def plots(plot_dicts, min_max_dict):
         ax.set_ylabel("Extrinsic")
         if((cur_dict["min"] != cur_dict["max"]).all()):
             ax2 = ax.twinx()
-            handles.append(awesome_plot(ax2, cur_dict, "green", "Curiosity"))
-            ax2.set_ylabel("Curiosity")
+            handles.append(awesome_plot(ax2, cur_dict, "green", "log Curiosity"))
+            ax2.set_ylabel("log Curiosity")
         if((ent_dict["min"] != ent_dict["max"]).all()):
             ax3 = ax.twinx()
             ax3.spines["right"].set_position(("axes", 1.08))
-            handles.append(awesome_plot(ax3, ent_dict, "blue", "Entropy"))
+            handles.append(awesome_plot(ax3, ent_dict, "black", "Entropy"))
             ax3.set_ylabel("Entropy")
         ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nExtrinsic and Intrinsic Rewards")
@@ -182,12 +182,12 @@ def plots(plot_dicts, min_max_dict):
         ax.set_ylabel("Extrinsic")
         if((cur_dict["min"] != cur_dict["max"]).all()):
             ax2 = ax.twinx()
-            handles.append(awesome_plot(ax2, cur_dict, "green", "Curiosity", min_max_dict["intrinsic_curiosity"]))
-            ax2.set_ylabel("Curiosity")
+            handles.append(awesome_plot(ax2, cur_dict, "green", "log Curiosity", min_max_dict["intrinsic_curiosity"]))
+            ax2.set_ylabel("log Curiosity")
         if((ent_dict["min"] != ent_dict["max"]).all()):
             ax3 = ax.twinx()
             ax3.spines["right"].set_position(("axes", 1.08))
-            handles.append(awesome_plot(ax3, ent_dict, "blue", "Entropy", min_max_dict["intrinsic_entropy"]))
+            handles.append(awesome_plot(ax3, ent_dict, "black", "Entropy", min_max_dict["intrinsic_entropy"]))
             ax3.set_ylabel("Entropy")
         ax.legend(handles = handles)
         ax.set_title(plot_dict["title"] + "\nExtrinsic and Intrinsic Rewards, shared min/max")
@@ -196,44 +196,26 @@ def plots(plot_dicts, min_max_dict):
         
         # Curiosities
         naive_dict = get_quantiles(plot_dict, "naive")
-        friston_dict = get_quantiles(plot_dict, "friston")
+        free_dict = get_quantiles(plot_dict, "free")
         
         ax = axs[9,i] if len(plot_dicts) > 1 else axs[9]
-        handles = []
-        handles.append(awesome_plot(ax, naive_dict, "green", "Naive"))
-        ax.set_ylabel("Naive")
-        ax2 = ax.twinx()
-        handles.append(awesome_plot(ax2, friston_dict, "red", "Friston"))
-        ax2.set_ylabel("Friston")
-        ax.legend(handles = handles)
-        ax.set_title(plot_dict["title"] + "\nCuriosities")
+        awesome_plot(ax, naive_dict, "green", "log Naive")
+        awesome_plot(ax, free_dict, "red", "log Free")
+        ax.set_ylabel("log Curiosity")
+        ax.legend()
+        ax.set_title(plot_dict["title"] + "\nPossible Curiosities")
         
+        min_max = many_min_max([min_max_dict["naive"], min_max_dict["free"]])
         ax = axs[10,i] if len(plot_dicts) > 1 else axs[10]
-        handles = []
-        handles.append(awesome_plot(ax, naive_dict, "green", "Naive", min_max_dict["naive"]))
-        ax.set_ylabel("Naive")
-        ax2 = ax.twinx()
-        handles.append(awesome_plot(ax2, friston_dict, "red", "Friston", min_max_dict["friston"]))
-        ax2.set_ylabel("Friston")
-        ax.legend(handles = handles)
-        ax.set_title(plot_dict["title"] + "\nCuriosities, shared min/max")
-
+        awesome_plot(ax, naive_dict, "green", "log Naive", min_max)
+        awesome_plot(ax, free_dict, "red", "log Free", min_max)
+        ax.set_ylabel("log Curiosity")
+        ax.legend()
+        ax.set_title(plot_dict["title"] + "\nPossible Curiosities, shared min/max")
         
         
-        # DKL-Guessing
-        guesser_dict = get_quantiles(plot_dict, "guesser")
         
-        ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
-        awesome_plot(ax, guesser_dict, "green", "Loss")
-        ax.set_ylabel("Loss")
-        ax.set_title(plot_dict["title"] + "\nDKL Guesser Loss")
-        
-        ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
-        awesome_plot(ax, guesser_dict, "green", "Guesser Loss", min_max_dict["guesser"])
-        ax.set_ylabel("Loss")
-        ax.set_title(plot_dict["title"] + "\nDKL Guesser Loss, shared min/max")
-        
-        print(i, plot_dict["title"], duration(start_time))
+        print("\n{}: {}.".format(plot_dict["title"], duration(start_time)))
 
     
     
