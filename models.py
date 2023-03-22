@@ -60,8 +60,8 @@ class Forward(nn.Module):
         mu = self.mu(x)
         std = torch.log1p(torch.exp(self.rho(x))) 
         dist = Normal(0, 1)
-        e = dist.sample(std.shape)
-        x = mu.cpu() + e * std.cpu()
+        e = dist.sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        x = mu + e * std
         pred_obs = self.lin_2(x)
         return(pred_obs, mu, std)
         
@@ -92,7 +92,7 @@ class Actor(nn.Module):
         mu = self.mu(x)
         std = torch.log1p(torch.exp(self.rho(x)))
         dist = Normal(0, 1)
-        e = dist.sample(std.shape)
+        e = dist.sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         action = torch.tanh(mu + e * std)
         log_prob = Normal(mu, std).log_prob(mu + e * std) - \
             torch.log(1 - action.pow(2) + epsilon)

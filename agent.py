@@ -33,6 +33,9 @@ class Agent:
         
         self.forward = Forward(self.args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
+        
+        self.forward_clone = Forward(self.args)
+        self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=self.args.forward_lr, weight_decay=0)   
                            
         self.actor = Actor(self.args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=self.args.actor_lr, weight_decay=0)     
