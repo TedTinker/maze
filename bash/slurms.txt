@@ -7,6 +7,9 @@ e_n1 : --alpha None --curiosity naive_1
 n2   : --curiosity naive_2
 e_n2 : --alpha None --curiosity naive_2
 
+n3   : --curiosity naive_3
+e_n3 : --alpha None --curiosity naive_3
+
 f   : --curiosity free 
 e_f : --alpha None --curiosity free
 

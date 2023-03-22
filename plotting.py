@@ -225,12 +225,14 @@ def plots(plot_dicts, min_max_dict):
         # Curiosities
         naive_1_dict = get_quantiles(plot_dict, "naive_1")
         naive_2_dict = get_quantiles(plot_dict, "naive_2")
+        naive_3_dict = get_quantiles(plot_dict, "naive_3")
         free_dict = get_quantiles(plot_dict, "free")
-        min_max = many_min_max([min_max_dict["naive_1"], min_max_dict["naive_2"], min_max_dict["free"]])
+        min_max = many_min_max([min_max_dict["naive_1"], min_max_dict["naive_2"], min_max_dict["naive_3"], min_max_dict["free"]])
         
         ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
         awesome_plot(ax, naive_1_dict, "green", "Naive 1")
         awesome_plot(ax, naive_2_dict, "blue", "Naive 2")
+        awesome_plot(ax, naive_3_dict, "yellow", "Naive 3")
         awesome_plot(ax, free_dict, "red", "Free")
         ax.set_ylabel("Curiosity")
         ax.legend()
@@ -239,6 +241,7 @@ def plots(plot_dicts, min_max_dict):
         ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
         awesome_plot(ax, naive_1_dict, "green", "Naive 1", min_max)
         awesome_plot(ax, naive_2_dict, "blue", "Naive 2", min_max)
+        awesome_plot(ax, naive_3_dict, "yellow", "Naive 3", min_max)
         awesome_plot(ax, free_dict, "red", "Free", min_max)
         ax.set_ylabel("Curiosity")
         ax.legend()
@@ -249,12 +252,14 @@ def plots(plot_dicts, min_max_dict):
         # Log Curiosities
         log_naive_1_dict = get_logs(naive_1_dict)
         log_naive_2_dict = get_logs(naive_2_dict)
+        log_naive_3_dict = get_logs(naive_3_dict)
         log_free_dict = get_logs(free_dict)
         min_max = (log(min_max[0]), log(min_max[1]))
         
         ax = axs[13,i] if len(plot_dicts) > 1 else axs[13]
         awesome_plot(ax, log_naive_1_dict, "green", "log Naive 1")
         awesome_plot(ax, log_naive_2_dict, "blue", "log Naive 2")
+        awesome_plot(ax, log_naive_3_dict, "yellow", "log Naive 3")
         awesome_plot(ax, log_free_dict, "red", "log Free")
         ax.set_ylabel("log Curiosity")
         ax.legend()
@@ -263,6 +268,7 @@ def plots(plot_dicts, min_max_dict):
         ax = axs[14,i] if len(plot_dicts) > 1 else axs[14]
         awesome_plot(ax, log_naive_1_dict, "green", "log Naive 1", min_max)
         awesome_plot(ax, log_naive_2_dict, "blue", "log Naive 2", min_max)
+        awesome_plot(ax, log_naive_3_dict, "yellow", "log Naive 3", min_max)
         awesome_plot(ax, log_free_dict, "red", "log Free", min_max)
         ax.set_ylabel("log Curiosity")
         ax.legend()

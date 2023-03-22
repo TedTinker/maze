@@ -95,13 +95,15 @@ class Agent:
         naive_1_curiosity = self.args.naive_1_eta * errors
         
         _, mu_a, std_a = self.forward(obs, actions)    
-        naive_2_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1)
+        naive_2_curiosity = self.args.naive_2_eta * torch.abs(mu_a - mu_b).mean(-1).unsqueeze(-1)
+        naive_3_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1)
         
         dkl_changes = dkl(mu_a, std_a, mu_b, std_b).mean(-1).unsqueeze(-1)
         free_curiosity = self.args.free_eta * dkl_changes   
         
         if(self.args.curiosity == "naive_1"):   curiosity = naive_1_curiosity
         elif(self.args.curiosity == "naive_2"): curiosity = naive_2_curiosity
+        elif(self.args.curiosity == "naive_3"): curiosity = naive_3_curiosity
         elif(self.args.curiosity == "free"):    curiosity = free_curiosity
         else:                                   curiosity = torch.zeros(rewards.shape)
         curiosity *= masks.detach() 
@@ -198,9 +200,10 @@ class Agent:
         
         naive_1_curiosity = naive_1_curiosity.mean().item()
         naive_2_curiosity = naive_2_curiosity.mean().item()
+        naive_3_curiosity = naive_3_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()
         if(free_curiosity == 0): free_curiosity = None
-        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_1_curiosity, naive_2_curiosity, free_curiosity)
+        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_1_curiosity, naive_2_curiosity, naive_3_curiosity, free_curiosity)
                      
     def soft_update(self, local_model, target_model, tau):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
