@@ -1,8 +1,11 @@
 d   : 
 e   : --alpha None
 
-n   : --curiosity naive
-e_n : --alpha None --curiosity naive
+n1   : --curiosity naive_1
+e_n1 : --alpha None --curiosity naive_1
+
+n2   : --curiosity naive_2
+e_n2 : --alpha None --curiosity naive_2
 
 f   : --curiosity free 
 e_f : --alpha None --curiosity free

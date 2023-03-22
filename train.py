@@ -47,7 +47,7 @@ class Trainer():
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
             "intrinsic_entropy" : [], 
-            "naive" : [], "free" : []}
+            "naive_1" : [], "naive_2" : [], "free" : []}
 
     def train(self):
         self.agent.train()
@@ -56,7 +56,7 @@ class Trainer():
         while(True):
             E.update()
             r, spot_name = episode(self.agent)
-            l, e, ic, ie, naive, free = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
+            l, e, ic, ie, naive_1, naive_2, free = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
             self.e += 1
             if(self.e == 1 or self.e >= self.args.epochs or (self.e)%self.args.keep_data==0):
                 self.plot_dict["rewards"].append(r)
@@ -70,7 +70,8 @@ class Trainer():
                 self.plot_dict["extrinsic"].append(e)
                 self.plot_dict["intrinsic_curiosity"].append(ic)
                 self.plot_dict["intrinsic_entropy"].append(ie)
-                self.plot_dict["naive"].append(naive)
+                self.plot_dict["naive_1"].append(naive_1)
+                self.plot_dict["naive_2"].append(naive_2)
                 self.plot_dict["free"].append(free)
             if(self.e >= self.args.epochs): 
                 print("\n\nDone training!")
@@ -85,9 +86,9 @@ class Trainer():
                 l = deepcopy(l)
                 l = [_ for _ in l if _ != None]
                 if(l != []):
-                    if(minimum == None):    minimum = min(l)
+                    if(  minimum == None):  minimum = min(l)
                     elif(minimum > min(l)): minimum = min(l)
-                    if(maximum == None):    maximum = max(l) 
+                    if(  maximum == None):  maximum = max(l) 
                     elif(maximum < max(l)): maximum = max(l)
                 min_max_dict[key] = (minimum, maximum)
         return(self.plot_dict, min_max_dict)
