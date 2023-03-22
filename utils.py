@@ -79,6 +79,7 @@ for arg in vars(default_args):
 
 
 def get_args_name(default_args, args):
+    if(args.name[:3] == "___"): return(args.name)
     name = "" ; first = True
     for arg in vars(default_args):
         if(arg in ["arg_title", "id"]): pass 
@@ -92,11 +93,7 @@ def get_args_name(default_args, args):
     if(name == ""): name = "default" 
     return(name)
 
-
-
-if(args.name[:3] != "___"):
-    name = get_args_name(default_args, args)
-    args.name = name
+args.name = get_args_name(default_args, args)
 
 folder = "saved/" + args.arg_title
 if(args.arg_title[:3] != "___" and args.arg_title != "default"):

@@ -2,39 +2,28 @@ d   :
 e   : --alpha None
 
 n1   : --curiosity naive_1
-e_n1 : --alpha None --curiosity naive_1
+en1 : --alpha None --curiosity naive_1
 
 n2   : --curiosity naive_2
-e_n2 : --alpha None --curiosity naive_2
+en2 : --alpha None --curiosity naive_2
 
 n3   : --curiosity naive_3
-e_n3 : --alpha None --curiosity naive_3
+en3 : --alpha None --curiosity naive_3
 
 f   : --curiosity free 
-e_f : --alpha None --curiosity free
+ef : --alpha None --curiosity free
 
 
 
 
 
-e_f_1 : --alpha None --curiosity free 
-e_f_2 : --alpha None --curiosity free 
-e_f_3 : --alpha None --curiosity free 
-e_f_4 : --alpha None --curiosity free 
-e_f_5 : --alpha None --curiosity free 
-e_f_6 : --alpha None --curiosity free 
-e_f_7 : --alpha None --curiosity free 
-e_f_8 : --alpha None --curiosity free 
 
-
-
-e_n_1 : --alpha None --curiosity naive --complexity_2 .01
-e_n_2 : --alpha None --curiosity naive --complexity_2 .1
-e_n_3 : --alpha None --curiosity naive --complexity_2 .25
-e_n_4 : --alpha None --curiosity naive --complexity_2 .5
-e_n_5 : --alpha None --curiosity naive --complexity_2 .75
-e_n_6 : --alpha None --curiosity naive --complexity_2 1
-e_n_7 : --alpha None --curiosity naive --complexity_2 2
-e_n_8 : --alpha None --curiosity naive --complexity_2 4
-
+en2a : --alpha None --curiosity naive_2 --naive_2_eta 50
+en2b : --alpha None --curiosity naive_2 --naive_2_eta 75
+en2c : --alpha None --curiosity naive_2 --naive_2_eta 100
+en2d : --alpha None --curiosity naive_2 --naive_2_eta 125
+en2e : --alpha None --curiosity naive_2 --naive_2_eta 150
+en2f : --alpha None --curiosity naive_2 --naive_2_eta 175
+en2g : --alpha None --curiosity naive_2 --naive_2_eta 200
+en2h : --alpha None --curiosity naive_2 --naive_2_eta 225
 
