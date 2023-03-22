@@ -185,11 +185,9 @@ class Agent:
         
         if(error_loss != None): 
             error_loss = error_loss.item()
-            error_loss = log(error_loss) if error_loss > 0 else error_loss
         if(complexity_loss != None): 
             complexity_loss = complexity_loss.item()
-            complexity_loss = log(complexity_loss) if complexity_loss > 0 else complexity_loss
-            if(self.args.beta == 0): dkl_loss = None
+            if(self.args.beta == 0): complexity_loss = None
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): 
@@ -201,9 +199,7 @@ class Agent:
         losses = np.array([[error_loss, complexity_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         naive_curiosity = naive_curiosity.mean().item()
-        naive_curiosity = log(naive_curiosity) if naive_curiosity > 0 else naive_curiosity
         free_curiosity = free_curiosity.mean().item()
-        free_curiosity = log(free_curiosity) if free_curiosity > 0 else free_curiosity
         if(free_curiosity == 0): free_curiosity = None
         return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_curiosity, free_curiosity)
                      
