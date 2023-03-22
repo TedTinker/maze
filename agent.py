@@ -34,8 +34,9 @@ class Agent:
         self.forward = Forward(self.args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
         
-        self.forward_clone = Forward(self.args)
-        self.clone_opt = optim.Adam(self.forward_clone.parameters(), lr=self.args.forward_lr, weight_decay=0)   
+        self.clone = Forward(self.args)
+        clone_params = self.forward.state_dict() # Use just parameters with mu, rho
+        self.clone_opt = optim.Adam(self.clone.parameters(), lr=self.args.forward_lr, weight_decay=0)   
                            
         self.actor = Actor(self.args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=self.args.actor_lr, weight_decay=0)     
@@ -76,21 +77,28 @@ class Agent:
         
         
                             
-        # Train forward
-        pred_obs, mu_b, std_b = self.forward(obs, actions)   
-        errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none").sum(-1).unsqueeze(-1)
-        complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
-                
-        errors = errors * masks.detach()
-        error_loss = errors.mean()
-        complexity = complexity * masks.detach()
-        complexity_loss = complexity.mean()
-        forward_loss = error_loss + self.args.beta * complexity_loss
-        if(self.args.beta == 0): complexity = None ; complexity_loss = None
+        # Train forward and clone
+        def train_forward(forward, opt):
+            pred_obs, mu_b, std_b = forward(obs, actions)   
+            errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none").sum(-1).unsqueeze(-1)
+            complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
+                    
+            errors = errors * masks.detach()
+            error_loss = errors.mean()
+            complexity = complexity * masks.detach()
+            complexity_loss = complexity.mean()
+            forward_loss = error_loss + self.args.beta * complexity_loss
+            if(self.args.beta == 0): complexity = None ; complexity_loss = None
+            
+            opt.zero_grad()
+            forward_loss.backward()
+            opt.step()
+            return(mu_b, std_b, errors, error_loss, complexity_loss)
         
-        self.forward_opt.zero_grad()
-        forward_loss.backward()
-        self.forward_opt.step()
+        self.clone.load_state_dict(self.forward.state_dict())
+        mu_b, std_b, errors, error_loss, complexity_loss = \
+            train_forward(self.forward, self.forward_opt)
+        train_forward(self.clone, self.clone_opt)
                         
         
         
