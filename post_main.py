@@ -7,6 +7,8 @@ from time import sleep
 from utils import args, folder
 from plotting import plots
 
+print("name: {}".format(args.name))
+
 if(args.arg_title[:3] != "___"):
     
     try:

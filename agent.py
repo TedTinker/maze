@@ -76,7 +76,7 @@ class Agent:
         # Train forward
         pred_obs, mu_b, std_b = self.forward(obs, actions)   
         errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none").sum(-1).unsqueeze(-1)
-        complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape), torch.ones(std_b.shape) * self.args.sigma)
+        complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
                 
         errors = errors * masks.detach()
         error_loss = errors.mean()
@@ -92,13 +92,13 @@ class Agent:
         
         
         # Get curiosity  
-        naive_curiosity = curiosity = self.args.naive_eta * errors
+        naive_curiosity = self.args.naive_eta * errors
         if(self.args.beta == 0):         
             dkl_changes = torch.zeros(rewards.shape)
         else:
             _, mu_a, std_a = self.forward(obs, actions)    
             dkl_changes = dkl(mu_a, std_a, mu_b, std_b).mean(-1).unsqueeze(-1)
-        free_curiosity = curiosity = self.args.free_eta * dkl_changes   
+        free_curiosity = self.args.free_eta * dkl_changes   
         #print("\n\n")
         #print("Naive: {}.".format(naive_curiosity.mean().item()))
         #print("Free:  {}.".format(free_curiosity.mean().item()))
