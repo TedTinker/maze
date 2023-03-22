@@ -5,7 +5,10 @@ import pickle
 from utils import args, folder
 from train import Trainer
 
-print("name + id: {}_{}".format(args.name, args.id))
+print("name:")
+print(args.name)
+print("id:")
+print(args.id)
 
 import datetime 
 start_time = datetime.datetime.now()
