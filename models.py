@@ -11,7 +11,7 @@ from maze import obs_size, action_size
 
 
 
-class Summarizer(nn.Module): # For recurrency, not implemented yet.
+class Summarizer(nn.Module): 
     
     def __init__(self, args = default_args):
         super(Summarizer, self).__init__()
@@ -110,15 +110,16 @@ class Critic(nn.Module):
         
         self.sum = Summarizer(self.args)
         self.lin = nn.Sequential(
-            nn.Linear(obs_size + action_size, args.hidden),
+            nn.Linear(args.hidden + action_size, args.hidden),
             nn.LeakyReLU(),
             nn.Linear(args.hidden, 1))
 
         self.lin.apply(init_weights)
         self.to(args.device)
 
-    def forward(self, obs, action):
-        x = torch.cat((obs, action), dim=-1)
+    def forward(self, obs, prev_action, action):
+        h = self.sum(obs, prev_action)
+        x = torch.cat((h, action), dim=-1)
         x = self.lin(x)
         return(x)
     
