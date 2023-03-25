@@ -35,7 +35,6 @@ class Trainer():
             "naive_1" : [], "naive_2" : [], "naive_3" : [], "free" : []}
 
     def train(self):
-        self.agent.train()
         manager = enlighten.Manager(width = 150)
         E = manager.counter(total = self.args.epochs, desc = "{}:".format(self.title), unit = "ticks", color = "blue")
         while(True):

@@ -50,14 +50,19 @@ class Agent:
         self.critic2_target = Critic(self.args)
         self.critic2_target.load_state_dict(self.critic2.state_dict())
         
-        self.restart_memory()
+        self.train()
         
-    def restart_memory(self):
         self.memory = RecurrentReplayBuffer(self.args)
-
-    def act(self, obs):
-        action, _ = self.actor(obs)
-        return(action[0])
+        self.plot_dict = {
+            "args" : self.args,
+            "title" : "{}_{}".format(self.args.name, self.args.id),
+            "rewards" : [], "spot_names" : [], 
+            "error" : [], "complexity" : [], 
+            "alpha" : [], "actor" : [], 
+            "critic_1" : [], "critic_2" : [], 
+            "extrinsic" : [], "intrinsic_curiosity" : [], 
+            "intrinsic_entropy" : [], 
+            "naive_1" : [], "naive_2" : [], "naive_3" : [], "free" : []}
     
     
     
@@ -69,8 +74,8 @@ class Agent:
         with torch.no_grad():
             while(done == False):
                 o = t_maze.obs()
-                a = self.act(o)
-                action = a.squeeze(0).tolist()
+                a, _ = self.actor(o)
+                action = a[0].squeeze(0).tolist()
                 r, spot_name, done = t_maze.action(action[0], action[1], verbose)
                 no = t_maze.obs()
                 if(push): self.memory.push(o, a, r, no, done, done)
