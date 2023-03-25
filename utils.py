@@ -32,6 +32,7 @@ parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
 parser.add_argument('--actor_lr',           type=float, default = .01)
 parser.add_argument('--critic_lr',          type=float, default = .01)
+parser.add_argument('--action_prior',       type=str,   default = "normal")
 
 # Memory buffer
 parser.add_argument('--capacity',           type=int,   default = 100)

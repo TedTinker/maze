@@ -16,7 +16,7 @@ from models import Forward, Actor, Critic
 
 class Agent:
     
-    def __init__(self, action_prior="normal", args = default_args):
+    def __init__(self, args = default_args):
         
         self.args = args
         self.steps = 0
@@ -26,7 +26,6 @@ class Agent:
         self.alpha = 1
         self.log_alpha = torch.tensor([0.0], requires_grad=True)
         self.alpha_opt = optim.Adam(params=[self.log_alpha], lr=self.args.alpha_lr, weight_decay=0) 
-        self._action_prior = action_prior
         
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
@@ -173,12 +172,12 @@ class Agent:
                 alpha = self.args.alpha
                 actions_pred, log_pis = self.actor(obs.detach())
 
-            if self._action_prior == "normal":
+            if self.args.action_prior == "normal":
                 loc = torch.zeros(self.action_size, dtype=torch.float64)
                 scale_tril = torch.tensor([[1, 0], [1, 1]], dtype=torch.float64)
                 policy_prior = MultivariateNormal(loc=loc, scale_tril=scale_tril)
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred.cpu()).unsqueeze(-1)
-            elif self._action_prior == "uniform":
+            elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
                 self.critic1(obs.detach(), prev_actions, actions_pred), 
