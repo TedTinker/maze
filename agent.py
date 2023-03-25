@@ -9,6 +9,7 @@ import numpy as np
 from math import log
 
 from utils import default_args, dkl
+from maze import T_Maze, action_size
 from buffer import RecurrentReplayBuffer
 from models import Forward, Actor, Critic
 
@@ -20,7 +21,6 @@ class Agent:
         
         self.args = args
         self.steps = 0
-        self.action_size = 2
         
         self.target_entropy = self.args.target_entropy # -dim(A)
         self.alpha = 1
@@ -58,6 +58,23 @@ class Agent:
     def act(self, obs):
         action, _ = self.actor(obs)
         return(action[0])
+    
+    
+    
+    def episode(self, push = True, verbose = False):
+        done = False
+        t_maze = T_Maze()
+        if(verbose): print("\n\n\n\n\nSTART!\n")
+        if(verbose): print(t_maze)
+        with torch.no_grad():
+            while(done == False):
+                o = t_maze.obs()
+                a = self.act(o)
+                action = a.squeeze(0).tolist()
+                r, spot_name, done = t_maze.action(action[0], action[1], verbose)
+                no = t_maze.obs()
+                if(push): self.memory.push(o, a, r, no, done, done)
+        return(r, spot_name)
     
     
     
@@ -173,7 +190,7 @@ class Agent:
                 actions_pred, log_pis = self.actor(obs.detach())
 
             if self.args.action_prior == "normal":
-                loc = torch.zeros(self.action_size, dtype=torch.float64)
+                loc = torch.zeros(action_size, dtype=torch.float64)
                 scale_tril = torch.tensor([[1, 0], [1, 1]], dtype=torch.float64)
                 policy_prior = MultivariateNormal(loc=loc, scale_tril=scale_tril)
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred.cpu()).unsqueeze(-1)

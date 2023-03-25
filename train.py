@@ -1,30 +1,15 @@
 #%%
 
-import torch
 import enlighten
 from itertools import accumulate
 from copy import deepcopy
 
 from utils import default_args
-from maze import T_Maze
 from agent import Agent
 
 
 
-def episode(agent, push = True, verbose = False):
-    done = False
-    t_maze = T_Maze()
-    if(verbose): print("\n\n\n\n\nSTART!\n")
-    if(verbose): print(t_maze)
-    with torch.no_grad():
-        while(done == False):
-            o = t_maze.obs()
-            a = agent.act(o)
-            action = a.squeeze(0).tolist()
-            r, spot_name, done = t_maze.action(action[0], action[1], verbose)
-            no = t_maze.obs()
-            if(push): agent.memory.push(o, a, r, no, done, done)
-    return(r, spot_name)
+
 
 
 
@@ -55,7 +40,7 @@ class Trainer():
         E = manager.counter(total = self.args.epochs, desc = "{}:".format(self.title), unit = "ticks", color = "blue")
         while(True):
             E.update()
-            r, spot_name = episode(self.agent)
+            r, spot_name = self.agent.episode()
             l, e, ic, ie, naive_1, naive_2, naive_3, free = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
             self.e += 1
             if(self.e == 1 or self.e >= self.args.epochs or (self.e)%self.args.keep_data==0):
