@@ -147,7 +147,6 @@ class Agent:
         next_obs = obs[:,1:]
         obs = obs[:,:-1]
         
-        print(actions[:,0].unsqueeze(1).shape, actions[:,:-1].shape)
         prev_actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions[:,:-1]], dim = 1)
         
         
@@ -155,12 +154,12 @@ class Agent:
         # Train forward and clone
         def train_forward(forward, opt):
             pred_obs, mu_b, std_b, log_prob_func = forward(obs, actions)   
-            errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none").sum(-1).unsqueeze(-1)
+            errors = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
             complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
                     
-            errors = errors * masks.detach()
+            errors = errors * masks
             error_loss = errors.mean()
-            complexity = complexity * masks.detach()
+            complexity = complexity * masks
             complexity_loss = complexity.mean()
             forward_loss = error_loss + self.args.beta * complexity_loss
             if(self.args.beta == 0): complexity = None ; complexity_loss = None
