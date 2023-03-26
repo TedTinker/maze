@@ -42,11 +42,8 @@ class Forward(nn.Module):
         
         self.sum = Summarizer(self.args) # Not implemented
         self.lin = nn.Linear(obs_size + action_size, args.hidden)
-        self.mu = nn.Sequential(
-            nn.Linear(args.hidden, args.hidden),
-            nn.Tanh())
-        self.rho = nn.Sequential(
-            nn.Linear(args.hidden, args.hidden))
+        self.mu = nn.Linear(args.hidden, args.hidden)
+        self.rho = nn.Linear(args.hidden, args.hidden)
         self.lin_2 = nn.Linear(args.hidden, obs_size)
         
         self.lin.apply(init_weights)
@@ -59,9 +56,8 @@ class Forward(nn.Module):
         x = self.lin(x)
         mu = self.mu(x)
         std = torch.log1p(torch.exp(self.rho(x))) 
-        dist = Normal(0, 1)
-        e = dist.sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = mu + e * std
+        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        x = torch.tanh(mu + e * std)
         pred_obs = self.lin_2(x)
         return(pred_obs, mu, std)
         
@@ -90,8 +86,7 @@ class Actor(nn.Module):
         x = self.lin(obs)
         mu = self.mu(x)
         std = torch.log1p(torch.exp(self.rho(x)))
-        dist = Normal(0, 1)
-        e = dist.sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         action = torch.tanh(mu + e * std)
         log_prob = Normal(mu, std).log_prob(mu + e * std) - \
             torch.log(1 - action.pow(2) + epsilon)
