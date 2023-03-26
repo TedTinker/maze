@@ -100,19 +100,19 @@ def plots(plot_dicts, min_max_dict):
         
         
         # Forward Losses
-        error_dict = get_quantiles(plot_dict, "error")
+        accuracy_dict = get_quantiles(plot_dict, "accuracy")
         comp_dict  = get_quantiles(plot_dict, "complexity")
-        min_max = many_min_max([min_max_dict["error"], min_max_dict["complexity"]])
+        min_max = many_min_max([min_max_dict["accuracy"], min_max_dict["complexity"]])
         
         ax = axs[3,i] if len(plot_dicts) > 1 else axs[3]
-        h1 = awesome_plot(ax, error_dict, "green", "Error")
+        h1 = awesome_plot(ax, accuracy_dict, "green", "Accuracy")
         ax.set_ylabel("Loss")
         h2 = awesome_plot(ax, comp_dict, "red", "Complexity")
         ax.legend(handles = [h1, h2])
         ax.set_title(plot_dict["title"] + "\nForward Losses")
         
         ax = axs[4,i] if len(plot_dicts) > 1 else axs[4]
-        h1 = awesome_plot(ax, error_dict, "green", "Error", min_max)
+        h1 = awesome_plot(ax, accuracy_dict, "green", "Accuracy", min_max)
         ax.set_ylabel("Loss")
         h2 = awesome_plot(ax, comp_dict, "red", "Complexity", min_max)
         ax.legend(handles = [h1, h2])
@@ -121,19 +121,19 @@ def plots(plot_dicts, min_max_dict):
         
         
         # Log Forward Losses
-        log_error_dict = get_logs(error_dict)
+        log_accuracy_dict = get_logs(accuracy_dict)
         log_comp_dict  = get_logs(comp_dict)
         min_max = (log(min_max[0]), log(min_max[1]))
         
         ax = axs[5,i] if len(plot_dicts) > 1 else axs[5]
-        h1 = awesome_plot(ax, log_error_dict, "green", "log Error")
+        h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy")
         ax.set_ylabel("log Loss")
         h2 = awesome_plot(ax, log_comp_dict, "red", "log Complexity")
         ax.legend(handles = [h1, h2])
         ax.set_title(plot_dict["title"] + "\nlog Forward Losses")
         
         ax = axs[6,i] if len(plot_dicts) > 1 else axs[6]
-        h1 = awesome_plot(ax, log_error_dict, "green", "log Error", min_max)
+        h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy", min_max)
         ax.set_ylabel("log Loss")
         h2 = awesome_plot(ax, log_comp_dict, "red", "log Complexity", min_max)
         ax.legend(handles = [h1, h2])

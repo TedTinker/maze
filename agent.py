@@ -60,7 +60,7 @@ class Agent:
             "args" : self.args,
             "title" : "{}_{}".format(self.args.name, self.args.id),
             "rewards" : [], "spot_names" : [], 
-            "error" : [], "complexity" : [], 
+            "accuracy" : [], "complexity" : [], 
             "alpha" : [], "actor" : [], 
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
@@ -81,7 +81,7 @@ class Agent:
             if(epochs == 1 or epochs >= self.args.epochs or epochs%self.args.keep_data==0):
                 self.plot_dict["rewards"].append(r)
                 self.plot_dict["spot_names"].append(spot_name)
-                self.plot_dict["error"].append(l[0][0])
+                self.plot_dict["accuracy"].append(l[0][0])
                 self.plot_dict["complexity"].append(l[0][1])
                 self.plot_dict["alpha"].append(l[0][2])
                 self.plot_dict["actor"].append(l[0][3])
@@ -154,30 +154,30 @@ class Agent:
         # Train forward and clone
         def train_forward(forward, opt):
             pred_obs, mu_b, std_b, log_prob_func = forward(obs, actions)   
-            errors = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-            #errors = -log_prob_func(next_obs)
+            accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+            #accuracy = -log_prob_func(next_obs)
             complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
                     
-            errors = errors * masks
-            error_loss = errors.mean()
+            accuracy = accuracy * masks
+            accuracy_loss = accuracy.mean()
             complexity = complexity * masks
             complexity_loss = complexity.mean()
-            forward_loss = error_loss + self.args.beta * complexity_loss
+            forward_loss = accuracy_loss + self.args.beta * complexity_loss
             if(self.args.beta == 0): complexity = None ; complexity_loss = None
             
             opt.zero_grad()
             forward_loss.backward()
             opt.step()
-            return(mu_b, std_b, errors, error_loss, complexity_loss)
+            return(mu_b, std_b, accuracy, accuracy_loss, complexity_loss)
         
         self.clone.load_state_dict(self.forward.state_dict())
-        mu_b, std_b, errors, error_loss, complexity_loss = train_forward(self.forward, self.forward_opt)
+        mu_b, std_b, accuracy, accuracy_loss, complexity_loss = train_forward(self.forward, self.forward_opt)
         train_forward(self.clone, self.clone_opt)
                         
         
         
         # Get curiosity  
-        naive_1_curiosity = self.args.naive_1_eta * errors
+        naive_1_curiosity = self.args.naive_1_eta * accuracy
         
         _, mu_a, std_a, _ = self.forward(obs, actions)    
         naive_2_curiosity = self.args.naive_2_eta * torch.abs(mu_a - mu_b).mean(-1).unsqueeze(-1)
@@ -268,8 +268,8 @@ class Agent:
             intrinsic_entropy = None
             actor_loss = None
         
-        if(error_loss != None): 
-            error_loss = error_loss.item()
+        if(accuracy_loss != None): 
+            accuracy_loss = accuracy_loss.item()
         if(complexity_loss != None): 
             complexity_loss = complexity_loss.item()
             if(self.args.beta == 0): complexity_loss = None
@@ -281,7 +281,7 @@ class Agent:
         if(critic2_loss != None): 
             critic2_loss = critic2_loss.item()
             critic2_loss = log(critic2_loss) if critic2_loss > 0 else critic2_loss
-        losses = np.array([[error_loss, complexity_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
+        losses = np.array([[accuracy_loss, complexity_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         naive_1_curiosity = naive_1_curiosity.mean().item()
         naive_2_curiosity = naive_2_curiosity.mean().item()
