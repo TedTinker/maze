@@ -191,7 +191,7 @@ class Agent:
         elif(self.args.curiosity == "naive_3"): curiosity = naive_3_curiosity
         elif(self.args.curiosity == "free"):    curiosity = free_curiosity
         else:                                   curiosity = torch.zeros(rewards.shape)
-        curiosity *= masks.detach() 
+        curiosity *= masks
         
         extrinsic = torch.mean(rewards).item()
         intrinsic_curiosity = curiosity.mean().item()
@@ -225,8 +225,8 @@ class Agent:
         
         # Train alpha
         if self.args.alpha == None:
-            actions_pred, log_pis = self.actor(obs.detach())
-            alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy).detach())*masks.detach()
+            actions_pred, log_pis = self.actor(obs)
+            alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy))*masks
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()
             alpha_loss.backward()
@@ -242,7 +242,7 @@ class Agent:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha
-                actions_pred, log_pis = self.actor(obs)
+            actions_pred, log_pis = self.actor(obs)
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
