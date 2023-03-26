@@ -20,7 +20,7 @@ class Agent:
     def __init__(self, args = default_args):
         
         self.args = args
-        self.steps = 0
+        self.episodes = 0 ; self.epochs = 0
         
         self.target_entropy = self.args.target_entropy # -dim(A)
         self.alpha = 1
@@ -79,13 +79,14 @@ class Agent:
                 r, spot_name, done = t_maze.action(action[0], action[1], verbose)
                 no = t_maze.obs()
                 if(push): self.memory.push(o, a, r, no, done, done)
+        self.episodes += 1
         return(r, spot_name)
     
     
     
-    def learn(self, batch_size, epochs):
+    def epoch(self, batch_size):
                 
-        self.steps += 1
+        self.epochs += 1
 
         obs, actions, rewards, dones, masks = self.memory.sample(batch_size)
         
@@ -188,7 +189,7 @@ class Agent:
             
         
         # Train actor
-        if self.steps % self.args.d == 0:
+        if self.epochs % self.args.d == 0:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha

@@ -40,7 +40,7 @@ class Trainer():
         while(True):
             E.update()
             r, spot_name = self.agent.episode()
-            l, e, ic, ie, naive_1, naive_2, naive_3, free = self.agent.learn(batch_size = self.args.batch_size, epochs = self.e)
+            l, e, ic, ie, naive_1, naive_2, naive_3, free = self.agent.epoch(batch_size = self.args.batch_size)
             self.e += 1
             if(self.e == 1 or self.e >= self.args.epochs or (self.e)%self.args.keep_data==0):
                 self.plot_dict["rewards"].append(r)
