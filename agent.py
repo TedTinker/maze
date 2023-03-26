@@ -206,17 +206,17 @@ class Agent:
         Q_target1_next = self.critic1_target(next_obs.detach(), actions.detach(), next_action.detach())
         Q_target2_next = self.critic2_target(next_obs.detach(), actions.detach(), next_action.detach())
         Q_target_next = torch.min(Q_target1_next, Q_target2_next)
-        if self.args.alpha == None: Q_targets = rewards.cpu() + (self.args.GAMMA * (1 - dones.cpu()) * (Q_target_next.cpu() - self.alpha * log_pis_next.cpu()))
-        else:                       Q_targets = rewards.cpu() + (self.args.GAMMA * (1 - dones.cpu()) * (Q_target_next.cpu() - self.args.alpha * log_pis_next.cpu()))
+        if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
+        else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(obs.detach(), prev_actions, actions.detach()).cpu()
-        critic1_loss = 0.5*F.mse_loss(Q_1*masks.detach().cpu(), Q_targets.detach()*masks.detach().cpu())
+        Q_1 = self.critic1(obs.detach(), prev_actions, actions.detach())
+        critic1_loss = 0.5*F.mse_loss(Q_1*masks.detach(), Q_targets.detach()*masks.detach())
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(obs.detach(), prev_actions, actions.detach()).cpu()
-        critic2_loss = 0.5*F.mse_loss(Q_2*masks.detach().cpu(), Q_targets.detach()*masks.detach().cpu())
+        Q_2 = self.critic2(obs.detach(), prev_actions, actions.detach())
+        critic2_loss = 0.5*F.mse_loss(Q_2*masks.detach(), Q_targets.detach()*masks.detach())
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
         self.critic2_opt.step()
@@ -226,7 +226,7 @@ class Agent:
         # Train alpha
         if self.args.alpha == None:
             actions_pred, log_pis = self.actor(obs.detach())
-            alpha_loss = -(self.log_alpha.cpu() * (log_pis.cpu() + self.target_entropy).detach().cpu())*masks.detach().cpu()
+            alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy).detach())*masks.detach()
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()
             alpha_loss.backward()
@@ -248,14 +248,14 @@ class Agent:
                 loc = torch.zeros(action_size, dtype=torch.float64)
                 scale_tril = torch.tensor([[1, 0], [1, 1]], dtype=torch.float64)
                 policy_prior = MultivariateNormal(loc=loc, scale_tril=scale_tril)
-                policy_prior_log_probs = policy_prior.log_prob(actions_pred.cpu()).unsqueeze(-1)
+                policy_prior_log_probs = policy_prior.log_prob(actions_pred).unsqueeze(-1)
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
                 self.critic1(obs.detach(), prev_actions, actions_pred), 
                 self.critic2(obs.detach(), prev_actions, actions_pred)).mean(-1).unsqueeze(-1)
-            intrinsic_entropy = torch.mean((alpha * log_pis.cpu())*masks.detach().cpu()).item()
-            actor_loss = (alpha * log_pis.cpu() - policy_prior_log_probs - Q.cpu())*masks.detach().cpu()
+            intrinsic_entropy = torch.mean((alpha * log_pis)*masks.detach()).item()
+            actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks.detach()
             actor_loss = actor_loss.mean() / masks.mean()
 
             self.actor_opt.zero_grad()
