@@ -201,12 +201,13 @@ class Agent:
         
                 
         # Train critics
-        next_action, log_pis_next = self.actor(next_obs.detach())
-        Q_target1_next = self.critic1_target(next_obs.detach(), actions.detach(), next_action.detach())
-        Q_target2_next = self.critic2_target(next_obs.detach(), actions.detach(), next_action.detach())
-        Q_target_next = torch.min(Q_target1_next, Q_target2_next)
-        if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
-        else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
+        with torch.no_grad():
+            next_action, log_pis_next = self.actor(next_obs)
+            Q_target1_next = self.critic1_target(next_obs, actions, next_action)
+            Q_target2_next = self.critic2_target(next_obs, actions, next_action)
+            Q_target_next = torch.min(Q_target1_next, Q_target2_next)
+            if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
+            else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
         Q_1 = self.critic1(obs.detach(), prev_actions, actions.detach())
         critic1_loss = 0.5*F.mse_loss(Q_1*masks.detach(), Q_targets.detach()*masks.detach())
