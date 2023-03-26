@@ -30,6 +30,34 @@ class Summarizer(nn.Module):
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(x, h)
         return(h)
+    
+    
+    
+class Variational(nn.Module):
+    
+    def __init__(self, input_size, output_size, args = default_args):
+        super(Variational, self).__init__()
+        
+        self.args = args
+        
+        self.mu = nn.Linear(input_size, output_size)
+        self.rho = nn.Linear(input_size, output_size)
+        
+        self.mu.apply(init_weights)
+        self.rho.apply(init_weights)
+        self.to(args.device)
+        
+    def forward(self, x):
+        mu = self.mu(x)
+        std = torch.log1p(torch.exp(self.rho(x))) 
+        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        x = torch.tanh(mu + e * std)
+        def log_prob_func(x_, epsilon=1e-6):
+            log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - x_.pow(2) + epsilon)
+            log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
+            return(log_prob)
+        return(x, mu, std, log_prob_func(x), log_prob_func)
+        
         
     
 
@@ -42,24 +70,18 @@ class Forward(nn.Module):
         
         self.sum = Summarizer(self.args) # Not implemented
         self.lin = nn.Linear(obs_size + action_size, args.hidden)
-        self.mu = nn.Linear(args.hidden, args.hidden)
-        self.rho = nn.Linear(args.hidden, args.hidden)
+        self.var = Variational(args.hidden, args.hidden, args = args)
         self.lin_2 = nn.Linear(args.hidden, obs_size)
         
         self.lin.apply(init_weights)
-        self.mu.apply(init_weights)
-        self.rho.apply(init_weights)
         self.to(args.device)
         
     def forward(self, obs, action):
         x = torch.cat([obs, action], -1)
         x = self.lin(x)
-        mu = self.mu(x)
-        std = torch.log1p(torch.exp(self.rho(x))) 
-        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = torch.tanh(mu + e * std)
+        x, mu, std, _, log_prob_func = self.var(x)
         pred_obs = self.lin_2(x)
-        return(pred_obs, mu, std)
+        return(pred_obs, mu, std, log_prob_func)
         
 
 
@@ -74,23 +96,14 @@ class Actor(nn.Module):
         self.lin = nn.Sequential(
             nn.Linear(obs_size, args.hidden),
             nn.LeakyReLU())
-        self.mu = nn.Linear(args.hidden, action_size)
-        self.rho= nn.Linear(args.hidden, action_size)
+        self.var = Variational(args.hidden, action_size, args = args)
 
         self.lin.apply(init_weights)
-        self.mu.apply(init_weights)
-        self.rho.apply(init_weights)
         self.to(self.args.device)
 
-    def forward(self, obs, epsilon=1e-6):
+    def forward(self, obs):
         x = self.lin(obs)
-        mu = self.mu(x)
-        std = torch.log1p(torch.exp(self.rho(x)))
-        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        action = torch.tanh(mu + e * std)
-        log_prob = Normal(mu, std).log_prob(mu + e * std) - \
-            torch.log(1 - action.pow(2) + epsilon)
-        log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
+        action, _, _, log_prob, _ = self.var(x)
         return(action, log_prob)
     
     
@@ -148,6 +161,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((3,obs_size),(3,action_size))))
+    print(torch_summary(critic, ((3,obs_size),(3,action_size),(3,action_size))))
 
 # %%

@@ -154,7 +154,7 @@ class Agent:
                             
         # Train forward and clone
         def train_forward(forward, opt):
-            pred_obs, mu_b, std_b = forward(obs, actions)   
+            pred_obs, mu_b, std_b, log_prob_func = forward(obs, actions)   
             errors = F.mse_loss(pred_obs, next_obs.detach(), reduction = "none").sum(-1).unsqueeze(-1)
             complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
                     
@@ -171,8 +171,7 @@ class Agent:
             return(mu_b, std_b, errors, error_loss, complexity_loss)
         
         self.clone.load_state_dict(self.forward.state_dict())
-        mu_b, std_b, errors, error_loss, complexity_loss = \
-            train_forward(self.forward, self.forward_opt)
+        mu_b, std_b, errors, error_loss, complexity_loss = train_forward(self.forward, self.forward_opt)
         train_forward(self.clone, self.clone_opt)
                         
         
@@ -180,7 +179,7 @@ class Agent:
         # Get curiosity  
         naive_1_curiosity = self.args.naive_1_eta * errors
         
-        _, mu_a, std_a = self.forward(obs, actions)    
+        _, mu_a, std_a, _ = self.forward(obs, actions)    
         naive_2_curiosity = self.args.naive_2_eta * torch.abs(mu_a - mu_b).mean(-1).unsqueeze(-1)
         naive_3_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1)
         
