@@ -40,7 +40,7 @@ class Forward(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args)
+        self.sum = Summarizer(self.args) # Not implemented
         self.lin = nn.Linear(obs_size + action_size, args.hidden)
         self.mu = nn.Sequential(
             nn.Linear(args.hidden, args.hidden),
@@ -74,13 +74,12 @@ class Actor(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args)
+        self.sum = Summarizer(self.args) # Not implemented
         self.lin = nn.Sequential(
             nn.Linear(obs_size, args.hidden),
             nn.LeakyReLU())
         self.mu = nn.Linear(args.hidden, action_size)
-        self.rho= nn.Sequential(
-            nn.Linear(args.hidden, action_size))
+        self.rho= nn.Linear(args.hidden, action_size)
 
         self.lin.apply(init_weights)
         self.mu.apply(init_weights)
@@ -108,7 +107,7 @@ class Critic(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args)
+        self.sum = Summarizer(self.args) # Implemented
         self.lin = nn.Sequential(
             nn.Linear(args.hidden + action_size, args.hidden),
             nn.LeakyReLU(),
