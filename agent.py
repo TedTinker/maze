@@ -202,7 +202,6 @@ class Agent:
                 
         # Train critics
         next_action, log_pis_next = self.actor(next_obs.detach())
-        print(actions.shape, next_action.shape)
         Q_target1_next = self.critic1_target(next_obs.detach(), actions.detach(), next_action.detach())
         Q_target2_next = self.critic2_target(next_obs.detach(), actions.detach(), next_action.detach())
         Q_target_next = torch.min(Q_target1_next, Q_target2_next)
@@ -242,7 +241,7 @@ class Agent:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha
-                actions_pred, log_pis = self.actor(obs.detach())
+                actions_pred, log_pis = self.actor(obs)
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
@@ -252,10 +251,10 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
-                self.critic1(obs.detach(), prev_actions, actions_pred), 
-                self.critic2(obs.detach(), prev_actions, actions_pred)).mean(-1).unsqueeze(-1)
-            intrinsic_entropy = torch.mean((alpha * log_pis)*masks.detach()).item()
-            actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks.detach()
+                self.critic1(obs, prev_actions, actions_pred), 
+                self.critic2(obs, prev_actions, actions_pred)).mean(-1).unsqueeze(-1)
+            intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
+            actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()
 
             self.actor_opt.zero_grad()
