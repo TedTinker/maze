@@ -138,3 +138,13 @@ def dkl(mu_1, std_1, mu_2, std_2):
     out = (.5 * (term_1 + term_2 - term_3 - 1))
     out = torch.nan_to_num(out)
     return(out)
+
+
+
+from torch import nn 
+def invert_linear_layer(layer):
+    weights = layer.weight.data
+    reverse_weights = torch.pinverse(weights)
+    reverse_layer = nn.Linear(layer.out_features, layer.in_features)
+    reverse_layer.weight.data = reverse_weights
+    return(reverse_layer)

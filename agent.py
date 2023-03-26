@@ -155,6 +155,7 @@ class Agent:
         def train_forward(forward, opt):
             pred_obs, mu_b, std_b, log_prob_func = forward(obs, actions)   
             errors = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+            #errors = -log_prob_func(next_obs)
             complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
                     
             errors = errors * masks
@@ -194,7 +195,6 @@ class Agent:
         
         extrinsic = torch.mean(rewards).item()
         intrinsic_curiosity = curiosity.mean().item()
-        if(intrinsic_curiosity != 0): intrinsic_curiosity = log(intrinsic_curiosity) 
         rewards += curiosity
         
         

@@ -6,7 +6,7 @@ from torch.distributions import Normal
 import torch.nn.functional as F
 from torchinfo import summary as torch_summary
 
-from utils import default_args, init_weights
+from utils import default_args, init_weights, invert_linear_layer
 from maze import obs_size, action_size
 
 
@@ -32,7 +32,8 @@ class Summarizer(nn.Module):
         return(h)
     
     
-    
+
+# I think this needs min-max!
 class Variational(nn.Module):
     
     def __init__(self, input_size, output_size, args = default_args):
@@ -52,7 +53,7 @@ class Variational(nn.Module):
         std = torch.log1p(torch.exp(self.rho(x))) 
         e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         x = torch.tanh(mu + e * std)
-        def log_prob_func(x_, epsilon=1e-6):
+        def log_prob_func(x_, epsilon = 1e-6):
             log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - x_.pow(2) + epsilon)
             log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
             return(log_prob)
@@ -81,7 +82,11 @@ class Forward(nn.Module):
         x = self.lin(x)
         x, mu, std, _, log_prob_func = self.var(x)
         pred_obs = self.lin_2(x)
-        return(pred_obs, mu, std, log_prob_func)
+        reverse = invert_linear_layer(self.lin_2)
+        def new_log_prob_func(pred_obs, epsilon = 1e-6):
+            x = reverse(pred_obs)
+            return(log_prob_func(x, epsilon))
+        return(pred_obs, mu, std, new_log_prob_func)
         
 
 
