@@ -3,13 +3,9 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Without this, pyplot crashes the ker
 
 import matplotlib.pyplot as plt 
 import numpy as np
-import datetime 
 from math import log
 
-def duration(start_time):
-    change_time = datetime.datetime.now() - start_time
-    change_time = change_time - datetime.timedelta(microseconds=change_time.microseconds)
-    return(change_time)
+from utils import duration
 
 
 
@@ -58,7 +54,6 @@ def many_min_max(min_max_list):
 
 
 def plots(plot_dicts, min_max_dict):
-    start_time = datetime.datetime.now()
     fig, axs = plt.subplots(15, len(plot_dicts), figsize = (10*len(plot_dicts), 100))
                 
     for i, plot_dict in enumerate(plot_dicts):
@@ -276,7 +271,7 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        print("\n{}: {}.".format(plot_dict["title"], duration(start_time)))
+        print("\n{}: {}.".format(plot_dict["title"], duration()))
 
     
     

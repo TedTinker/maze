@@ -1,7 +1,15 @@
 #%% 
 
+import datetime 
+
+start_time = datetime.datetime.now()
+    
+def duration(start_time = start_time):
+    change_time = datetime.datetime.now() - start_time
+    change_time = change_time - datetime.timedelta(microseconds=change_time.microseconds)
+    return(change_time)
+
 import argparse
-#import sys ; sys.argv=[''] ; del sys
 import os 
 
 if(os.getcwd().split("/")[-1] != "easy_maze"): os.chdir("easy_maze")
