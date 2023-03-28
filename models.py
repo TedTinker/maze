@@ -58,6 +58,43 @@ class Variational(nn.Module):
             log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
             return(log_prob)
         return(x, mu, std, log_prob_func(x), log_prob_func)
+    
+    
+    
+"""
+class Variational(nn.Module):
+    
+    def __init__(self, input_size, output_size, layers, args = default_args):
+        super(Variational, self).__init__()
+        
+        self.args = args
+        
+        self.mu = torch.nn.ModuleList()
+        self.rho = torch.nn.ModuleList()
+        for i in range(layers):
+            in_size = args.hidden ; out_size = args.hidden
+            if(i == 0): in_size = input_size
+            if(i == layers - 1): out_size = output_size
+            self.mu.append(nn.Linear( in_size, out_size))
+            self.rho.append(nn.Linear(in_size, out_size))
+        
+        self.mu.apply(init_weights)
+        self.rho.apply(init_weights)
+        self.to(args.device)
+        
+    def forward(self, x):
+        for i, (mu_layer, rho_layer) in enumerate(zip(self.mu, self.rho)):
+            if(i == 0): mu = mu_layer(x)  ; rho = rho_layer(x)
+            else:       mu = mu_layer(mu) ; rho = rho_layer(rho)
+        std = torch.log1p(torch.exp(rho))
+        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        x = torch.tanh(mu + e * std)
+        def log_prob_func(x_, epsilon = 1e-6):
+            log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - x_.pow(2) + epsilon)
+            log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
+            return(log_prob)
+        return(x, mu, std, log_prob_func(x), log_prob_func)
+"""
         
         
     
