@@ -154,7 +154,7 @@ class Agent:
                             
         # Train forward and clone
         def train_forward(forward, opt):
-            pred_obs, mu_b, std_b, log_prob_func = forward(obs, actions)   
+            pred_obs, mu_b, std_b, log_prob_func = forward(obs, prev_actions, actions)   
             accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
             #accuracy = -log_prob_func(next_obs)
             complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
@@ -180,7 +180,7 @@ class Agent:
         # Get curiosity  
         naive_1_curiosity = self.args.naive_1_eta * accuracy
         
-        _, mu_a, std_a, _ = self.forward(obs, actions)    
+        _, mu_a, std_a, _ = self.clone(obs, prev_actions, actions)    
         naive_2_curiosity = self.args.naive_2_eta * torch.abs(mu_a - mu_b).mean(-1).unsqueeze(-1)
         naive_3_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1)
         

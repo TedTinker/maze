@@ -25,7 +25,7 @@ class Summarizer(nn.Module):
             batch_first = True)
         
         self.gru.apply(init_weights)
-        self.to(self.args.device)
+        self.to(args.device)
         
     def forward(self, obs, prev_a, h = None):
         x = torch.cat([obs, prev_a], -1)
@@ -83,15 +83,16 @@ class Forward(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args) # Not implemented
-        self.lin = nn.Linear(obs_size + action_size, args.hidden)
+        self.sum = Summarizer(args) 
+        self.lin = nn.Linear(args.hidden + action_size, args.hidden)
         self.var = Variational(args.hidden, obs_size, args.forward_var_layers, args = args)
         
         self.lin.apply(init_weights)
         self.to(args.device)
         
-    def forward(self, obs, action):
-        x = torch.cat([obs, action], -1)
+    def forward(self, obs, prev_action, action):
+        h = self.sum(obs, prev_action)
+        x = torch.cat((h, action), dim=-1)
         x = self.lin(x)
         pred_obs, mu, std, _, log_prob_func = self.var(x)
         return(pred_obs, mu, std, log_prob_func)
@@ -105,14 +106,14 @@ class Actor(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args) # Implemented
+        self.sum = Summarizer(args) 
         self.lin = nn.Sequential(
             nn.Linear(args.hidden, args.hidden),
             nn.LeakyReLU())
         self.var = Variational(args.hidden, action_size, args.actor_var_layers, args = args)
 
         self.lin.apply(init_weights)
-        self.to(self.args.device)
+        self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
         h = self.sum(obs, prev_action, h)
@@ -129,7 +130,7 @@ class Critic(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args) # Implemented
+        self.sum = Summarizer(args) 
         self.lin = nn.Sequential(
             nn.Linear(args.hidden + action_size, args.hidden),
             nn.LeakyReLU(),
