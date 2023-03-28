@@ -105,7 +105,7 @@ class Actor(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(self.args) # Not implemented
+        self.sum = Summarizer(self.args) # Implemented
         self.lin = nn.Sequential(
             nn.Linear(args.hidden, args.hidden),
             nn.LeakyReLU())
