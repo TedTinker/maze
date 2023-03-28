@@ -41,16 +41,16 @@ class Variational(nn.Module):
         
         self.args = args
         
-        self.mu = nn.Linear(input_size, output_size)
-        self.rho = nn.Linear(input_size, output_size)
+        self.mu = torch.nn.ModuleList([nn.Linear(input_size, output_size)])
+        self.rho = torch.nn.ModuleList([nn.Linear(input_size, output_size)])
         
         self.mu.apply(init_weights)
         self.rho.apply(init_weights)
         self.to(args.device)
         
     def forward(self, x):
-        mu = self.mu(x)
-        std = torch.log1p(torch.exp(self.rho(x))) 
+        mu = self.mu[0](x)
+        std = torch.log1p(torch.exp(self.rho[0](x))) 
         e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         x = torch.tanh(mu + e * std)
         def log_prob_func(x_, epsilon = 1e-6):
