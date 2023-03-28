@@ -37,6 +37,8 @@ parser.add_argument('--wall_punishment',    type=int,   default = -1)
 
 # Module 
 parser.add_argument('--hidden',             type=int,   default = 32)
+parser.add_argument('--forward_var_layers', type=int,   default = 1)
+parser.add_argument('--actor_var_layers',   type=int,   default = 1)
 parser.add_argument("--beta",               type=float, default = .005)   # Scale complexity loss
 parser.add_argument("--sigma",              type=float, default = 1)   # Scale complexity loss
 parser.add_argument("--sample_elbo",        type=int,   default = 10)  # Samples for elbo

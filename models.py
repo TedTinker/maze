@@ -36,7 +36,7 @@ class Summarizer(nn.Module):
 # I think this needs min-max!
 class Variational(nn.Module):
     
-    def __init__(self, input_size, output_size, args = default_args):
+    def __init__(self, input_size, output_size, layers, args = default_args):
         super(Variational, self).__init__()
         
         self.args = args
@@ -108,7 +108,7 @@ class Forward(nn.Module):
         
         self.sum = Summarizer(self.args) # Not implemented
         self.lin = nn.Linear(obs_size + action_size, args.hidden)
-        self.var = Variational(args.hidden, args.hidden, args = args)
+        self.var = Variational(args.hidden, args.hidden, args.forward_var_layers, args = args)
         self.lin_2 = nn.Linear(args.hidden, obs_size)
         
         self.lin.apply(init_weights)
@@ -138,7 +138,7 @@ class Actor(nn.Module):
         self.lin = nn.Sequential(
             nn.Linear(obs_size, args.hidden),
             nn.LeakyReLU())
-        self.var = Variational(args.hidden, action_size, args = args)
+        self.var = Variational(args.hidden, action_size, args.actor_var_layers, args = args)
 
         self.lin.apply(init_weights)
         self.to(self.args.device)
