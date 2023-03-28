@@ -1,5 +1,9 @@
 #%% 
 
+# Issues:
+# Free Curiosity should depend on changing just variational layers.
+# Use log_prob accuracy loss.
+
 import datetime 
 
 start_time = datetime.datetime.now()
