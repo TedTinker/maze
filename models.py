@@ -47,8 +47,12 @@ class Variational(nn.Module):
             in_size = args.hidden ; out_size = args.hidden
             if(i == 0): in_size = input_size
             if(i == layers - 1): out_size = output_size
-            self.mu.append(nn.Linear( in_size, out_size))
-            self.rho.append(nn.Linear(in_size, out_size))
+            self.mu.append(nn.Sequential(
+                nn.Linear(in_size, out_size),
+                nn.Tanh() if i != layers - 1 else nn.Identity()))
+            self.rho.append(nn.Sequential(
+                nn.Linear(in_size, out_size),
+                nn.LeakyReLU() if i != layers - 1 else nn.Identity()))
         
         self.mu.apply(init_weights)
         self.rho.apply(init_weights)
@@ -66,46 +70,8 @@ class Variational(nn.Module):
             log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
             return(log_prob)
         return(x, mu, std, log_prob_func(x), log_prob_func)
-    
-    
-    
-"""
-class Variational(nn.Module):
-    
-    def __init__(self, input_size, output_size, layers, args = default_args):
-        super(Variational, self).__init__()
-        
-        self.args = args
-        
-        self.mu = torch.nn.ModuleList()
-        self.rho = torch.nn.ModuleList()
-        for i in range(layers):
-            in_size = args.hidden ; out_size = args.hidden
-            if(i == 0): in_size = input_size
-            if(i == layers - 1): out_size = output_size
-            self.mu.append(nn.Linear( in_size, out_size))
-            self.rho.append(nn.Linear(in_size, out_size))
-        
-        self.mu.apply(init_weights)
-        self.rho.apply(init_weights)
-        self.to(args.device)
-        
-    def forward(self, x):
-        for i, (mu_layer, rho_layer) in enumerate(zip(self.mu, self.rho)):
-            if(i == 0): mu = mu_layer(x)  ; rho = rho_layer(x)
-            else:       mu = mu_layer(mu) ; rho = rho_layer(rho)
-        std = torch.log1p(torch.exp(rho))
-        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = torch.tanh(mu + e * std)
-        def log_prob_func(x_, epsilon = 1e-6):
-            log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - x_.pow(2) + epsilon)
-            log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
-            return(log_prob)
-        return(x, mu, std, log_prob_func(x), log_prob_func)
-"""
         
         
-    
 
 class Forward(nn.Module):
     
@@ -116,8 +82,7 @@ class Forward(nn.Module):
         
         self.sum = Summarizer(self.args) # Not implemented
         self.lin = nn.Linear(obs_size + action_size, args.hidden)
-        self.var = Variational(args.hidden, args.hidden, args.forward_var_layers, args = args)
-        self.lin_2 = nn.Linear(args.hidden, obs_size)
+        self.var = Variational(args.hidden, obs_size, args.forward_var_layers, args = args)
         
         self.lin.apply(init_weights)
         self.to(args.device)
@@ -125,13 +90,8 @@ class Forward(nn.Module):
     def forward(self, obs, action):
         x = torch.cat([obs, action], -1)
         x = self.lin(x)
-        x, mu, std, _, log_prob_func = self.var(x)
-        pred_obs = self.lin_2(x)
-        reverse = invert_linear_layer(self.lin_2)
-        def new_log_prob_func(pred_obs, epsilon = 1e-6):
-            x = reverse(pred_obs)
-            return(log_prob_func(x, epsilon))
-        return(pred_obs, mu, std, new_log_prob_func)
+        pred_obs, mu, std, _, log_prob_func = self.var(x)
+        return(pred_obs, mu, std, log_prob_func)
         
 
 
