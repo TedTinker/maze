@@ -117,18 +117,19 @@ class Agent:
     
     
     def episode(self, push = True, verbose = False):
-        done = False
+        done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
         t_maze = T_Maze()
         if(verbose): print("\n\n\n\n\nSTART!\n")
         if(verbose): print(t_maze)
         with torch.no_grad():
             while(done == False):
-                o = t_maze.obs()
-                a, _ = self.actor(o)
-                action = a[0].squeeze(0).tolist()
+                o = t_maze.obs().unsqueeze(0)
+                a, _, h = self.actor(o, prev_a)
+                action = torch.flatten(a).tolist()
                 r, spot_name, done = t_maze.action(action[0], action[1], verbose)
-                no = t_maze.obs()
+                no = t_maze.obs().unsqueeze(0)
                 if(push): self.memory.push(o, a, r, no, done, done)
+                prev_a = a
         self.episodes += 1
         return(r, spot_name)
     
@@ -201,7 +202,7 @@ class Agent:
                 
         # Train critics
         with torch.no_grad():
-            next_action, log_pis_next = self.actor(next_obs)
+            next_action, log_pis_next, _ = self.actor(next_obs, actions)
             Q_target1_next = self.critic1_target(next_obs, actions, next_action)
             Q_target2_next = self.critic2_target(next_obs, actions, next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
@@ -224,7 +225,7 @@ class Agent:
         
         # Train alpha
         if self.args.alpha == None:
-            actions_pred, log_pis = self.actor(obs)
+            actions_pred, log_pis, _ = self.actor(obs, prev_actions)
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy))*masks
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()
@@ -241,7 +242,7 @@ class Agent:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha
-            actions_pred, log_pis = self.actor(obs)
+            actions_pred, log_pis, _ = self.actor(obs, prev_actions)
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
