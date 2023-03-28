@@ -35,10 +35,6 @@ class Agent:
         
         self.forward = Forward(self.args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
-        
-        self.clone = Forward(self.args)
-        clone_params = self.forward.state_dict() # Use just parameters with mu, rho
-        self.clone_opt = optim.Adam(self.clone.parameters(), lr=self.args.forward_lr, weight_decay=0)   
                            
         self.actor = Actor(self.args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=self.args.actor_lr, weight_decay=0)     
@@ -152,35 +148,29 @@ class Agent:
         
         
                             
-        # Train forward and clone
-        def train_forward(forward, opt):
-            pred_obs, mu_b, std_b, log_prob_func = forward(obs, prev_actions, actions)   
-            accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-            #accuracy = -log_prob_func(next_obs)
-            complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
-                    
-            accuracy = accuracy * masks
-            accuracy_loss = accuracy.mean()
-            complexity = complexity * masks
-            complexity_loss = complexity.mean()
-            forward_loss = accuracy_loss + self.args.beta * complexity_loss
-            if(self.args.beta == 0): complexity = None ; complexity_loss = None
-            
-            opt.zero_grad()
-            forward_loss.backward()
-            opt.step()
-            return(mu_b, std_b, accuracy, accuracy_loss, complexity_loss)
+        # Train forward
+        pred_obs, mu_b, std_b, log_prob_func = self.forward(obs, prev_actions, actions)   
+        accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+        #accuracy = -log_prob_func(next_obs)
+        complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
+                
+        accuracy = accuracy * masks
+        accuracy_loss = accuracy.mean()
+        complexity = complexity * masks
+        complexity_loss = complexity.mean()
+        forward_loss = accuracy_loss + self.args.beta * complexity_loss
+        if(self.args.beta == 0): complexity = None ; complexity_loss = None
         
-        self.clone.load_state_dict(self.forward.state_dict())
-        mu_b, std_b, accuracy, accuracy_loss, complexity_loss = train_forward(self.forward, self.forward_opt)
-        train_forward(self.clone, self.clone_opt)
+        self.forward_opt.zero_grad()
+        forward_loss.backward()
+        self.forward_opt.step()
+        
                         
-        
         
         # Get curiosity  
         naive_1_curiosity = self.args.naive_1_eta * accuracy
         
-        _, mu_a, std_a, _ = self.clone(obs, prev_actions, actions)    
+        _, mu_a, std_a, _ = self.forward(obs, prev_actions, actions)    
         naive_2_curiosity = self.args.naive_2_eta * torch.abs(mu_a - mu_b).mean(-1).unsqueeze(-1)
         naive_3_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1)
         
@@ -329,4 +319,8 @@ class Agent:
         self.critic2.train()
         self.critic2_target.train()
         
+        
+        
+if __name__ == "__main__":
+    agent = Agent()
 # %%
