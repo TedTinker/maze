@@ -23,7 +23,7 @@ class Agent:
     def __init__(self, args = default_args):
         
         self.args = args
-        self.episodes = 0 ; self.epochs = 0
+        self.episodes = 0 ; self.epochs = 0 ; self.steps = 0
         
         self.target_entropy = self.args.target_entropy # -dim(A)
         self.alpha = 1
@@ -67,30 +67,12 @@ class Agent:
         
     def training(self):
         manager = enlighten.Manager(width = 150)
-        E = manager.counter(total = self.args.episodes, desc = self.plot_dict["title"] + ":", unit = "ticks", color = "blue")
+        E = manager.counter(total = self.args.epochs, desc = self.plot_dict["title"] + ":", unit = "ticks", color = "blue")
         while(True):
             E.update()
             r, spot_name = self.episode()
-            l, e, ic, ie, naive_1, naive_2, naive_3, free = self.epoch(batch_size = self.args.batch_size)
-            if(self.episodes == 1 or self.episodes >= self.args.episodes or self.episodes % self.args.keep_data == 0):
-                self.plot_dict["rewards"].append(r)
-                self.plot_dict["spot_names"].append(spot_name)
-                self.plot_dict["accuracy"].append(l[0][0])
-                self.plot_dict["complexity"].append(l[0][1])
-                self.plot_dict["alpha"].append(l[0][2])
-                self.plot_dict["actor"].append(l[0][3])
-                self.plot_dict["critic_1"].append(l[0][4])
-                self.plot_dict["critic_2"].append(l[0][5])
-                self.plot_dict["extrinsic"].append(e)
-                self.plot_dict["intrinsic_curiosity"].append(ic)
-                self.plot_dict["intrinsic_entropy"].append(ie)
-                self.plot_dict["naive_1"].append(naive_1)
-                self.plot_dict["naive_2"].append(naive_2)
-                self.plot_dict["naive_3"].append(naive_3)
-                self.plot_dict["free"].append(free)
-            if(self.episodes >= self.args.episodes): 
-                print("\n\nDone training!")
-                break
+            if(self.epochs >= self.args.epochs): 
+                print("\n\nDone training!") ; break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         
         min_max_dict = {key : [] for key in self.plot_dict.keys()}
@@ -115,23 +97,55 @@ class Agent:
         t_maze = T_Maze(self.args)
         if(verbose): print("\n\n\n\n\nSTART!\n")
         if(verbose): print(t_maze)
-        with torch.no_grad():
-            while(done == False):
-                o = t_maze.obs().unsqueeze(0)
-                a, _, h = self.actor(o, prev_a)
-                action = torch.flatten(a).tolist()
-                r, spot_name, done = t_maze.action(action[0], action[1], verbose)
-                no = t_maze.obs().unsqueeze(0)
-                if(push): self.memory.push(o, a, r, no, done, done)
-                prev_a = a
+        
+        for step in range(self.args.max_steps):
+            self.steps += 1
+            if(not done):
+                with torch.no_grad():
+                    o = t_maze.obs().unsqueeze(0)
+                    a, _, h = self.actor(o, prev_a, h)
+                    action = torch.flatten(a).tolist()
+                    r, spot_name, done = t_maze.action(action[0], action[1], verbose)
+                    no = t_maze.obs().unsqueeze(0)
+                    if(push): self.memory.push(o, a, r, no, done, done)
+                    prev_a = a
+                
+            if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
+                print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))
+                plot_data = self.epoch(batch_size = self.args.batch_size)
+                if(plot_data == False): print("Not getting an epoch!")
+                else:
+                    l, e, ic, ie, naive_1, naive_2, naive_3, free = plot_data
+                    if(self.epochs == 1 or self.epochs >= self.args.epochs or self.epochs % self.args.keep_data == 0):
+                        self.plot_dict["rewards"].append(r)
+                        self.plot_dict["spot_names"].append(spot_name)
+                        self.plot_dict["accuracy"].append(l[0][0])
+                        self.plot_dict["complexity"].append(l[0][1])
+                        self.plot_dict["alpha"].append(l[0][2])
+                        self.plot_dict["actor"].append(l[0][3])
+                        self.plot_dict["critic_1"].append(l[0][4])
+                        self.plot_dict["critic_2"].append(l[0][5])
+                        self.plot_dict["extrinsic"].append(e)
+                        self.plot_dict["intrinsic_curiosity"].append(ic)
+                        self.plot_dict["intrinsic_entropy"].append(ie)
+                        self.plot_dict["naive_1"].append(naive_1)
+                        self.plot_dict["naive_2"].append(naive_2)
+                        self.plot_dict["naive_3"].append(naive_3)
+                        self.plot_dict["free"].append(free)
+                        
         self.episodes += 1
         return(r, spot_name)
     
     
     
     def epoch(self, batch_size):
-                
-        obs, actions, rewards, dones, masks = self.memory.sample(batch_size)
+                        
+        batch = self.memory.sample(batch_size)
+        if(batch == False): return(False)
+        
+        self.epochs += 1
+
+        obs, actions, rewards, dones, masks = batch
         
         #print("\n\n")
         #print(obs.shape, actions.shape, rewards.shape, dones.shape, masks.shape)
@@ -277,8 +291,6 @@ class Agent:
         naive_3_curiosity = naive_3_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()
         if(free_curiosity == 0): free_curiosity = None
-        
-        self.epochs += 1
         
         return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_1_curiosity, naive_2_curiosity, naive_3_curiosity, free_curiosity)
                      

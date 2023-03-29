@@ -58,12 +58,18 @@ else:
     order = order.split("+")
     order = [o for o in order if o != "break"]
     
-    sleep(2)
     for name in order:
-        with open("saved/" + name + "/" + "plot_dict.pickle", "rb") as handle: 
-            plot_dicts.append(pickle.load(handle))
-        with open("saved/" + name + "/" + "min_max_dict.pickle", "rb") as handle: 
-            min_max_dicts.append(pickle.load(handle))
+        got_plot_dicts = False ; got_min_max_dicts = False
+        while(not got_plot_dicts):
+            try:
+                with open("saved/" + name + "/" + "plot_dict.pickle", "rb") as handle: 
+                    plot_dicts.append(pickle.load(handle)) ; got_plot_dicts = True
+            except: print("Stuck trying to get {}'s plot_dicts...".format(name)) ; sleep(1)
+        while(not got_min_max_dicts):
+            try:
+                with open("saved/" + name + "/" + "min_max_dict.pickle", "rb") as handle: 
+                    min_max_dicts.append(pickle.load(handle)) ; got_min_max_dicts = True 
+            except: print("Stuck trying to get {}'s min_max_dicts...".format(name)) ; sleep(1)
             
     min_max_dict = {}
     for key in plot_dicts[0].keys():

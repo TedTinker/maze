@@ -11,6 +11,9 @@ from utils import duration
 
 def get_quantiles(plot_dict, name):
     xs = [i for i, x in enumerate(plot_dict[name][0]) if x != None]
+    print("\n\n", name)
+    for agent_record in plot_dict[name]:
+        print(len(agent_record))
     lists = np.array(plot_dict[name], dtype=float)    
     lists = lists[:,xs]
     quantile_dict = {"xs" : [x * plot_dict["args"][0].keep_data for x in xs]}

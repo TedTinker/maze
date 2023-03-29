@@ -120,7 +120,7 @@ class RecurrentReplayBuffer:
             self.time_ptr += 1
 
     def sample(self, batch_size):
-
+        if(self.num_episodes == 0): return(False)
         if(self.num_episodes < batch_size): return self.sample(self.num_episodes)
 
         # sample episode indices
