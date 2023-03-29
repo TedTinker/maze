@@ -150,8 +150,10 @@ class Agent:
                             
         # Train forward
         pred_obs, mu_b, std_b, log_prob_func = self.forward(obs, prev_actions, actions)   
-        accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-        #accuracy = -log_prob_func(next_obs)
+        if(self.args.accuracy == "mse"):
+            accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+        if(self.args.accuracy == "log_prob"):
+            accuracy = -log_prob_func(next_obs)
         complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
                 
         accuracy = accuracy * masks

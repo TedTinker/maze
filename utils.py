@@ -34,6 +34,7 @@ parser.add_argument('--device',             type=str,   default = "cpu")
 parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--step_lim_punishment',type=int,   default = -1)
 parser.add_argument('--wall_punishment',    type=int,   default = -1)
+parser.add_argument('--non_one',            type=int,   default = 0)
 
 # Module 
 parser.add_argument('--hidden',             type=int,   default = 32)
@@ -63,6 +64,7 @@ parser.add_argument("--naive_2_eta",        type=float, default = 100)        # 
 parser.add_argument("--naive_3_eta",        type=float, default = 1000)        # Scale curiosity
 parser.add_argument("--free_eta",           type=float, default = .01)        # Scale curiosity
 parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
+parser.add_argument('--accuracy',           type=str,   default = "mse")
 parser.add_argument("--curiosity",          type=str,   default = "none")     # Which kind of curiosity
 
 # Saving data

@@ -11,7 +11,7 @@ class Spot:
     def __init__(self, pos, exit_reward = None, name = "NONE"):
         self.pos = pos ; self.exit_reward = exit_reward
         self.name = name
-        
+            
         
 
 class T_Maze:
@@ -26,9 +26,9 @@ class T_Maze:
         self.agent_pos = (0, 0)
         
     def obs(self):
-        pos = [1 if spot.pos == self.agent_pos else 0 for spot in self.maze]
-        right = 0 ; left = 0 ; up = 0 ; down = 0
-        for i, spot in enumerate(self.maze):
+        pos = [1 if spot.pos == self.agent_pos else self.args.non_one for spot in self.maze]
+        right = self.args.non_one ; left = self.args.non_one ; up = self.args.non_one ; down = self.args.non_one
+        for spot in self.maze:
             if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
             if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1 
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1 
@@ -39,10 +39,10 @@ class T_Maze:
     def obs_str(self):
         obs = self.obs().squeeze(0)
         spot_num = torch.argmax(obs[:-4]).item()
-        r = bool(obs[-4].item())
-        l = bool(obs[-3].item())
-        u = bool(obs[-2].item())
-        d = bool(obs[-1].item())
+        r = bool(obs[-4].item()==1)
+        l = bool(obs[-3].item()==1)
+        u = bool(obs[-2].item()==1)
+        d = bool(obs[-1].item()==1)
         return("Observation: Spot #{}. Right {}. Left {}. Up {}. Down {}.".format(
             spot_num, r, l, u, d))
         
@@ -73,6 +73,7 @@ class T_Maze:
         if(verbose): print("\n{}\n".format(self))
         if(verbose): print("Reward: {}. Spot name: {}. Done: {}.".format(reward, spot_name, done))
         if(verbose): print(self.obs_str())
+        if(verbose): print(self.obs())
         return(reward, spot_name, done)    
     
     def __str__(self):

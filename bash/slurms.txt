@@ -16,6 +16,15 @@ ef : --alpha None --curiosity free
 
 
 
+mse : 
+log : --accuracy log_prob
+
+en1_mse : --alpha None --curiosity naive_1
+en1_log : --alpha None --curiosity naive_1 --accuracy log_prob
+
+
+
+
 
 
 en2a : --alpha None --curiosity naive_2 --naive_2_eta 50
