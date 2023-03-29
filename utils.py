@@ -41,8 +41,7 @@ parser.add_argument('--hidden',             type=int,   default = 32)
 parser.add_argument('--forward_var_layers', type=int,   default = 2)
 parser.add_argument('--actor_var_layers',   type=int,   default = 1)
 parser.add_argument("--beta",               type=float, default = .005)   # Scale complexity loss
-parser.add_argument("--sigma",              type=float, default = 1)   # Scale complexity loss
-parser.add_argument("--sample_elbo",        type=int,   default = 10)  # Samples for elbo
+parser.add_argument("--sigma",              type=float, default = 1)      # Scale complexity loss
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
 parser.add_argument('--actor_lr',           type=float, default = .01)
@@ -52,8 +51,8 @@ parser.add_argument('--action_prior',       type=str,   default = "normal")
 # Memory buffer
 parser.add_argument('--capacity',           type=int,   default = 100)
 
-# Training
-parser.add_argument('--epochs',             type=int,   default = 1000)
+# Training.01
+parser.add_argument('--episodes',           type=int,   default = 1000)
 parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
 parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors

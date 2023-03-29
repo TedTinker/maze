@@ -67,14 +67,12 @@ class Agent:
         
     def training(self):
         manager = enlighten.Manager(width = 150)
-        E = manager.counter(total = self.args.epochs, desc = self.plot_dict["title"] + ":", unit = "ticks", color = "blue")
-        epochs = 0
+        E = manager.counter(total = self.args.episodes, desc = self.plot_dict["title"] + ":", unit = "ticks", color = "blue")
         while(True):
             E.update()
             r, spot_name = self.episode()
             l, e, ic, ie, naive_1, naive_2, naive_3, free = self.epoch(batch_size = self.args.batch_size)
-            epochs += 1
-            if(epochs == 1 or epochs >= self.args.epochs or epochs%self.args.keep_data==0):
+            if(self.episodes == 1 or self.episodes >= self.args.episodes or self.episodes % self.args.keep_data == 0):
                 self.plot_dict["rewards"].append(r)
                 self.plot_dict["spot_names"].append(spot_name)
                 self.plot_dict["accuracy"].append(l[0][0])
@@ -90,7 +88,7 @@ class Agent:
                 self.plot_dict["naive_2"].append(naive_2)
                 self.plot_dict["naive_3"].append(naive_3)
                 self.plot_dict["free"].append(free)
-            if(epochs >= self.args.epochs): 
+            if(self.episodes >= self.args.episodes): 
                 print("\n\nDone training!")
                 break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
@@ -133,8 +131,6 @@ class Agent:
     
     def epoch(self, batch_size):
                 
-        self.epochs += 1
-
         obs, actions, rewards, dones, masks = self.memory.sample(batch_size)
         
         #print("\n\n")
@@ -281,6 +277,9 @@ class Agent:
         naive_3_curiosity = naive_3_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()
         if(free_curiosity == 0): free_curiosity = None
+        
+        self.epochs += 1
+        
         return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_1_curiosity, naive_2_curiosity, naive_3_curiosity, free_curiosity)
                      
     def soft_update(self, local_model, target_model, tau):
