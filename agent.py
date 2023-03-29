@@ -114,7 +114,7 @@ class Agent:
     
     def episode(self, push = True, verbose = False):
         done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
-        t_maze = T_Maze()
+        t_maze = T_Maze(self.args)
         if(verbose): print("\n\n\n\n\nSTART!\n")
         if(verbose): print(t_maze)
         with torch.no_grad():
