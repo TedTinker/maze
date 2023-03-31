@@ -1,6 +1,7 @@
 #%%
 
-import pickle, os
+import pickle, os, torch, random
+import numpy as np
 from multiprocessing import Pool
 
 from utils import args, folder, duration
@@ -11,23 +12,21 @@ print("name:\n{}".format(args.name))
 
 
 def train(i):
-    print("\n\nTraining {}!".format(i))
+    np.random.seed(i)
+    random.seed(i)
+    torch.manual_seed(i)
+    torch.cuda.manual_seed(i)
     agent = Agent(args)
     plot_dict, min_max_dict = agent.training(str(i).zfill(3))
-    return(plot_dict, min_max_dict)
-
-with Pool() as p: 
-    results = p.starmap(train, [(i,) for i in range(1, args.agents + 1)])
-    p.close() ; p.join()
-print("\n\nDuration: {}".format(duration()))
-
-print("\n\nHow many results: {}\n\n".format(len(results)))
-
-for i, (plot_dict, min_max_dict) in enumerate(results):
     with open(folder + "/plot_dict_{}.pickle".format(   str(i).zfill(3)), "wb") as handle:
         pickle.dump(plot_dict, handle)
     with open(folder + "/min_max_dict_{}.pickle".format(str(i).zfill(3)), "wb") as handle:
         pickle.dump(min_max_dict, handle)
+
+with Pool() as p: 
+    p.map(train, range(1, args.agents + 1))
+    p.close() ; p.join()
+print("\n\nDuration: {}".format(duration()))
 
 
 
