@@ -105,8 +105,8 @@ def get_args_name(default_args, args):
             if(this_time == default): pass
             else: 
                 if first: first = False
-                else: name += "_"
-                name += "{}_{}".format(arg, this_time)
+                else: name += "|"
+                name += "{}/{}".format(arg, this_time)
     if(name == ""): name = "default" 
     return(name)
 
