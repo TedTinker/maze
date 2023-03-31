@@ -1,6 +1,7 @@
 #%%
 
-import pickle, os, enlighten
+import pickle, os
+from multiprocessing import Pool
 
 from utils import args, folder, duration
 from agent import Agent
@@ -17,10 +18,10 @@ def train(i):
         pickle.dump(plot_dict, handle)
     with open(folder + "/min_max_dict_{}.pickle".format(str(i).zfill(3)), "wb") as handle:
         pickle.dump(min_max_dict, handle)
-            
-manager = enlighten.Manager(width = 150)  
-E = manager.counter(total = args.agents, desc = "{}    :".format(args.name), unit = "ticks", color = "blue")
-for i in range(args.agents): train(i+1) ; E.update()
+
+with Pool(5) as p: 
+    p.map(train, range(1, args.agents + 1))
+    p.close() ; p.join()
 print("\n\nDuration: {}".format(duration()))
 
 

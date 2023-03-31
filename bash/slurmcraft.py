@@ -12,19 +12,6 @@ import os
 try:    os.chdir("easy_maze/bash")
 except: pass
 
-if(args.comp == "deigo"):
-	partition = """
-#SBATCH --partition=short
-#SBATCH --time 2:00:00
-"""
-
-if(args.comp == "saion"):
-	partition = """
-#SBATCH --partition=taniu
-#SBATCH --gres=gpu:1
-#SBATCH --time 48:00:00
-"""
-
 
 
 from itertools import product
@@ -73,6 +60,22 @@ for key, item in slurm_dict.items():
         
 slurm_dict = new_slurm_dict
             
+
+
+if(args.comp == "deigo"):
+	partition = """
+#SBATCH --partition=short
+#SBATCH --cpus-per-task=1
+#SBATCH --time 2:00:00
+"""
+
+if(args.comp == "saion"):
+	partition = """
+#SBATCH --partition=taniu
+#SBATCH --gres=gpu:1
+#SBATCH --time 48:00:00
+"""
+
 
         
 if(args.post == "False"):
