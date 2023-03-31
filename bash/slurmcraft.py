@@ -66,9 +66,8 @@ if(args.comp == "deigo"):
 	partition = """
 #SBATCH --partition=short
 #SBATCH --cpus-per-task=1
-#SBATCH --ntasks=1
 #SBATCH --time 2:00:00
-""".format(args.agents)
+"""
 
 if(args.comp == "saion"):
 	partition = """
@@ -85,12 +84,13 @@ if(args.post == "False"):
 """
 #!/bin/bash -l
 {}
+#SBATCH --ntasks={}
 #SBATCH --mem=2G
 ##SBATCH --constraint 32
 
 module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --arg_title {} --agents {} {}
-    """.format(partition, args.arg_title, args.agents, slurm_dict[args.arg_title])[1:])
+    """.format(partition, args.agents, args.arg_title, args.agents, slurm_dict[args.arg_title])[1:])
         
 if(args.post == "True"):
     if(args.arg_title[:3] == "___"): 
@@ -102,11 +102,12 @@ if(args.post == "True"):
 """
 #!/bin/bash -l
 {}
+#SBATCH --ntasks={}
 #SBATCH --mem=2G
 ##SBATCH --constraint 32
 
 module load singularity
 singularity exec t_maze.sif python easy_maze/post_main.py --arg_title {} {}
-""".format(partition, args.arg_title, slurm_dict[args.arg_title])[1:])
+""".format(partition, args.agents, args.arg_title, slurm_dict[args.arg_title])[1:])
 # %%
 
