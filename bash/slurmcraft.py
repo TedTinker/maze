@@ -2,6 +2,7 @@
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--comp",         type=str,  default = "deigo")
+parser.add_argument("--agents",       type=int,  default = 10)
 parser.add_argument("--arg_title",    type=str,  default = "default")
 parser.add_argument("--post",         type=str,  default = "False")
 try:    args = parser.parse_args()
@@ -84,8 +85,8 @@ if(args.post == "False"):
 ##SBATCH --constraint 32
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/main.py --id ${{SLURM_ARRAY_TASK_ID}} --arg_title {} {}
-    """.format(partition, args.arg_title, slurm_dict[args.arg_title])[1:])
+singularity exec t_maze.sif python easy_maze/main.py --arg_title {} --agents {} {}
+    """.format(partition, args.arg_title, args.agents, slurm_dict[args.arg_title])[1:])
         
 if(args.post == "True"):
     if(args.arg_title[:3] == "___"): 

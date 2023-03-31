@@ -54,7 +54,7 @@ class Agent:
         self.memory = RecurrentReplayBuffer(self.args)
         self.plot_dict = {
             "args" : self.args,
-            "title" : "{}_{}".format(self.args.name, self.args.id),
+            "title" : self.args.name,
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "complexity" : [], 
             "alpha" : [], "actor" : [], 
@@ -65,14 +65,12 @@ class Agent:
         
         
         
-    def training(self):
+    def training(self, i):
         manager = enlighten.Manager(width = 150)
-        E = manager.counter(total = self.args.epochs, desc = self.plot_dict["title"] + ":", unit = "ticks", color = "blue")
+        E = manager.counter(total = self.args.epochs, desc = "{}_{}:".format(self.plot_dict["title"], i), unit = "ticks", color = "blue")
         while(True):
-            E.update()
-            r, spot_name = self.episode()
-            if(self.epochs >= self.args.epochs): 
-                print("\n\nDone training!") ; break
+            E.update() ; self.episode()
+            if(self.epochs >= self.args.epochs): break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         
         min_max_dict = {key : [] for key in self.plot_dict.keys()}
@@ -111,7 +109,7 @@ class Agent:
                     prev_a = a
                 
             if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
-                print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))
+                #print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))
                 plot_data = self.epoch(batch_size = self.args.batch_size)
                 if(plot_data == False): print("Not getting an epoch!")
                 else:
@@ -131,10 +129,8 @@ class Agent:
                         self.plot_dict["naive_1"].append(naive_1)
                         self.plot_dict["naive_2"].append(naive_2)
                         self.plot_dict["naive_3"].append(naive_3)
-                        self.plot_dict["free"].append(free)
-                        
+                        self.plot_dict["free"].append(free)    
         self.episodes += 1
-        return(r, spot_name)
     
     
     

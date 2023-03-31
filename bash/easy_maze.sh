@@ -15,13 +15,8 @@ do
     then
         :
     else
-        singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --arg_title $job
-        jid=$(sbatch --array=1-${agents} easy_maze/bash/main_$job.slurm)
-        echo $jid
-        jid=(${jid// / })
-        jid=${jid[3]}     
-        singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --arg_title $job --post True
-        jid=$(sbatch --dependency afterok:$jid easy_maze/bash/post_$job.slurm)
+        singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --agents ${agents} --arg_title $job
+        jid=$(sbatch easy_maze/bash/main_$job.slurm)
         echo $jid
         jid=(${jid// / })
         jid=${jid[3]}     

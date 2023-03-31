@@ -1,7 +1,6 @@
 #%% 
 
 # Issues:
-# Free Curiosity should depend on changing just variational layers.
 # Use log_prob accuracy loss.
 
 import datetime 
@@ -26,7 +25,7 @@ parser = argparse.ArgumentParser()
 # Meta 
 parser.add_argument("--arg_title",          type=str,   default = "default") 
 parser.add_argument("--name",               type=str,   default = "default") 
-parser.add_argument("--id",                 type=int,   default = 0)
+parser.add_argument("--agents",             type=int,   default = 25)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
 # Maze 
