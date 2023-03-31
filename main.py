@@ -19,7 +19,7 @@ def train(i):
     with open(folder + "/min_max_dict_{}.pickle".format(str(i).zfill(3)), "wb") as handle:
         pickle.dump(min_max_dict, handle)
 
-with Pool(5) as p: 
+with Pool(1) as p: 
     p.map(train, range(1, args.agents + 1))
     p.close() ; p.join()
 print("\n\nDuration: {}".format(duration()))
