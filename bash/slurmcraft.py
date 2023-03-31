@@ -49,14 +49,21 @@ def expand_args(args = ""):
         combos = [easy_args + combo for combo in combos]
     return(combos)
 
-slurm_dict = {}
-f = open("slurms.txt", "r")
-slurms = f.readlines()
-for line in slurms:
-    if(line == "\n"): pass 
-    else:
-        arg_title, text = line.split(":")
-        slurm_dict[arg_title.strip()] = text.strip()
+slurm_dict = {
+    "d"   : "", 
+    "e"   : "--alpha None",
+
+    "n1"  : "--curiosity naive_1",
+    "en1" : "--alpha None --curiosity naive_1",
+
+    "n2"  : "--curiosity naive_2",
+    "en2" : "--alpha None --curiosity naive_2",
+
+    "n3"  : "--curiosity naive_3",
+    "en3" : "--alpha None --curiosity naive_3",
+
+    "f"   : "--curiosity free",
+    "ef"  : "--alpha None --curiosity free"}
         
 if(args.post == "False"):
     with open("main_{}.slurm".format(args.arg_title), "a") as f:
