@@ -17,7 +17,6 @@ import argparse
 import os 
 
 if(os.getcwd().split("/")[-1] != "easy_maze"): os.chdir("easy_maze")
-print(os.getcwd())
 
 import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -105,8 +104,8 @@ def get_args_name(default_args, args):
             if(this_time == default): pass
             else: 
                 if first: first = False
-                else: name += "|"
-                name += "{}/{}".format(arg, this_time)
+                else: name += " "
+                name += "{}={}".format(arg, this_time)
     if(name == ""): name = "default" 
     return(name)
 

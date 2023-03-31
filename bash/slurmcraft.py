@@ -24,6 +24,8 @@ if(args.comp == "saion"):
 #SBATCH --time 48:00:00
 """
 
+
+
 from itertools import product
 def expand_args(args = ""):
     if(args == ""): combos = []
@@ -53,17 +55,24 @@ slurm_dict = {
     "d"   : "", 
     "e"   : "--alpha None",
 
-    "n1"  : "--curiosity naive_1",
-    "en1" : "--alpha None --curiosity naive_1",
-
-    "n2"  : "--curiosity naive_2",
-    "en2" : "--alpha None --curiosity naive_2",
-
-    "n3"  : "--curiosity naive_3",
-    "en3" : "--alpha None --curiosity naive_3",
+    "n"  : "--curiosity naive_1",
+    "en_" : "--alpha None --curiosity naive_1 naive_2 naive_3",
 
     "f"   : "--curiosity free",
-    "ef"  : "--alpha None --curiosity free"}
+    "ef"  : "--alpha None --curiosity free",
+    "ef_" : "--alpha None --curiosity free --free_eta .001 .01 .1"}
+
+new_slurm_dict = {}
+
+for key, item in slurm_dict.items():
+    combos = expand_args(item)
+    if(len(combos) == 1): new_slurm_dict[key] = combos[0] 
+    else:
+        for i, combo in enumerate(combos): new_slurm_dict[key + str(i+1)] = combo
+        
+slurm_dict = new_slurm_dict
+            
+
         
 if(args.post == "False"):
     with open("main_{}.slurm".format(args.arg_title), "a") as f:
