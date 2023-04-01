@@ -93,8 +93,8 @@ for arg in vars(default_args):
 
 
 
-def get_args_name(default_args, args):
-    if(args.arg_name[:3] == "___"): return(args.arg_name)
+def get_args_title(default_args, args):
+    if(args.arg_name[:3] == "___"): return("plotting")
     name = "" ; first = True
     for arg in vars(default_args):
         if(arg in ["arg_title", "id"]): pass 
@@ -108,10 +108,10 @@ def get_args_name(default_args, args):
     if(name == ""): name = "default" 
     return(name)
 
-args.arg_name = get_args_name(default_args, args)
+args.arg_title = get_args_title(default_args, args)
 
-folder = "saved/" + args.arg_title
-if(args.arg_title[:3] != "___" and args.arg_title != "default"):
+folder = "saved/" + args.arg_name
+if(args.arg_name[:3] != "___" and args.arg_name != "plotting"):
     try: os.mkdir(folder)
     except: pass
 if(default_args.alpha == "None"): default_args.alpha = None

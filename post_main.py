@@ -7,11 +7,11 @@ from time import sleep
 from utils import args
 from plotting import plots
 
-print("name:\n{}".format(args.arg_title))
+print("name:\n{}".format(args.arg_name))
 
 plot_dicts = [] ; min_max_dicts = []
     
-order = args.arg_title[3:-3]
+order = args.arg_name[3:-3]
 order = order.split("+")
 order = [o for o in order if o != "break"]
 

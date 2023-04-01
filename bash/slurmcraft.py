@@ -100,7 +100,7 @@ if(__name__ == "__main__"):
 ##SBATCH --constraint 32
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/main.py --arg_title {} --agents {} {}
+singularity exec t_maze.sif python easy_maze/main.py --arg_name {} --agents {} {}
 """.format(partition, args.agents, name, args.agents, slurm_dict[name])[1:])
             
             
@@ -114,7 +114,7 @@ singularity exec t_maze.sif python easy_maze/main.py --arg_title {} --agents {} 
 ##SBATCH --constraint 32
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/post_main.py --arg_title {} {}
+singularity exec t_maze.sif python easy_maze/post_main.py --arg_name {} {}
 """.format(partition, combined, slurm_dict[combined])[1:])
 # %%
 

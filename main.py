@@ -7,7 +7,7 @@ from multiprocessing import Pool
 from utils import args, folder, duration
 from agent import Agent
 
-print("\nname:\n{}".format(args.arg_title))
+print("\nname:\n{}".format(args.arg_name))
 
 
 
@@ -40,7 +40,7 @@ for file in files:
     for key in saved_d.keys(): 
         if(not key in d): d[key] = []
         d[key].append(saved_d[key])
-d["arg_title"] = args.arg_name
+d["arg_title"] = args.arg_title
     
 for key in min_max_dict.keys():
     if(not key in ["args", "arg_title", "arg_name", "spot_names"]):
