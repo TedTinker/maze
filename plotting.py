@@ -69,7 +69,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, rew_dict, "turquoise", "Reward")
         ax.axhline(y = 0, color = 'black', linestyle = '--', alpha = .2)
         ax.set_ylabel("Reward")
-        ax.set_title(plot_dict["title"] + "\nCumulative Rewards")
+        ax.set_title(plot_dict["arg_title"] + "\nCumulative Rewards")
         
         ax = axs[1,i] if len(plot_dicts) > 1 else axs[1]
         awesome_plot(ax, rew_dict, "turquoise", "Reward", min_max_dict["rewards"])
@@ -77,7 +77,7 @@ def plots(plot_dicts, min_max_dict):
         ax.plot(max_rewards, color = "black", label = "Max Reward")
         ax.plot(min_rewards, color = "black", label = "Max Reward")
         ax.set_ylabel("Reward")
-        ax.set_title(plot_dict["title"] + "\nCumulative Rewards, shared min/max")
+        ax.set_title(plot_dict["arg_title"] + "\nCumulative Rewards, shared min/max")
     
     
     
@@ -97,7 +97,7 @@ def plots(plot_dicts, min_max_dict):
         ax.tick_params(left = False)
         ax.set_ylim([-1, len(kinds)*agents*1.1])
         ax.set_ylabel("Ending Spot")
-        ax.set_title(plot_dict["title"] + "\nEnding Spots")
+        ax.set_title(plot_dict["arg_title"] + "\nEnding Spots")
         
         
         
@@ -111,14 +111,14 @@ def plots(plot_dicts, min_max_dict):
         ax.set_ylabel("Loss")
         h2 = awesome_plot(ax, comp_dict, "red", "Complexity")
         ax.legend(handles = [h1, h2])
-        ax.set_title(plot_dict["title"] + "\nForward Losses")
+        ax.set_title(plot_dict["arg_title"] + "\nForward Losses")
         
         ax = axs[4,i] if len(plot_dicts) > 1 else axs[4]
         h1 = awesome_plot(ax, accuracy_dict, "green", "Accuracy", min_max)
         ax.set_ylabel("Loss")
         h2 = awesome_plot(ax, comp_dict, "red", "Complexity", min_max)
         ax.legend(handles = [h1, h2])
-        ax.set_title(plot_dict["title"] + "\nForward Losses, shared min/max")
+        ax.set_title(plot_dict["arg_title"] + "\nForward Losses, shared min/max")
         
         
         
@@ -132,14 +132,14 @@ def plots(plot_dicts, min_max_dict):
         ax.set_ylabel("log Loss")
         h2 = awesome_plot(ax, log_comp_dict, "red", "log Complexity")
         ax.legend(handles = [h1, h2])
-        ax.set_title(plot_dict["title"] + "\nlog Forward Losses")
+        ax.set_title(plot_dict["arg_title"] + "\nlog Forward Losses")
         
         #ax = axs[6,i] if len(plot_dicts) > 1 else axs[6]
         #h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy", min_max)
         #ax.set_ylabel("log Loss")
         #h2 = awesome_plot(ax, log_comp_dict, "red", "log Complexity", min_max)
         #ax.legend(handles = [h1, h2])
-        #ax.set_title(plot_dict["title"] + "\nlog Forward Losses, shared min/max")
+        #ax.set_title(plot_dict["arg_title"] + "\nlog Forward Losses, shared min/max")
         
         
         
@@ -161,7 +161,7 @@ def plots(plot_dicts, min_max_dict):
         h3 = awesome_plot(ax3, alpha_dict, "black", "Alpha")
         ax3.set_ylabel("Alpha Loss")
         ax.legend(handles = [h1, h2, h3])
-        ax.set_title(plot_dict["title"] + "\nOther Losses")
+        ax.set_title(plot_dict["arg_title"] + "\nOther Losses")
         
         ax = axs[8,i] if len(plot_dicts) > 1 else axs[8]
         min_max = many_min_max([min_max_dict["critic_1"], min_max_dict["critic_2"]])
@@ -176,7 +176,7 @@ def plots(plot_dicts, min_max_dict):
         h3 = awesome_plot(ax3, alpha_dict, "black", "Alpha", min_max_dict["alpha"])
         ax3.set_ylabel("Alpha Loss")
         ax.legend(handles = [h1, h2, h3])
-        ax.set_title(plot_dict["title"] + "\nOther Losses, shared min/max")
+        ax.set_title(plot_dict["arg_title"] + "\nOther Losses, shared min/max")
         
         
         
@@ -199,7 +199,7 @@ def plots(plot_dicts, min_max_dict):
             handles.append(awesome_plot(ax3, ent_dict, "black", "Entropy"))
             ax3.set_ylabel("Entropy")
         ax.legend(handles = handles)
-        ax.set_title(plot_dict["title"] + "\nExtrinsic and Intrinsic Rewards")
+        ax.set_title(plot_dict["arg_title"] + "\nExtrinsic and Intrinsic Rewards")
         
         ax = axs[10,i] if len(plot_dicts) > 1 else axs[10]
         handles = []
@@ -215,7 +215,7 @@ def plots(plot_dicts, min_max_dict):
             handles.append(awesome_plot(ax3, ent_dict, "black", "Entropy", min_max_dict["intrinsic_entropy"]))
             ax3.set_ylabel("Entropy")
         ax.legend(handles = handles)
-        ax.set_title(plot_dict["title"] + "\nExtrinsic and Intrinsic Rewards, shared min/max")
+        ax.set_title(plot_dict["arg_title"] + "\nExtrinsic and Intrinsic Rewards, shared min/max")
         
         
         
@@ -233,7 +233,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, free_dict, "red", "Free")
         ax.set_ylabel("Curiosity")
         ax.legend()
-        ax.set_title(plot_dict["title"] + "\nPossible Curiosities")
+        ax.set_title(plot_dict["arg_title"] + "\nPossible Curiosities")
         
         ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
         awesome_plot(ax, naive_1_dict, "green", "Naive 1", min_max)
@@ -242,7 +242,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, free_dict, "red", "Free", min_max)
         ax.set_ylabel("Curiosity")
         ax.legend()
-        ax.set_title(plot_dict["title"] + "\nPossible Curiosities, shared min/max")
+        ax.set_title(plot_dict["arg_title"] + "\nPossible Curiosities, shared min/max")
         
         
         
@@ -260,7 +260,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, log_free_dict, "red", "log Free")
         ax.set_ylabel("log Curiosity")
         ax.legend()
-        ax.set_title(plot_dict["title"] + "\nlog Possible Curiosities")
+        ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities")
         
         #ax = axs[14,i] if len(plot_dicts) > 1 else axs[14]
         #awesome_plot(ax, log_naive_1_dict, "green", "log Naive 1", min_max)
@@ -269,11 +269,11 @@ def plots(plot_dicts, min_max_dict):
         #awesome_plot(ax, log_free_dict, "red", "log Free", min_max)
         #ax.set_ylabel("log Curiosity")
         #ax.legend()
-        #ax.set_title(plot_dict["title"] + "\nlog Possible Curiosities, shared min/max")
+        #ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities, shared min/max")
         
         
         
-        print("\n{}: {}.".format(plot_dict["title"], duration()))
+        print("\n{}: {}.".format(plot_dict["arg_title"], duration()))
 
     
     

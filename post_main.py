@@ -7,11 +7,11 @@ from time import sleep
 from utils import args
 from plotting import plots
 
-print("name:\n{}".format(args.name))
+print("name:\n{}".format(args.arg_title))
 
 plot_dicts = [] ; min_max_dicts = []
     
-order = args.name[3:-3]
+order = args.arg_title[3:-3]
 order = order.split("+")
 order = [o for o in order if o != "break"]
 
@@ -30,7 +30,7 @@ for name in order:
         
 min_max_dict = {}
 for key in plot_dicts[0].keys():
-    if(not key in ["title", "spot_names"]):
+    if(not key in ["arg_title", "arg_name", "spot_names"]):
         minimum = None ; maximum = None
         for mm_dict in min_max_dicts:
             if(mm_dict[key] != (None, None)):
@@ -41,4 +41,4 @@ for key in plot_dicts[0].keys():
         min_max_dict[key] = (minimum, maximum)
         
 plots(plot_dicts, min_max_dict)
-print("Done with {}!".format(args.name))
+print("Done with {}!".format(args.arg_name))

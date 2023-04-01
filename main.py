@@ -40,10 +40,10 @@ for file in files:
     for key in saved_d.keys(): 
         if(not key in d): d[key] = []
         d[key].append(saved_d[key])
-d["title"] = args.name
+d["arg_title"] = args.arg_name
     
 for key in min_max_dict.keys():
-    if(not key in ["args", "title", "spot_names"]):
+    if(not key in ["args", "arg_title", "arg_name", "spot_names"]):
         minimum = None ; maximum = None
         for min_max in min_max_dict[key]:
             if(minimum == None):        minimum = min_max[0]
@@ -57,6 +57,6 @@ with open(folder + "/plot_dict.pickle", "wb") as handle:
 with open(folder + "/min_max_dict.pickle", "wb") as handle:
     pickle.dump(min_max_dict, handle)
         
-print("Done with {}!".format(args.name))
+print("Done with {}!".format(args.arg_name))
 print("\n\nDuration: {}".format(duration()))
 # %%

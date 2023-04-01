@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser()
 
 # Meta 
 parser.add_argument("--arg_title",          type=str,   default = "default") 
-parser.add_argument("--name",               type=str,   default = "default") 
+parser.add_argument("--arg_name",           type=str,   default = "default") 
 parser.add_argument("--agents",             type=int,   default = 25)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
@@ -94,7 +94,7 @@ for arg in vars(default_args):
 
 
 def get_args_name(default_args, args):
-    if(args.name[:3] == "___"): return(args.name)
+    if(args.arg_name[:3] == "___"): return(args.arg_name)
     name = "" ; first = True
     for arg in vars(default_args):
         if(arg in ["arg_title", "id"]): pass 
@@ -108,7 +108,7 @@ def get_args_name(default_args, args):
     if(name == ""): name = "default" 
     return(name)
 
-args.name = get_args_name(default_args, args)
+args.arg_name = get_args_name(default_args, args)
 
 folder = "saved/" + args.arg_title
 if(args.arg_title[:3] != "___" and args.arg_title != "default"):

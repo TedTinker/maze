@@ -54,7 +54,8 @@ class Agent:
         self.memory = RecurrentReplayBuffer(self.args)
         self.plot_dict = {
             "args" : self.args,
-            "title" : self.args.arg_title,
+            "arg_title" : self.args.arg_title,
+            "arg_name" : self.args.arg_name,
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "complexity" : [], 
             "alpha" : [], "actor" : [], 
@@ -67,7 +68,7 @@ class Agent:
         
     def training(self, i):
         manager = enlighten.Manager(width = 150)
-        E = manager.counter(total = self.args.epochs, desc = "{} ({}):".format(self.plot_dict["title"], i), unit = "ticks", color = "blue")
+        E = manager.counter(total = self.args.epochs, desc = "{} ({}):".format(self.plot_dict["arg_title"], i), unit = "ticks", color = "blue")
         while(True):
             E.update() ; self.episode()
             if(self.epochs >= self.args.epochs): break
@@ -75,7 +76,7 @@ class Agent:
         
         min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in min_max_dict.keys():
-            if(not key in ["args", "title", "spot_names"]):
+            if(not key in ["args", "arg_title", "arg_name", "spot_names"]):
                 minimum = None ; maximum = None 
                 l = self.plot_dict[key]
                 l = deepcopy(l)
