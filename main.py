@@ -7,7 +7,7 @@ from multiprocessing import Pool
 from utils import args, folder, duration
 from agent import Agent
 
-print("name:\n{}".format(args.name))
+print("\nname:\n{}".format(args.arg_title))
 
 
 

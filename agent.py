@@ -54,7 +54,7 @@ class Agent:
         self.memory = RecurrentReplayBuffer(self.args)
         self.plot_dict = {
             "args" : self.args,
-            "title" : self.args.name,
+            "title" : self.args.arg_title,
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "complexity" : [], 
             "alpha" : [], "actor" : [], 

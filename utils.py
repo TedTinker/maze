@@ -123,7 +123,6 @@ else:
         default, this_time = getattr(default_args, arg), getattr(args, arg)
         if(this_time == default): pass
         else: print("{}:\n\tDefault:\t{}\n\tThis time:\t{}".format(arg, default, this_time))
-print("\n\n")
 
 
 

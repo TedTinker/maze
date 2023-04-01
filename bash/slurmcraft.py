@@ -31,7 +31,7 @@ def expand_args(args = ""):
                 num = int(num)
                 min_val = float(min_val)
                 max_val = float(max_val)
-                nums = [min_val + (max_val - min_val) * (n / (num - 1)) for n in range(num)]
+                nums = [min_val + i*((max_val - min_val) / (num - 1)) for i in range(num)]
                 hard_args.append([arg_words[0], nums])
             else: hard_args.append([arg_words[0], arg_words[1:]])    
     if(hard_args == []): combos = [easy_args]
@@ -48,7 +48,7 @@ slurm_dict = {
     "n"  : "--curiosity naive_1",
     "en1" : "--alpha None --curiosity naive_1",
     
-    "en2_" : "--alpha None --curiosity naive_2 --naive_2_eta num_min_max 25 50 250",
+    "en2_" : "--alpha None --curiosity naive_2 --naive_2_eta num_min_max 11 100 200",
 
     "f"   : "--curiosity free",
     "ef"  : "--alpha None --curiosity free",
