@@ -1,15 +1,13 @@
 #%%
-import argparse, ast
+import argparse, ast, json
 parser = argparse.ArgumentParser()
 parser.add_argument("--comp",         type=str,  default = "deigo")
 parser.add_argument("--agents",       type=int,  default = 10)
 parser.add_argument("--arg_list",     type=str,  default = ["d", "e", "en1"])
-parser.add_argument("--post",         type=str,  default = "False")
 try:    args = parser.parse_args()
 except: args, _ = parser.parse_known_args()
 
-if(type(args.arg_list) != list):
-    args.arg_list = ast.literal_eval(args.arg_list)
+if(type(args.arg_list) != list): args.arg_list = json.loads(args.arg_list)
 combined = "___{}___".format("+".join(args.arg_list))    
 
 import os 
@@ -50,14 +48,13 @@ slurm_dict = {
     "n"  : "--curiosity naive_1",
     "en1" : "--alpha None --curiosity naive_1",
     
-    "en2_" : "--alpha None --curiosity naive_2 --naive_2_eta num_min_max 5 100 300",
+    "en2_" : "--alpha None --curiosity naive_2 --naive_2_eta num_min_max 25 50 250",
 
     "f"   : "--curiosity free",
     "ef"  : "--alpha None --curiosity free",
     "ef_" : "--alpha None --curiosity free --free_eta .001 .01 .1"}
 
 new_slurm_dict = {}
-
 for key, item in slurm_dict.items():
     combos = expand_args(item)
     if(len(combos) == 1): new_slurm_dict[key] = combos[0] 
@@ -66,28 +63,35 @@ for key, item in slurm_dict.items():
         
 slurm_dict = new_slurm_dict
 slurm_dict[combined] = "--name {}".format(combined)
+
+def all_like_this(this): 
+    if(this[-1] != "_"): result = [this]
+    else: result = [key for key in slurm_dict.keys() if key.startswith(this)]
+    return(json.dumps(result))
             
 
 
-if(args.comp == "deigo"):
-	partition = """
+if(__name__ == "__main__"):
+    
+    if(args.comp == "deigo"):
+        partition = """
 #SBATCH --partition=short
 #SBATCH --cpus-per-task=1
 #SBATCH --time 2:00:00
 """
 
-if(args.comp == "saion"):
-	partition = """
+    if(args.comp == "saion"):
+        partition = """
 #SBATCH --partition=taniu
 #SBATCH --gres=gpu:1
 #SBATCH --time 48:00:00
 """
 
 
-        
-for name in args.arg_list:
-    with open("main_{}.slurm".format(name), "a") as f:
-        f.write(
+            
+    for name in args.arg_list:
+        with open("main_{}.slurm".format(name), "a") as f:
+            f.write(
 """
 #!/bin/bash -l
 {}
@@ -98,11 +102,11 @@ for name in args.arg_list:
 module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --arg_title {} --agents {} {}
 """.format(partition, args.agents, name, args.agents, slurm_dict[name])[1:])
-        
-        
-        
-with open("post_final.slurm".format(name), "a") as f:
-    f.write(
+            
+            
+            
+    with open("post_final.slurm".format(name), "a") as f:
+        f.write(
 """
 #!/bin/bash -l
 {}
