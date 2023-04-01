@@ -1,12 +1,16 @@
 #%%
-import argparse
+import argparse, ast
 parser = argparse.ArgumentParser()
 parser.add_argument("--comp",         type=str,  default = "deigo")
 parser.add_argument("--agents",       type=int,  default = 10)
-parser.add_argument("--arg_title",    type=str,  default = "default")
+parser.add_argument("--arg_list",     type=str,  default = ["d", "e", "en1"])
 parser.add_argument("--post",         type=str,  default = "False")
 try:    args = parser.parse_args()
 except: args, _ = parser.parse_known_args()
+
+if(type(args.arg_list) != list):
+    args.arg_list = ast.literal_eval(args.arg_list)
+combined = "___{}___".format("+".join(args.arg_list))    
 
 import os 
 try:    os.chdir("easy_maze/bash")
@@ -61,6 +65,7 @@ for key, item in slurm_dict.items():
         for i, combo in enumerate(combos): new_slurm_dict[key + str(i+1)] = combo
         
 slurm_dict = new_slurm_dict
+slurm_dict[combined] = "--name {}".format(combined)
             
 
 
@@ -80,8 +85,8 @@ if(args.comp == "saion"):
 
 
         
-if(args.post == "False"):
-    with open("main_{}.slurm".format(args.arg_title), "a") as f:
+for name in args.arg_list:
+    with open("main_{}.slurm".format(name), "a") as f:
         f.write(
 """
 #!/bin/bash -l
@@ -92,24 +97,20 @@ if(args.post == "False"):
 
 module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --arg_title {} --agents {} {}
-    """.format(partition, args.agents, args.arg_title, args.agents, slurm_dict[args.arg_title])[1:])
+""".format(partition, args.agents, name, args.agents, slurm_dict[name])[1:])
         
-if(args.post == "True"):
-    if(args.arg_title[:3] == "___"): 
-        slurm_dict[args.arg_title] = "--name {}".format(args.arg_title)
-        name = "final"
-    else: name = args.arg_title
-    with open("post_{}.slurm".format(name), "a") as f:
-        f.write(
+        
+        
+with open("post_final.slurm".format(name), "a") as f:
+    f.write(
 """
 #!/bin/bash -l
 {}
-#SBATCH --ntasks={}
 #SBATCH --mem=2G
 ##SBATCH --constraint 32
 
 module load singularity
 singularity exec t_maze.sif python easy_maze/post_main.py --arg_title {} {}
-""".format(partition, args.agents, args.arg_title, slurm_dict[args.arg_title])[1:])
+""".format(partition, combined, slurm_dict[combined])[1:])
 # %%
 
