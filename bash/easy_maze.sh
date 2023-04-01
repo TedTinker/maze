@@ -15,17 +15,11 @@ do
     rm ${temp_file}
 done
 
-echo
-echo -n "Original job list: "
-echo "${job_list[*]}" | sed "s/ /, /g"
-echo
-echo new_job_list: $real_job_list
-echo
 job_list=$real_job_list
-
 singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --agents ${agents} --arg_list "${job_list}"
-
 job_list=$(echo "${job_list}" | tr -d '[]"' | sed 's/,/, /g')
+
+echo
 for job in ${job_list//, / }
 do
     if [ $job == "break" ]
@@ -36,7 +30,7 @@ do
         :
     else
         jid=$(sbatch easy_maze/bash/main_$job.slurm)
-        echo $jid
+        echo "$job: $jid"
         jid=(${jid// / })
         jid=${jid[3]}     
         jid_list+=($jid)
@@ -44,4 +38,5 @@ do
 done
 
 jid=$(sbatch --dependency afterok:$(echo ${jid_list[*]} | tr ' ' :) easy_maze/bash/post_final.slurm)
-echo $jid
+echo "plotting: $jid"
+echo
