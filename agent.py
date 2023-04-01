@@ -179,8 +179,8 @@ class Agent:
         naive_1_curiosity = self.args.naive_1_eta * accuracy
         
         _, mu_a, std_a, _ = self.forward(obs, prev_actions, actions)    
-        naive_2_curiosity = self.args.naive_2_eta * torch.abs(mu_a - mu_b).mean(-1).unsqueeze(-1)
-        naive_3_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1)
+        naive_2_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1)
+        naive_3_curiosity = self.args.naive_2_eta * (.5 * (torch.pow(mu_a - mu_b, 2).mean(-1).unsqueeze(-1) - 1))
         
         dkl_changes = dkl(mu_a, std_a, mu_b, std_b).mean(-1).unsqueeze(-1)
         free_curiosity = self.args.free_eta * dkl_changes   
