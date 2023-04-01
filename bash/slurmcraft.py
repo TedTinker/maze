@@ -62,7 +62,6 @@ for key, item in slurm_dict.items():
         for i, combo in enumerate(combos): new_slurm_dict[key + str(i+1)] = combo
         
 slurm_dict = new_slurm_dict
-slurm_dict[combined] = "--name {}".format(combined)
 
 def all_like_this(this): 
     if(this[-1] != "_"): result = [this]
@@ -114,7 +113,7 @@ singularity exec t_maze.sif python easy_maze/main.py --arg_name {} --agents {} {
 ##SBATCH --constraint 32
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/post_main.py --arg_name {} {}
-""".format(partition, combined, slurm_dict[combined])[1:])
+singularity exec t_maze.sif python easy_maze/post_main.py --arg_name {}
+""".format(partition, combined)[1:])
 # %%
 
