@@ -26,7 +26,6 @@ def train(i):
 with Pool() as p: 
     p.map(train, range(1, args.agents + 1))
     p.close() ; p.join()
-print("\n\nDuration: {}".format(duration()))
 
 
 
@@ -59,5 +58,5 @@ with open(folder + "/min_max_dict.pickle", "wb") as handle:
     pickle.dump(min_max_dict, handle)
         
 print("Done with {}!".format(args.name))
-
+print("\n\nDuration: {}".format(duration()))
 # %%
