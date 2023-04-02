@@ -112,7 +112,7 @@ def get_args_title(default_args, args):
 args.arg_title = get_args_title(default_args, args)
 
 folder = "saved/" + args.arg_name
-if(args.arg_name[:3] != "___" and args.arg_name != "plotting"):
+if(args.arg_name[:3] != "___" and not args.arg_name in ["default", "plotting"]):
     try: os.mkdir(folder)
     except: pass
 if(default_args.alpha == "None"): default_args.alpha = None

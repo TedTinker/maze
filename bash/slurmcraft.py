@@ -99,16 +99,16 @@ module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
 """.format(partition, max_cpus, name, slurm_dict[name])[1:])
             
-        with open("post_{}.slurm".format(name), "w") as f:
-            f.write(
+    with open("post.slurm", "w") as f:
+        f.write(
 """
 #!/bin/bash -l
 {}
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/post.py --arg_name {} {}
-""".format(partition, name, slurm_dict[name])[1:])
+singularity exec t_maze.sif python easy_maze/post.py
+""".format(partition)[1:])
             
             
             

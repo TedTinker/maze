@@ -62,13 +62,10 @@ done
 
 post_jid_list=()
 echo
-for arg in ${arg_list//, / }
-do
-    job_ids=$(echo ${jid_list[@]} | tr ' ' ':')  
-    jid=$(sbatch --dependency=afterok:${job_ids} easy_maze/bash/post_${arg}.slurm | awk '{print $4}')
-    echo "post_$arg: $jid"
-    post_jid_list+=($jid)
-done
+job_ids=$(echo ${jid_list[@]} | tr ' ' ':')  
+jid=$(sbatch --dependency=afterok:${job_ids} easy_maze/bash/post.slurm | awk '{print $4}')
+echo "post: $jid"
+post_jid_list+=($jid)
 
 echo
 # Run plotting job
