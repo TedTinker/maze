@@ -38,7 +38,7 @@ parser.add_argument('--non_one',            type=int,   default = -1)
 parser.add_argument('--hidden',             type=int,   default = 32)
 parser.add_argument('--forward_var_layers', type=int,   default = 2)
 parser.add_argument('--actor_var_layers',   type=int,   default = 1)
-parser.add_argument("--beta",               type=float, default = .005)   # Scale complexity loss
+parser.add_argument("--beta",               type=float, default = 3)   # Scale complexity loss
 parser.add_argument("--sigma",              type=float, default = 1)      # Scale complexity loss
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 

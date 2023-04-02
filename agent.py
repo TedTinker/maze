@@ -68,7 +68,7 @@ class Agent:
         
     def training(self, i):
         manager = enlighten.Manager(width = 150)
-        E = manager.counter(total = self.args.epochs, desc = "{} ({}):".format(self.plot_dict["arg_name"], i), unit = "ticks", color = "blue")
+        E = manager.counter(total = self.args.epochs, unit = "ticks", color = "blue")
         while(True):
             E.update() ; self.episode()
             if(self.epochs >= self.args.epochs): break
@@ -165,7 +165,6 @@ class Agent:
         accuracy_loss = accuracy.mean()
         complexity = complexity * masks
         complexity_loss = self.args.beta * complexity.mean()
-        print(self.args.beta)
         forward_loss = accuracy_loss + complexity_loss
         if(self.args.beta == 0): complexity = None ; complexity_loss = None
         
