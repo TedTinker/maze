@@ -60,16 +60,12 @@ do
     fi
 done
 
-post_jid_list=()
-echo
 job_ids=$(echo ${jid_list[@]} | tr ' ' ':')  
 jid=$(sbatch --dependency=afterok:${job_ids} easy_maze/bash/post.slurm | awk '{print $4}')
-echo "post: $jid"
-post_jid_list+=($jid)
-
 echo
-# Run plotting job
-dependency_string=$(IFS=:; echo "${post_jid_list[*]}")
-jid=$(sbatch --dependency=afterok:${dependency_string} easy_maze/bash/plotting.slurm | awk '{print $4}')
+echo "post: $jid"
+
+jid=$(sbatch --dependency=afterok:$jid easy_maze/bash/plotting.slurm | awk '{print $4}')
+echo
 echo "plotting: $jid"
 echo

@@ -2,7 +2,7 @@ import os, pickle
 
 from utils import duration
 
-print("\nname:\nCollecting dictionaries.")
+print("\nname:\nCollecting dictionaries")
 
 os.chdir("saved")
 folders = os.listdir()
