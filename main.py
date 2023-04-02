@@ -22,7 +22,8 @@ def train(i):
         pickle.dump(plot_dict, handle)
     with open(folder + "/min_max_dict_{}.pickle".format(str(i).zfill(3)), "wb") as handle:
         pickle.dump(min_max_dict, handle)
-
+        
+        
 with Pool() as p: 
     p.map(train, range(1, args.agents + 1))
     p.close() ; p.join()

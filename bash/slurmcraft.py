@@ -67,6 +67,7 @@ def all_like_this(this):
             
 
 
+max_cpus = 25
 if(__name__ == "__main__"):
     
     if(args.comp == "deigo"):
@@ -93,11 +94,11 @@ if(__name__ == "__main__"):
 {}
 #SBATCH --ntasks={}
 #SBATCH --mem=2G
-##SBATCH --constraint 32
 
+export AGENTS=$agents
 module load singularity
-singularity exec t_maze.sif python easy_maze/main.py --arg_name {} --agents {} {}
-""".format(partition, args.agents, name, args.agents, slurm_dict[name])[1:])
+singularity exec t_maze.sif python easy_maze/main.py --arg_name {} {}
+""".format(partition, max_cpus, name, slurm_dict[name])[1:])
             
             
             
@@ -107,7 +108,6 @@ singularity exec t_maze.sif python easy_maze/main.py --arg_name {} --agents {} {
 #!/bin/bash -l
 {}
 #SBATCH --mem=2G
-##SBATCH --constraint 32
 
 module load singularity
 singularity exec t_maze.sif python easy_maze/post_main.py --arg_name {}

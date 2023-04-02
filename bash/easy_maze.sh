@@ -18,7 +18,9 @@ done
 job_list=$real_job_list
 singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} --agents ${agents} --arg_list "${job_list}"
 job_list=$(echo "${job_list}" | tr -d '[]"' | sed 's/,/, /g')
+wait
 
+jid_list=()
 echo
 for job in ${job_list//, / }
 do
@@ -29,14 +31,13 @@ do
     then
         :
     else
-        jid=$(sbatch easy_maze/bash/main_$job.slurm)
+        jid=$(sbatch easy_maze/bash/main_${job}.slurm --export=agents=${agents} | awk '{print $4}')
         echo "$job: $jid"
-        jid=(${jid// / })
-        jid=${jid[3]}     
         jid_list+=($jid)
     fi
 done
 
-jid=$(sbatch --dependency afterok:$(echo ${jid_list[*]} | tr ' ' :) easy_maze/bash/post_final.slurm)
+dependency_string=$(IFS=:; echo "${jid_list[*]}")
+jid=$(sbatch --dependency afterok:${dependency_string} easy_maze/bash/post_final.slurm)
 echo "plotting: $jid"
 echo
