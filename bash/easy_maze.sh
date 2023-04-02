@@ -47,13 +47,13 @@ do
             else
                 agents_per_job=$(( 25 ))
             fi
-            jid=$(sbatch easy_maze/bash/main_${arg}.slurm --export=agents=${agents_per_job},previous_agents=${previous_agents} | awk '{print $4}')
+            jid=$(sbatch --export=agents_per_job=${agents_per_job},previous_agents=${previous_agents} easy_maze/bash/main_${arg}.slurm | awk '{print $4}')
             echo "$arg (part $i): $jid"
             jid_list+=($jid)
             previous_agents=$(( previous_agents + agents_per_job ))
         done
     else
-        jid=$(sbatch easy_maze/bash/main_${arg}.slurm --export=agents=${agents},previous_agents=${previous_agents} | awk '{print $4}')
+        jid=$(sbatch --export=agents_per_job=${agents_per_job},previous_agents=${previous_agents} easy_maze/bash/main_${arg}.slurm | awk '{print $4}')
         echo "$arg: $jid"
         jid_list+=($jid)
         previous_agents=$(( previous_agents + agents )) 

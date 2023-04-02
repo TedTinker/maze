@@ -9,8 +9,6 @@ from agent import Agent
 
 print("\nname:\n{}".format(args.arg_name))
 
-
-
 def train(i):
     np.random.seed(i)
     random.seed(i)

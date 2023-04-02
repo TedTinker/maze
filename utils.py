@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 # Meta 
 parser.add_argument("--arg_title",          type=str,   default = "default") 
 parser.add_argument("--arg_name",           type=str,   default = "default") 
-parser.add_argument("--agents",             type=int,   default = 25)
+parser.add_argument("--agents",             type=int,   default = 24)
 parser.add_argument("--previous_agents",    type=int,   default = 0)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
