@@ -2,6 +2,8 @@ import os, pickle
 
 from utils import args, folder, duration
 
+print("\nname:\n{}_post".format(args.arg_name))
+
 plot_dict = {} ; min_max_dict = {}
 files = os.listdir(folder) ; files.sort()
 
