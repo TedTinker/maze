@@ -87,7 +87,7 @@ if(__name__ == "__main__"):
 
             
     for name in args.arg_list:
-        with open("main_{}.slurm".format(name), "a") as f:
+        with open("main_{}.slurm".format(name), "w") as f:
             f.write(
 """
 #!/bin/bash -l
@@ -96,13 +96,26 @@ if(__name__ == "__main__"):
 #SBATCH --mem=2G
 
 export AGENTS=$agents
+export PREVIOUS_AGENTS=$previous_agents
 module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --arg_name {} {}
 """.format(partition, max_cpus, name, slurm_dict[name])[1:])
             
+        with open("post_{}.slurm".format(name), "w") as f:
+            f.write(
+"""
+#!/bin/bash -l
+{}
+#SBATCH --mem=2G
+
+export AGENTS=$agents
+module load singularity
+singularity exec t_maze.sif python easy_maze/post.py --arg_name {} {}
+""".format(partition, name, slurm_dict[name])[1:])
             
             
-    with open("post_final.slurm".format(name), "a") as f:
+            
+    with open("plotting.slurm", "w") as f:
         f.write(
 """
 #!/bin/bash -l
@@ -110,7 +123,7 @@ singularity exec t_maze.sif python easy_maze/main.py --arg_name {} {}
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/post_main.py --arg_name {}
+singularity exec t_maze.sif python easy_maze/plotting.py --arg_name {}
 """.format(partition, combined)[1:])
 # %%
 
