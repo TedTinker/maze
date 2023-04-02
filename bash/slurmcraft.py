@@ -45,10 +45,11 @@ slurm_dict = {
     "d"   : "", 
     "e"   : "--alpha None",
 
-    "n"  : "--curiosity naive_1",
+    "n1"  : "--curiosity naive_1",
     "en1" : "--alpha None --curiosity naive_1",
+    "en1_log_prob_" : "--alpha None --curiosity naive_1 --accuracy log_prob --beta .0001 --naive_1_eta num_min_max 5 .1 1",
     
-    "en2_" : "--alpha None --curiosity naive_2 --naive_2_eta num_min_max 11 100 200",
+    "en2_" : "--alpha None --curiosity naive_2 --naive_2_eta num_min_max 21 1 50",
 
     "f"   : "--curiosity free",
     "ef"  : "--alpha None --curiosity free",
