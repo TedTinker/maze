@@ -158,7 +158,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((3, obs_size), (3, action_size))))
+    print(torch_summary(forward, ((3, obs_size), (3, action_size), (3, action_size))))
     
 
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(actor)
     print()
-    print(torch_summary(actor, ((3,obs_size),)))
+    print(torch_summary(actor, ((3,obs_size), (3, action_size))))
     
     
     
