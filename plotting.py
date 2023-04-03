@@ -85,7 +85,8 @@ def plots(plot_dicts, min_max_dict):
         # Ending spot
         ax = axs[2,i] if len(plot_dicts) > 1 else axs[2]
         spot_names = np.array([spot_names for spot_names in plot_dict["spot_names"]])
-        agents = spot_names.shape[0] ; xs = list(range(spot_names.shape[1]))        
+        agents = spot_names.shape[0]
+        xs = [x * plot_dict["args"][0].keep_data for x in list(range(spot_names.shape[1]))   ]
         kinds = ["NONE", "BAD", "GOOD"]
         
         for j, kind in enumerate(kinds):
@@ -93,7 +94,7 @@ def plots(plot_dicts, min_max_dict):
             counts = [count + (j*agents*1.1) for count in counts]
             ax.fill_between(xs, [j*agents*1.1 for _ in xs], counts, color = "black", linewidth = 0)
             if(j != len(kinds)-1):
-                ax.plot(rew_dict["xs"], [agents*1.05 + j*agents*1.1 for _ in xs], color = "black", linestyle = "--")
+                ax.plot(xs, [agents*1.05 + j*agents*1.1 for _ in xs], color = "black", linestyle = "--")
         ax.set_yticks([(2*j+1)*agents*1.1/2 for j in range(len(kinds))], kinds, rotation='vertical')
         ax.tick_params(left = False)
         ax.set_ylim([-1, len(kinds)*agents*1.1])
@@ -221,25 +222,19 @@ def plots(plot_dicts, min_max_dict):
         
         
         # Curiosities
-        naive_1_dict = get_quantiles(plot_dict, "naive_1")
-        naive_2_dict = get_quantiles(plot_dict, "naive_2")
-        naive_3_dict = get_quantiles(plot_dict, "naive_3")
+        naive_dict = get_quantiles(plot_dict, "naive")
         free_dict = get_quantiles(plot_dict, "free")
-        min_max = many_min_max([min_max_dict["naive_1"], min_max_dict["naive_2"], min_max_dict["naive_3"], min_max_dict["free"]])
+        min_max = many_min_max([min_max_dict["naive"], min_max_dict["free"]])
         
         ax = axs[11,i] if len(plot_dicts) > 1 else axs[11]
-        awesome_plot(ax, naive_1_dict, "green", "Naive 1")
-        awesome_plot(ax, naive_2_dict, "blue", "Naive 2")
-        awesome_plot(ax, naive_3_dict, "yellow", "Naive 3")
+        awesome_plot(ax, naive_dict, "green", "Naive")
         awesome_plot(ax, free_dict, "red", "Free")
         ax.set_ylabel("Curiosity")
         ax.legend()
         ax.set_title(plot_dict["arg_title"] + "\nPossible Curiosities")
         
         ax = axs[12,i] if len(plot_dicts) > 1 else axs[12]
-        awesome_plot(ax, naive_1_dict, "green", "Naive 1", min_max)
-        awesome_plot(ax, naive_2_dict, "blue", "Naive 2", min_max)
-        awesome_plot(ax, naive_3_dict, "yellow", "Naive 3", min_max)
+        awesome_plot(ax, naive_dict, "green", "Naive", min_max)
         awesome_plot(ax, free_dict, "red", "Free", min_max)
         ax.set_ylabel("Curiosity")
         ax.legend()
@@ -248,25 +243,19 @@ def plots(plot_dicts, min_max_dict):
         
         
         # Log Curiosities
-        log_naive_1_dict = get_logs(naive_1_dict)
-        log_naive_2_dict = get_logs(naive_2_dict)
-        log_naive_3_dict = get_logs(naive_3_dict)
+        log_naive_dict = get_logs(naive_dict)
         log_free_dict = get_logs(free_dict)
         #min_max = (log(min_max[0]), log(min_max[1]))
         
         ax = axs[13,i] if len(plot_dicts) > 1 else axs[13]
-        awesome_plot(ax, log_naive_1_dict, "green", "log Naive 1")
-        awesome_plot(ax, log_naive_2_dict, "blue", "log Naive 2")
-        awesome_plot(ax, log_naive_3_dict, "yellow", "log Naive 3")
+        awesome_plot(ax, log_naive_dict, "green", "log Naive")
         awesome_plot(ax, log_free_dict, "red", "log Free")
         ax.set_ylabel("log Curiosity")
         ax.legend()
         ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities")
         
         #ax = axs[14,i] if len(plot_dicts) > 1 else axs[14]
-        #awesome_plot(ax, log_naive_1_dict, "green", "log Naive 1", min_max)
-        #awesome_plot(ax, log_naive_2_dict, "blue", "log Naive 2", min_max)
-        #awesome_plot(ax, log_naive_3_dict, "yellow", "log Naive 3", min_max)
+        #awesome_plot(ax, log_naive_dict, "green", "log Naive", min_max)
         #awesome_plot(ax, log_free_dict, "red", "log Free", min_max)
         #ax.set_ylabel("log Curiosity")
         #ax.legend()

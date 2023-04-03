@@ -5,13 +5,14 @@ from utils import duration
 print("\nname:\nCollecting dictionaries")
 
 os.chdir("saved")
-folders = os.listdir()
+folders = os.listdir() ; folders.sort()
 print("{} folders.".format(len(folders)))
 
 for folder in folders:
     plot_dict = {} ; min_max_dict = {}
 
-    files = os.listdir(folder)
+    files = os.listdir(folder) ; files.sort()
+    print("{} files in {} folder.".format(len(files), folder))
     for file in files:
         if(file.split("_")[0] == "plot"): d = plot_dict
         if(file.split("_")[0] == "min"):  d = min_max_dict

@@ -38,6 +38,8 @@ do
         if [ $remainder -gt 0 ]
         then
             num_jobs=$(( num_jobs + 1 ))
+        else 
+            remainder=25
         fi
         for (( i=1; i<=${num_jobs}; i++ ))
         do

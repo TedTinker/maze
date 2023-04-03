@@ -62,7 +62,7 @@ class Agent:
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
             "intrinsic_entropy" : [], 
-            "naive_1" : [], "naive_2" : [], "naive_3" : [], "free" : []}
+            "naive" : [], "free" : []}
         
         
         
@@ -114,7 +114,7 @@ class Agent:
                 plot_data = self.epoch(batch_size = self.args.batch_size)
                 if(plot_data == False): print("Not getting an epoch!")
                 else:
-                    l, e, ic, ie, naive_1, naive_2, naive_3, free = plot_data
+                    l, e, ic, ie, naive, free = plot_data
                     if(self.epochs == 1 or self.epochs >= self.args.epochs or self.epochs % self.args.keep_data == 0):
                         self.plot_dict["rewards"].append(r)
                         self.plot_dict["spot_names"].append(spot_name)
@@ -127,9 +127,7 @@ class Agent:
                         self.plot_dict["extrinsic"].append(e)
                         self.plot_dict["intrinsic_curiosity"].append(ic)
                         self.plot_dict["intrinsic_entropy"].append(ie)
-                        self.plot_dict["naive_1"].append(naive_1)
-                        self.plot_dict["naive_2"].append(naive_2)
-                        self.plot_dict["naive_3"].append(naive_3)
+                        self.plot_dict["naive"].append(naive)
                         self.plot_dict["free"].append(free)    
         self.episodes += 1
     
@@ -175,20 +173,16 @@ class Agent:
                         
         
         # Get curiosity  
-        naive_1_curiosity = self.args.naive_1_eta * accuracy
+        naive_curiosity = self.args.naive_eta * accuracy
         
         _, mu_a, std_a, _ = self.forward(obs, prev_actions, actions)    
-        naive_2_curiosity = self.args.naive_2_eta * torch.pow(mu_a - mu_b, 2).sum(-1).unsqueeze(-1)
-        naive_3_curiosity = self.args.naive_2_eta * (.5 * (torch.pow(mu_a - mu_b, 2).sum(-1).unsqueeze(-1) - 1))
         
         dkl_changes = dkl(mu_a, std_a, mu_b, std_b).sum(-1).unsqueeze(-1)
         free_curiosity = self.args.free_eta * dkl_changes   
         
-        if(self.args.curiosity == "naive_1"):   curiosity = naive_1_curiosity
-        elif(self.args.curiosity == "naive_2"): curiosity = naive_2_curiosity
-        elif(self.args.curiosity == "naive_3"): curiosity = naive_3_curiosity
-        elif(self.args.curiosity == "free"):    curiosity = free_curiosity
-        else:                                   curiosity = torch.zeros(rewards.shape)
+        if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
+        elif(self.args.curiosity == "free"): curiosity = free_curiosity
+        else:                                curiosity = torch.zeros(rewards.shape)
         curiosity *= masks
         
         extrinsic = torch.mean(rewards).item()
@@ -281,13 +275,11 @@ class Agent:
             critic2_loss = log(critic2_loss) if critic2_loss > 0 else critic2_loss
         losses = np.array([[accuracy_loss, complexity_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
-        naive_1_curiosity = naive_1_curiosity.mean().item()
-        naive_2_curiosity = naive_2_curiosity.mean().item()
-        naive_3_curiosity = naive_3_curiosity.mean().item()
+        naive_curiosity = naive_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()
         if(free_curiosity == 0): free_curiosity = None
         
-        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_1_curiosity, naive_2_curiosity, naive_3_curiosity, free_curiosity)
+        return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_curiosity, free_curiosity)
                      
     def soft_update(self, local_model, target_model, tau):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
