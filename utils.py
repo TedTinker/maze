@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 # Meta 
 parser.add_argument("--arg_title",          type=str,   default = "default") 
 parser.add_argument("--arg_name",           type=str,   default = "default") 
-parser.add_argument("--agents",             type=int,   default = 24)
+parser.add_argument("--agents",             type=int,   default = 25)
 parser.add_argument("--previous_agents",    type=int,   default = 0)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
@@ -51,7 +51,7 @@ parser.add_argument('--action_prior',       type=str,   default = "normal")
 parser.add_argument('--capacity',           type=int,   default = 100)
 
 # Training
-parser.add_argument('--epochs',             type=int,   default = 1000)
+parser.add_argument('--epochs',             type=int,   default = 2000)
 parser.add_argument('--steps_per_epoch',    type=int,   default = 10)
 parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)

@@ -6,6 +6,7 @@ print("\nname:\nCollecting dictionaries")
 
 os.chdir("saved")
 folders = os.listdir()
+print("{} folders.".format(len(folders)))
 
 for folder in folders:
     plot_dict = {} ; min_max_dict = {}

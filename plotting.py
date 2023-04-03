@@ -93,7 +93,7 @@ def plots(plot_dicts, min_max_dict):
             counts = [count + (j*agents*1.1) for count in counts]
             ax.fill_between(xs, [j*agents*1.1 for _ in xs], counts, color = "black", linewidth = 0)
             if(j != len(kinds)-1):
-                ax.plot(xs, [agents*1.05 + j*agents*1.1 for _ in xs], color = "black", linestyle = "--")
+                ax.plot(rew_dict["xs"], [agents*1.05 + j*agents*1.1 for _ in xs], color = "black", linestyle = "--")
         ax.set_yticks([(2*j+1)*agents*1.1/2 for j in range(len(kinds))], kinds, rotation='vertical')
         ax.tick_params(left = False)
         ax.set_ylim([-1, len(kinds)*agents*1.1])
