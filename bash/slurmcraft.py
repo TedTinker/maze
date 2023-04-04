@@ -42,14 +42,15 @@ def expand_args(args = ""):
     return(combos)
 
 slurm_dict = {
-    "d"   : "", 
-    "e"   : "--alpha None",
+    "d"    : "", 
+    "e"    : "--alpha None",
 
-    "n"  : "--curiosity naive",
-    "en" : "--alpha None --curiosity naive",
+    "n"    : "--curiosity naive",
+    "en"   : "--alpha None --curiosity naive",
+    
     "en_log_prob_" : "--alpha None --curiosity naive --accuracy log_prob --naive_eta num_min_max 5 .1 1",
     
-    "ef" : "--alpha None --curiosity free --forward_lr .006 --beta 2"}
+    "ef_"  : "--alpha None --curiosity free --beta 2.5 --forward_lr .001 .005 .01 .05 .1"}
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():

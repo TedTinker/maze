@@ -39,7 +39,7 @@ parser.add_argument('--non_one',            type=int,   default = -1)
 parser.add_argument('--hidden',             type=int,   default = 32)
 parser.add_argument('--forward_var_layers', type=int,   default = 3)
 parser.add_argument('--actor_var_layers',   type=int,   default = 2)
-parser.add_argument("--beta",               type=float, default = 3)   # Scale complexity loss
+parser.add_argument("--beta",               type=float, default = 0)   # Scale complexity loss
 parser.add_argument("--sigma",              type=float, default = 1)      # Scale complexity loss
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
@@ -51,7 +51,7 @@ parser.add_argument('--action_prior',       type=str,   default = "normal")
 parser.add_argument('--capacity',           type=int,   default = 100)
 
 # Training
-parser.add_argument('--epochs',             type=int,   default = 2000)
+parser.add_argument('--epochs',             type=int,   default = 5000)
 parser.add_argument('--steps_per_epoch',    type=int,   default = 10)
 parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
@@ -95,16 +95,21 @@ for arg in vars(default_args):
 def get_args_title(default_args, args):
     if(args.arg_name[:3] == "___"): return("plotting")
     name = "" ; first = True
-    for arg in vars(default_args):
+    arg_list = list(vars(default_args).keys())
+    arg_list.insert(0, arg_list.pop(arg_list.index("arg_name")))
+    for arg in arg_list:
         if(arg in ["arg_title", "id", "agents", "previous_agents"]): pass 
         else: 
             default, this_time = getattr(default_args, arg), getattr(args, arg)
             if(this_time == default): pass
+            elif(arg == "arg_name"):
+                name += "{} (".format(this_time)
             else: 
                 if first: first = False
                 else: name += ", "
                 name += "{}: {}".format(arg, this_time)
     if(name == ""): name = "default" 
+    else:           name += ")"
     return(name)
 
 args.arg_title = get_args_title(default_args, args)
@@ -152,3 +157,4 @@ def invert_linear_layer(layer):
     reverse_layer = nn.Linear(layer.out_features, layer.in_features)
     reverse_layer.weight.data = reverse_weights
     return(reverse_layer)
+# %%

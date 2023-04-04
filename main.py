@@ -8,6 +8,7 @@ from utils import args, folder, duration
 from agent import Agent
 
 print("\nname:\n{}".format(args.arg_name))
+print("\nagents: {}. previous_agents: {}.".format(args.agents, args.previous_agents))
 
 def train(i):
     np.random.seed(i)
