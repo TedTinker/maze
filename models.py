@@ -8,7 +8,7 @@ from torchinfo import summary as torch_summary
 
 from math import exp
 
-from utils import default_args, init_weights, invert_linear_layer
+from utils import default_args, init_weights
 from maze import obs_size, action_size
 
 
@@ -91,10 +91,10 @@ class Forward(nn.Module):
         
     def forward(self, obs, prev_action, action):
         h = self.sum(obs, prev_action)
-        state = self.state_var(h)
+        _, state_mu, state_std, _, _ = self.state_var(h)
         x = torch.cat((h, action), dim=-1)
-        pred_obs, mu, std, _, log_prob_func = self.obs_var(x)
-        return(pred_obs, mu, std, log_prob_func)
+        pred_obs_states, mu, std, _, log_prob_func = self.obs_var(x)
+        return(pred_obs_states, mu, std, state_mu, state_std, log_prob_func)
         
 
 
