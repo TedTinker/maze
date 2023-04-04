@@ -216,7 +216,7 @@ class Agent:
         
         # Train alpha
         if self.args.alpha == None:
-            actions_pred, log_pis, _ = self.actor(obs, prev_actions)
+            _, log_pis, _ = self.actor(obs, prev_actions)
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy))*masks
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()

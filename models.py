@@ -54,7 +54,7 @@ class Variational(nn.Module):
                 nn.Tanh() if i != layers - 1 else nn.Identity()))
             self.rho.append(nn.Sequential(
                 nn.Linear(in_size, out_size),
-                nn.LeakyReLU() if i != layers - 1 else nn.Identity()))
+                nn.Tanh() if i != layers - 1 else nn.Identity()))
         
         self.mu.apply(init_weights)
         self.rho.apply(init_weights)
@@ -84,16 +84,13 @@ class Forward(nn.Module):
         self.args = args
         
         self.sum = Summarizer(args) 
-        self.lin = nn.Linear(args.hidden + action_size, args.hidden)
-        self.var = Variational(args.hidden, obs_size, args.forward_var_layers, args = args)
+        self.var = Variational(args.hidden + action_size, obs_size, args.forward_var_layers, args = args)
         
-        self.lin.apply(init_weights)
         self.to(args.device)
         
     def forward(self, obs, prev_action, action):
         h = self.sum(obs, prev_action)
         x = torch.cat((h, action), dim=-1)
-        x = self.lin(x)
         pred_obs, mu, std, _, log_prob_func = self.var(x)
         return(pred_obs, mu, std, log_prob_func)
         
@@ -107,18 +104,13 @@ class Actor(nn.Module):
         self.args = args
         
         self.sum = Summarizer(args) 
-        self.lin = nn.Sequential(
-            nn.Linear(args.hidden, args.hidden),
-            nn.LeakyReLU())
         self.var = Variational(args.hidden, action_size, args.actor_var_layers, args = args)
 
-        self.lin.apply(init_weights)
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
         h = self.sum(obs, prev_action, h)
-        x = self.lin(h)
-        action, _, _, log_prob, _ = self.var(x)
+        action, _, _, log_prob, _ = self.var(h)
         return(action, log_prob, h)
     
     
