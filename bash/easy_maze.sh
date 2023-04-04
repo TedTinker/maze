@@ -31,15 +31,15 @@ do
     elif [ $arg == "empty_space" ]
     then
         :
-    elif [ ${agents} -gt 25 ]
+    elif [ ${agents} -gt 36 ]
     then
-        num_jobs=$(( ${agents} / 25 )) 
-        remainder=$(( ${agents} % 25 ))
+        num_jobs=$(( ${agents} / 36 )) 
+        remainder=$(( ${agents} % 36 ))
         if [ $remainder -gt 0 ]
         then
             num_jobs=$(( num_jobs + 1 ))
         else 
-            remainder=25
+            remainder=36
         fi
         for (( i=1; i<=${num_jobs}; i++ ))
         do
@@ -47,7 +47,7 @@ do
             then
                 agents_per_job=$(( remainder ))
             else
-                agents_per_job=$(( 25 ))
+                agents_per_job=$(( 36 ))
             fi
             jid=$(sbatch --export=agents_per_job=${agents_per_job},previous_agents=${previous_agents} easy_maze/bash/main_${arg}.slurm | awk '{print $4}')
             echo "$arg (part $i): $jid"

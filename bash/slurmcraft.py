@@ -67,7 +67,7 @@ def all_like_this(this):
             
 
 
-max_cpus = 25
+max_cpus = 36
 if(__name__ == "__main__"):
     
     if(args.comp == "deigo"):

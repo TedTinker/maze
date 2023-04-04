@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 # Meta 
 parser.add_argument("--arg_title",          type=str,   default = "default") 
 parser.add_argument("--arg_name",           type=str,   default = "default") 
-parser.add_argument("--agents",             type=int,   default = 25)
+parser.add_argument("--agents",             type=int,   default = 36)
 parser.add_argument("--previous_agents",    type=int,   default = 0)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
@@ -38,7 +38,7 @@ parser.add_argument('--non_one',            type=int,   default = -1)
 # Module 
 parser.add_argument('--hidden',             type=int,   default = 32)
 parser.add_argument('--forward_var_layers', type=int,   default = 3)
-parser.add_argument('--actor_var_layers',   type=int,   default = 1)
+parser.add_argument('--actor_var_layers',   type=int,   default = 2)
 parser.add_argument("--beta",               type=float, default = 3)   # Scale complexity loss
 parser.add_argument("--sigma",              type=float, default = 1)      # Scale complexity loss
 parser.add_argument('--forward_lr',         type=float, default = .01)
@@ -96,7 +96,7 @@ def get_args_title(default_args, args):
     if(args.arg_name[:3] == "___"): return("plotting")
     name = "" ; first = True
     for arg in vars(default_args):
-        if(arg in ["arg_title", "id"]): pass 
+        if(arg in ["arg_title", "id", "agents", "previous_agents"]): pass 
         else: 
             default, this_time = getattr(default_args, arg), getattr(args, arg)
             if(this_time == default): pass
