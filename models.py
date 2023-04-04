@@ -13,28 +13,6 @@ from maze import obs_size, action_size
 
 
 
-class Summarizer(nn.Module): 
-    
-    def __init__(self, args = default_args):
-        super(Summarizer, self).__init__()
-        
-        self.args = args
-        self.gru = nn.GRU(
-            input_size =  obs_size + action_size,
-            hidden_size = args.hidden,
-            batch_first = True)
-        
-        self.gru.apply(init_weights)
-        self.to(args.device)
-        
-    def forward(self, obs, prev_a, h = None):
-        x = torch.cat([obs, prev_a], -1)
-        h = h if h == None else h.permute(1, 0, 2)
-        h, _ = self.gru(x, h)
-        return(h)
-    
-    
-
 class Variational(nn.Module):
     
     def __init__(self, input_size, output_size, layers, std_min = exp(-20), std_max = exp(2), args = default_args):
@@ -46,7 +24,7 @@ class Variational(nn.Module):
         self.mu = torch.nn.ModuleList()
         self.rho = torch.nn.ModuleList()
         for i in range(layers):
-            in_size = args.hidden ; out_size = args.hidden
+            in_size = args.hidden_size ; out_size = args.hidden_size
             if(i == 0): in_size = input_size
             if(i == layers - 1): out_size = output_size
             self.mu.append(nn.Sequential(
@@ -73,6 +51,30 @@ class Variational(nn.Module):
             log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
             return(log_prob)
         return(x, mu, std, log_prob_func(x), log_prob_func)
+    
+    
+
+class Summarizer(nn.Module): 
+    
+    def __init__(self, args = default_args):
+        super(Summarizer, self).__init__()
+        
+        self.args = args
+        self.gru = nn.GRU(
+            input_size =  obs_size + action_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
+        self.var = Variational(args.hidden_size, args.state_size, 1, args = args)
+        
+        self.gru.apply(init_weights)
+        self.to(args.device)
+        
+    def forward(self, obs, prev_a, h = None):
+        x = torch.cat([obs, prev_a], -1)
+        h = h if h == None else h.permute(1, 0, 2)
+        h, _ = self.gru(x, h)
+        state = self.var(h)
+        return(h, state)
         
         
 
@@ -84,12 +86,12 @@ class Forward(nn.Module):
         self.args = args
         
         self.sum = Summarizer(args) 
-        self.var = Variational(args.hidden + action_size, obs_size, args.forward_var_layers, args = args)
+        self.var = Variational(args.hidden_size + action_size, obs_size, args.forward_var_layers, args = args)
         
         self.to(args.device)
         
     def forward(self, obs, prev_action, action):
-        h = self.sum(obs, prev_action)
+        h, state = self.sum(obs, prev_action)
         x = torch.cat((h, action), dim=-1)
         pred_obs, mu, std, _, log_prob_func = self.var(x)
         return(pred_obs, mu, std, log_prob_func)
@@ -104,12 +106,12 @@ class Actor(nn.Module):
         self.args = args
         
         self.sum = Summarizer(args) 
-        self.var = Variational(args.hidden, action_size, args.actor_var_layers, args = args)
+        self.var = Variational(args.hidden_size, action_size, args.actor_var_layers, args = args)
 
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
-        h = self.sum(obs, prev_action, h)
+        h, state = self.sum(obs, prev_action, h)
         action, _, _, log_prob, _ = self.var(h)
         return(action, log_prob, h)
     
@@ -124,15 +126,15 @@ class Critic(nn.Module):
         
         self.sum = Summarizer(args) 
         self.lin = nn.Sequential(
-            nn.Linear(args.hidden + action_size, args.hidden),
+            nn.Linear(args.hidden_size + action_size, args.hidden_size),
             nn.LeakyReLU(),
-            nn.Linear(args.hidden, 1))
+            nn.Linear(args.hidden_size, 1))
 
         self.lin.apply(init_weights)
         self.to(args.device)
 
     def forward(self, obs, prev_action, action):
-        h = self.sum(obs, prev_action)
+        h, state = self.sum(obs, prev_action)
         x = torch.cat((h, action), dim=-1)
         x = self.lin(x)
         return(x)
