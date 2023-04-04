@@ -269,13 +269,50 @@ def plots(plot_dicts, min_max_dict):
     
     # Done!
     fig.tight_layout(pad=1.0)
-    plt.savefig("saved/plot.png", bbox_inches = "tight")
+    plt.savefig("plot.png", bbox_inches = "tight")
     plt.show()
     plt.close()
     
     
 
 print("name:\n{}".format(args.arg_name))
+
+os.chdir("saved")
+folders = os.listdir() ; folders.sort()
+print("{} folders.".format(len(folders)))
+
+for folder in folders:
+    plot_dict = {} ; min_max_dict = {}
+
+    files = os.listdir(folder) ; files.sort()
+    print("{} files in {} folder.".format(len(files), folder))
+    for file in files:
+        if(file.split("_")[0] == "plot"): d = plot_dict
+        if(file.split("_")[0] == "min"):  d = min_max_dict
+        with open(folder + "/" + file, "rb") as handle: 
+            saved_d = pickle.load(handle) ; os.remove(folder + "/" + file)
+        for key in saved_d.keys(): 
+            if(not key in d): d[key] = []
+            if(key == "arg_title"): d[key] = saved_d[key]
+            else:                   d[key].append(saved_d[key])
+        
+    for key in min_max_dict.keys():
+        if(not key in ["args", "arg_title", "arg_name", "spot_names"]):
+            minimum = None ; maximum = None
+            for min_max in min_max_dict[key]:
+                if(minimum == None):        minimum = min_max[0]
+                elif(minimum > min_max[0]): minimum = min_max[0]
+                if(maximum == None):        maximum = min_max[1]
+                elif(maximum < min_max[1]): maximum = min_max[1]
+            min_max_dict[key] = (minimum, maximum)
+
+    with open(folder + "/plot_dict.pickle", "wb") as handle:
+        pickle.dump(plot_dict, handle)
+    with open(folder + "/min_max_dict.pickle", "wb") as handle:
+        pickle.dump(min_max_dict, handle)
+    
+print("Done collecting dictionaries!")
+print("\n\nDuration: {}".format(duration()))
 
 plot_dicts = [] ; min_max_dicts = []
     
@@ -287,12 +324,12 @@ for name in order:
     got_plot_dicts = False ; got_min_max_dicts = False
     while(not got_plot_dicts):
         try:
-            with open("saved/" + name + "/" + "plot_dict.pickle", "rb") as handle: 
+            with open(name + "/" + "plot_dict.pickle", "rb") as handle: 
                 plot_dicts.append(pickle.load(handle)) ; got_plot_dicts = True
         except: print("Stuck trying to get {}'s plot_dicts...".format(name)) ; sleep(1)
     while(not got_min_max_dicts):
         try:
-            with open("saved/" + name + "/" + "min_max_dict.pickle", "rb") as handle: 
+            with open(name + "/" + "min_max_dict.pickle", "rb") as handle: 
                 min_max_dicts.append(pickle.load(handle)) ; got_min_max_dicts = True 
         except: print("Stuck trying to get {}'s min_max_dicts...".format(name)) ; sleep(1)
         
@@ -309,4 +346,4 @@ for key in plot_dicts[0].keys():
         min_max_dict[key] = (minimum, maximum)
         
 plots(plot_dicts, min_max_dict)
-print("Done with {}!".format(args.arg_name))
+print("Done plotting {}!".format(args.arg_name))

@@ -63,11 +63,7 @@ do
 done
 
 job_ids=$(echo ${jid_list[@]} | tr ' ' ':')  
-jid=$(sbatch --dependency=afterok:${job_ids} easy_maze/bash/post.slurm | awk '{print $4}')
-echo
-echo "post: $jid"
-
-jid=$(sbatch --dependency=afterok:$jid easy_maze/bash/plotting.slurm | awk '{print $4}')
+jid=$(sbatch --dependency=afterok:${job_ids} easy_maze/bash/plotting.slurm | awk '{print $4}')
 echo
 echo "plotting: $jid"
 echo

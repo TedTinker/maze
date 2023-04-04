@@ -50,7 +50,7 @@ slurm_dict = {
     
     "en_log_prob_" : "--alpha None --curiosity naive --accuracy log_prob --naive_eta num_min_max 5 .1 1",
     
-    "ef_"  : "--alpha None --curiosity free --beta 2.5 --forward_lr .001 .005 .01 .05 .1"}
+    "ef"  : "--alpha None --curiosity free --beta 2.5"}
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():
@@ -100,18 +100,7 @@ module load singularity
 singularity exec t_maze.sif python easy_maze/main.py --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
 """.format(partition, max_cpus, name, slurm_dict[name])[1:])
             
-    with open("post.slurm", "w") as f:
-        f.write(
-"""
-#!/bin/bash -l
-{}
-#SBATCH --mem=2G
 
-module load singularity
-singularity exec t_maze.sif python easy_maze/post.py
-""".format(partition)[1:])
-            
-            
             
     with open("plotting.slurm", "w") as f:
         f.write(
