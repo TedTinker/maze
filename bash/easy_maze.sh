@@ -20,6 +20,7 @@ singularity exec t_maze.sif python easy_maze/bash/slurmcraft.py --comp ${comp} -
 arg_list=$(echo "${arg_list}" | tr -d '[]"' | sed 's/,/, /g')
 wait
 
+max_agents=36
 jid_list=()
 echo
 for arg in ${arg_list//, / }
@@ -31,15 +32,15 @@ do
     elif [ $arg == "empty_space" ]
     then
         :
-    elif [ ${agents} -gt 36 ]
+    elif [ ${agents} -gt ${max_agents} ]
     then
-        num_jobs=$(( ${agents} / 36 )) 
-        remainder=$(( ${agents} % 36 ))
+        num_jobs=$(( ${agents} / ${max_agents} )) 
+        remainder=$(( ${agents} % ${max_agents} ))
         if [ $remainder -gt 0 ]
         then
             num_jobs=$(( num_jobs + 1 ))
         else 
-            remainder=36
+            remainder=${max_agents}
         fi
         for (( i=1; i<=${num_jobs}; i++ ))
         do
@@ -47,7 +48,7 @@ do
             then
                 agents_per_job=$(( remainder ))
             else
-                agents_per_job=$(( 36 ))
+                agents_per_job=$(( ${max_agents} ))
             fi
             jid=$(sbatch --export=agents_per_job=${agents_per_job},previous_agents=${previous_agents} easy_maze/bash/main_${arg}.slurm | awk '{print $4}')
             echo "$arg (part $i): $jid"
@@ -55,10 +56,9 @@ do
             previous_agents=$(( previous_agents + agents_per_job ))
         done
     else
-        jid=$(sbatch --export=agents_per_job=${agents_per_job},previous_agents=${previous_agents} easy_maze/bash/main_${arg}.slurm | awk '{print $4}')
+        jid=$(sbatch --export=agents_per_job=${agents},previous_agents=0 easy_maze/bash/main_${arg}.slurm | awk '{print $4}')
         echo "$arg: $jid"
         jid_list+=($jid)
-        previous_agents=$(( previous_agents + agents )) 
     fi
 done
 

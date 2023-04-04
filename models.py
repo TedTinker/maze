@@ -64,7 +64,6 @@ class Summarizer(nn.Module):
             input_size =  obs_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
-        self.var = Variational(args.hidden_size, args.state_size, 1, args = args)
         
         self.gru.apply(init_weights)
         self.to(args.device)
@@ -73,8 +72,7 @@ class Summarizer(nn.Module):
         x = torch.cat([obs, prev_a], -1)
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(x, h)
-        state = self.var(h)
-        return(h, state)
+        return(h)
         
         
 
@@ -86,14 +84,16 @@ class Forward(nn.Module):
         self.args = args
         
         self.sum = Summarizer(args) 
-        self.var = Variational(args.hidden_size + action_size, obs_size, args.forward_var_layers, args = args)
+        self.state_var = Variational(args.hidden_size, args.state_size, args.forward_var_layers, args = args)
+        self.obs_var = Variational(args.hidden_size + action_size, obs_size, args.forward_var_layers, args = args)
         
         self.to(args.device)
         
     def forward(self, obs, prev_action, action):
-        h, state = self.sum(obs, prev_action)
+        h = self.sum(obs, prev_action)
+        state = self.state_var(h)
         x = torch.cat((h, action), dim=-1)
-        pred_obs, mu, std, _, log_prob_func = self.var(x)
+        pred_obs, mu, std, _, log_prob_func = self.obs_var(x)
         return(pred_obs, mu, std, log_prob_func)
         
 
@@ -111,7 +111,7 @@ class Actor(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
-        h, state = self.sum(obs, prev_action, h)
+        h = self.sum(obs, prev_action, h)
         action, _, _, log_prob, _ = self.var(h)
         return(action, log_prob, h)
     
@@ -134,7 +134,7 @@ class Critic(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, prev_action, action):
-        h, state = self.sum(obs, prev_action)
+        h = self.sum(obs, prev_action)
         x = torch.cat((h, action), dim=-1)
         x = self.lin(x)
         return(x)
