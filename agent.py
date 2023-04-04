@@ -140,16 +140,17 @@ class Agent:
         
         self.epochs += 1
 
-        obs, actions, rewards, dones, masks = batch
+        all_obs, actions, rewards, dones, masks = batch
         
         #print("\n\n")
         #print(obs.shape, actions.shape, rewards.shape, dones.shape, masks.shape)
         #print("\n\n")
         
-        next_obs = obs[:,1:]
-        obs = obs[:,:-1]
+        next_obs = all_obs[:,1:]
+        obs = all_obs[:,:-1]
         
-        prev_actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions[:,:-1]], dim = 1)
+        all_actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions], dim = 1)
+        prev_actions = all_actions[:,:-1]
         
         
                             
