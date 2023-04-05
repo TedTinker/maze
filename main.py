@@ -47,7 +47,7 @@ while any(process.is_alive() for process in processes) or not queue.empty():
         for value in values:
             if(value != "100"): string += " " + value
             else:               hundreds += 1 
-        if(hundreds > 0): string += " |" + " 100" * hundreds
+        if(hundreds > 0): string += " |||" + " 100" * hundreds
         string = "Duration: {} / {} :".format(duration(), "estimate") + string + "."
         print(string, flush=True)
     sleep(1)
