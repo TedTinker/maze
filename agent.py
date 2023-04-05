@@ -102,8 +102,7 @@ class Agent:
             if(not done):
                 with torch.no_grad():
                     o = t_maze.obs().unsqueeze(0)
-                    zq, _, _, h = self.forward.zq(o, prev_a, h)
-                    a, _ = self.actor(zq)
+                    a, _, _ = self.actor(o, prev_a, h)
                     action = torch.flatten(a).tolist()
                     r, spot_name, done = t_maze.action(action[0], action[1], verbose)
                     no = t_maze.obs().unsqueeze(0)
@@ -212,7 +211,7 @@ class Agent:
                 
         # Train critics
         with torch.no_grad():
-            next_action, log_pis_next = self.actor(next_zqs)
+            next_action, log_pis_next, _ = self.actor(next_obs, actions)
             Q_target1_next = self.critic1_target(next_obs, actions, next_action)
             Q_target2_next = self.critic2_target(next_obs, actions, next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
@@ -235,7 +234,7 @@ class Agent:
         
         # Train alpha
         if self.args.alpha == None:
-            _, log_pis = self.actor(zqs.detach())
+            _, log_pis, _ = self.actor(obs, prev_actions)
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy))*masks
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()
@@ -252,7 +251,7 @@ class Agent:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha
-            actions_pred, log_pis = self.actor(zqs.detach())
+            actions_pred, log_pis, _ = self.actor(obs, prev_actions)
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
