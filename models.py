@@ -98,6 +98,7 @@ class Forward(nn.Module):
         zq, zq_mu, zq_std, h = self.zq(obs, prev_action, h) ; action = action.unsqueeze(1)
         x = torch.cat((h, action), dim=-1)
         pred_obs, obs_mu, obs_std = self.obs_var(x)
+        #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
         
@@ -116,6 +117,7 @@ class Actor(nn.Module):
 
     def forward(self, zq, epsilon = 1e-6):
         x, mu, std = self.var(zq)
+        #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + epsilon)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
@@ -130,16 +132,24 @@ class Critic(nn.Module):
         
         self.args = args
         
+        self.gru = nn.GRU(
+            input_size =  obs_size + action_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
+        
         self.lin = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size),
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, 1))
 
+        self.gru.apply(init_weights)
         self.lin.apply(init_weights)
         self.to(args.device)
 
-    def forward(self, zq, action):
-        x = torch.cat((zq, action), dim=-1)
+    def forward(self, obs, prev_action, action, h = None):
+        x = torch.cat((obs, prev_action), dim=-1)
+        h, _ = self.gru(x, h)
+        x = torch.cat((h, action), dim=-1)
         x = self.lin(x)
         return(x)
     
@@ -174,6 +184,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((3, 1, args.state_size), (3, 1, action_size))))
+    print(torch_summary(critic, ((3, 1, obs_size), (3, 1, action_size), (3, 1, action_size))))
 
 # %%
