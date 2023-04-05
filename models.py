@@ -45,12 +45,8 @@ class Variational(nn.Module):
         std = torch.log1p(torch.exp(rho))
         std = torch.clamp(std, min = self.std_min, max = self.std_max)
         e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = torch.tanh(mu + e * std)
-        def log_prob_func(x_, epsilon = 1e-6):
-            log_prob = Normal(mu, std).log_prob(mu + e * std) - torch.log(1 - x_.pow(2) + epsilon)
-            log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
-            return(log_prob)
-        return(x, mu, std, log_prob_func(x), log_prob_func)
+        x = mu + e * std
+        return(x, mu, std)
     
     
 
@@ -93,14 +89,16 @@ class Forward(nn.Module):
         if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
         x = torch.cat((h, obs, prev_action), dim=-1)
-        zq, zq_mu, zq_std, _, _ = self.zq_var(x)
+        zq, zq_mu, zq_std = self.zq_var(x)
+        zq = torch.tanh(zq)
         h = self.sum(zq, h)
         return(zq, zq_mu, zq_std, h)
         
     def forward(self, obs, prev_action, action, h = None):
         zq, zq_mu, zq_std, h = self.zq(obs, prev_action, h) ; action = action.unsqueeze(1)
         x = torch.cat((h, action), dim=-1)
-        pred_obs, obs_mu, obs_std, _, _ = self.obs_var(x)
+        pred_obs, obs_mu, obs_std = self.obs_var(x)
+        pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
         
 
@@ -116,8 +114,11 @@ class Actor(nn.Module):
 
         self.to(args.device)
 
-    def forward(self, zq):
-        action, _, _, log_prob, _ = self.var(zq)
+    def forward(self, zq, epsilon = 1e-6):
+        x, mu, std = self.var(zq)
+        action = torch.tanh(x)
+        log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + epsilon)
+        log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
         return(action, log_prob)
     
     
