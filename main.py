@@ -32,7 +32,7 @@ for worker_id in range(args.agents):
     processes.append(process)
     process.start()
 
-progress_dict = {i : "0%" for i in range(args.agents)}
+progress_dict = {i : "0" for i in range(args.agents)}
 prev_progress_dict = {i : None for i in range(args.agents)}
 
 while any(process.is_alive() for process in processes) or not queue.empty():
@@ -44,9 +44,9 @@ while any(process.is_alive() for process in processes) or not queue.empty():
         prev_progress_dict = progress_dict.copy()
         string = "" ; hundreds = 0
         for key, item in progress_dict.items():
-            if(item != "100%"): string += " " + item
+            if(item != "100"): string += " " + item
             else:               hundreds += 1 
-        if(hundreds > 0): string += " |" + " 100%" * hundreds
+        if(hundreds > 0): string += " |" + " 100" * hundreds
         string = "Duration: {} / {} :".format(duration(), "estimate") + string + "."
         print(string, flush=True)
     sleep(1)
