@@ -43,8 +43,9 @@ while any(process.is_alive() for process in processes) or not queue.empty():
     if any(progress_dict[key] != prev_progress_dict[key] for key in progress_dict.keys()):
         prev_progress_dict = progress_dict.copy()
         string = "" ; hundreds = 0
-        for key, item in progress_dict.items():
-            if(item != "100"): string += " " + item
+        values = list(progress_dict.values()) ; values.sort()
+        for value in values:
+            if(value != "100"): string += " " + value
             else:               hundreds += 1 
         if(hundreds > 0): string += " |" + " 100" * hundreds
         string = "Duration: {} / {} :".format(duration(), "estimate") + string + "."
