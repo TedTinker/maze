@@ -42,16 +42,17 @@ while any(process.is_alive() for process in processes) or not queue.empty():
 
     if any(progress_dict[key] != prev_progress_dict[key] for key in progress_dict.keys()):
         prev_progress_dict = progress_dict.copy()
-        string = ""
+        string = "" ; hundreds = 0
         for key, item in progress_dict.items():
             if(item != "100%"): string += " " + item
-        string = "Duration: {} / {}.".format(duration(), "estimate") + string
+            else:               hundreds += 1 
+        if(hundreds > 0): string += " |" + " 100%" * hundreds
+        string = "Duration: {} / {} :".format(duration(), "estimate") + string + "."
         print(string, flush=True)
     sleep(1)
 
 for process in processes:
     process.join()
 
-print("Done with {}!".format(args.arg_name))
-print("\n\nDuration: {}".format(duration()))
+print("\nDuration: {}. Done!".format(duration()))
 # %%

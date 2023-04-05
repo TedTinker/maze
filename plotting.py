@@ -345,4 +345,4 @@ for key in plot_dicts[0].keys():
         min_max_dict[key] = (minimum, maximum)
         
 plots(plot_dicts, min_max_dict)
-print("Done plotting {}!".format(args.arg_name), flush = True)
+print("\nDuration: {}. Done!".format(duration()))
