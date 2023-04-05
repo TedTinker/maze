@@ -123,12 +123,12 @@ if(args.arg_name[:3] != "___" and not args.arg_name in ["default", "plotting"]):
 if(default_args.alpha == "None"): default_args.alpha = None
 if(args.alpha == "None"):         args.alpha = None
 
-if(args == default_args): print("Using default arguments.")
+if(args == default_args): print("Using default arguments.", flush = True)
 else:
     for arg in vars(default_args):
         default, this_time = getattr(default_args, arg), getattr(args, arg)
         if(this_time == default): pass
-        else: print("{}:\n\tDefault:\t{}\n\tThis time:\t{}".format(arg, default, this_time))
+        else: print("{}:\n\tDefault:\t{}\n\tThis time:\t{}".format(arg, default, this_time), flush = True)
 
 
 

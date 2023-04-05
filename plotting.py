@@ -263,29 +263,28 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        print("\n{}: {}.".format(plot_dict["arg_title"], duration()))
+        print("\n{}: {}.".format(plot_dict["arg_title"], duration()), flush = True)
 
     
     
     # Done!
     fig.tight_layout(pad=1.0)
     plt.savefig("plot.png", bbox_inches = "tight")
-    plt.show()
     plt.close()
     
     
 
-print("name:\n{}".format(args.arg_name))
+print("name:\n{}".format(args.arg_name), flush = True)
 
 os.chdir("saved")
 folders = os.listdir() ; folders.sort()
-print("{} folders.".format(len(folders)))
+print("{} folders.".format(len(folders)), flush = True)
 
 for folder in folders:
     plot_dict = {} ; min_max_dict = {}
 
     files = os.listdir(folder) ; files.sort()
-    print("{} files in {} folder.".format(len(files), folder))
+    print("{} files in {} folder.".format(len(files), folder), flush = True)
     for file in files:
         if(file.split("_")[0] == "plot"): d = plot_dict
         if(file.split("_")[0] == "min"):  d = min_max_dict
@@ -311,8 +310,8 @@ for folder in folders:
     with open(folder + "/min_max_dict.pickle", "wb") as handle:
         pickle.dump(min_max_dict, handle)
     
-print("Done collecting dictionaries!")
-print("\n\nDuration: {}".format(duration()))
+print("Done collecting dictionaries!", flush = True)
+print("\n\nDuration: {}".format(duration()), flush = True)
 
 plot_dicts = [] ; min_max_dicts = []
     
@@ -326,12 +325,12 @@ for name in order:
         try:
             with open(name + "/" + "plot_dict.pickle", "rb") as handle: 
                 plot_dicts.append(pickle.load(handle)) ; got_plot_dicts = True
-        except: print("Stuck trying to get {}'s plot_dicts...".format(name)) ; sleep(1)
+        except: print("Stuck trying to get {}'s plot_dicts...".format(name), flush = True) ; sleep(1)
     while(not got_min_max_dicts):
         try:
             with open(name + "/" + "min_max_dict.pickle", "rb") as handle: 
                 min_max_dicts.append(pickle.load(handle)) ; got_min_max_dicts = True 
-        except: print("Stuck trying to get {}'s min_max_dicts...".format(name)) ; sleep(1)
+        except: print("Stuck trying to get {}'s min_max_dicts...".format(name), flush = True) ; sleep(1)
         
 min_max_dict = {}
 for key in plot_dicts[0].keys():
@@ -346,4 +345,4 @@ for key in plot_dicts[0].keys():
         min_max_dict[key] = (minimum, maximum)
         
 plots(plot_dicts, min_max_dict)
-print("Done plotting {}!".format(args.arg_name))
+print("Done plotting {}!".format(args.arg_name), flush = True)

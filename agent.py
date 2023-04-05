@@ -8,8 +8,8 @@ import torch.optim as optim
 import numpy as np
 from math import log
 from itertools import accumulate
-import enlighten
 from copy import deepcopy
+import enlighten
 
 from utils import default_args, dkl
 from maze import T_Maze, action_size
@@ -66,16 +66,19 @@ class Agent:
         
         
         
-    def training(self, i):
-        manager = enlighten.Manager(width = 150)
-        E = manager.counter(total = self.args.epochs, unit = "ticks", color = "blue")
+    def training(self, q, i):
+        #manager = enlighten.Manager(width = 150)
+        #E = manager.counter(total = self.args.epochs, unit = "ticks", color = "blue")
         while(True):
-            E.update() ; self.episode()
+            #E.update()
+            self.episode()
+            percent_done = str(round(100 * self.epochs / self.args.epochs)) + "%"
+            q.put((i, percent_done))
             if(self.epochs >= self.args.epochs): break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         
-        min_max_dict = {key : [] for key in self.plot_dict.keys()}
-        for key in min_max_dict.keys():
+        self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
+        for key in self.min_max_dict.keys():
             if(not key in ["args", "arg_title", "arg_name", "spot_names"]):
                 minimum = None ; maximum = None 
                 l = self.plot_dict[key]
@@ -86,8 +89,7 @@ class Agent:
                     elif(minimum > min(l)): minimum = min(l)
                     if(  maximum == None):  maximum = max(l) 
                     elif(maximum < max(l)): maximum = max(l)
-                min_max_dict[key] = (minimum, maximum)
-        return(self.plot_dict, min_max_dict)
+                self.min_max_dict[key] = (minimum, maximum)
     
     
     
