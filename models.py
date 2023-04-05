@@ -61,17 +61,16 @@ class Summarizer(nn.Module):
         
         self.args = args
         self.gru = nn.GRU(
-            input_size =  obs_size + action_size,
+            input_size =  args.hidden_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         
         self.gru.apply(init_weights)
         self.to(args.device)
         
-    def forward(self, obs, prev_a, h = None):
-        x = torch.cat([obs, prev_a], -1)
+    def forward(self, zq, h = None):
         h = h if h == None else h.permute(1, 0, 2)
-        h, _ = self.gru(x, h)
+        h, _ = self.gru(zq, h)
         return(h)
         
         
@@ -84,17 +83,25 @@ class Forward(nn.Module):
         self.args = args
         
         self.sum = Summarizer(args) 
-        self.state_var = Variational(args.hidden_size, args.state_size, args.forward_var_layers, args = args)
-        self.obs_var = Variational(args.hidden_size + action_size, obs_size, args.forward_var_layers, args = args)
+        self.zq_var = Variational(args.hidden_size + obs_size + action_size, args.state_size, args.state_var_layers, args = args)
+        self.obs_var = Variational(args.hidden_size + action_size,           obs_size,        args.obs_var_layers, args = args)
         
         self.to(args.device)
         
-    def forward(self, obs, prev_action, action):
-        h = self.sum(obs, prev_action)
-        _, state_mu, state_std, _, _ = self.state_var(h)
+    def zq(self, obs, prev_action, h = None):
+        if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
+        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
+        if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
+        x = torch.cat((h, obs, prev_action), dim=-1)
+        zq, zq_mu, zq_std, _, _ = self.zq_var(x)
+        h = self.sum(zq, h)
+        return(zq, zq_mu, zq_std, h)
+        
+    def forward(self, obs, prev_action, action, h = None):
+        zq, zq_mu, zq_std, h = self.zq(obs, prev_action, h) ; action = action.unsqueeze(1)
         x = torch.cat((h, action), dim=-1)
-        pred_obs_states, mu, std, _, log_prob_func = self.obs_var(x)
-        return(pred_obs_states, mu, std, state_mu, state_std, log_prob_func)
+        pred_obs, obs_mu, obs_std, _, _ = self.obs_var(x)
+        return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
         
 
 
@@ -105,15 +112,13 @@ class Actor(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(args) 
         self.var = Variational(args.hidden_size, action_size, args.actor_var_layers, args = args)
 
         self.to(args.device)
 
-    def forward(self, obs, prev_action, h = None):
-        h = self.sum(obs, prev_action, h)
-        action, _, _, log_prob, _ = self.var(h)
-        return(action, log_prob, h)
+    def forward(self, zq):
+        action, _, _, log_prob, _ = self.var(zq)
+        return(action, log_prob)
     
     
     
@@ -124,7 +129,6 @@ class Critic(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(args) 
         self.lin = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size),
             nn.LeakyReLU(),
@@ -133,9 +137,8 @@ class Critic(nn.Module):
         self.lin.apply(init_weights)
         self.to(args.device)
 
-    def forward(self, obs, prev_action, action):
-        h = self.sum(obs, prev_action)
-        x = torch.cat((h, action), dim=-1)
+    def forward(self, zq, action):
+        x = torch.cat((zq, action), dim=-1)
         x = self.lin(x)
         return(x)
     
@@ -161,7 +164,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(actor)
     print()
-    print(torch_summary(actor, ((3,obs_size), (3, action_size))))
+    print(torch_summary(actor, ((3, 1, args.state_size))))
     
     
     
@@ -170,6 +173,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((3,obs_size),(3,action_size),(3,action_size))))
+    print(torch_summary(critic, ((3, 1, args.state_size), (3, 1, action_size))))
 
 # %%

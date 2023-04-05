@@ -102,7 +102,8 @@ class Agent:
             if(not done):
                 with torch.no_grad():
                     o = t_maze.obs().unsqueeze(0)
-                    a, _, h = self.actor(o, prev_a, h)
+                    zq, _, _, h = self.forward.zq(o, prev_a, h)
+                    a, _ = self.actor(zq)
                     action = torch.flatten(a).tolist()
                     r, spot_name, done = t_maze.action(action[0], action[1], verbose)
                     no = t_maze.obs().unsqueeze(0)
@@ -141,24 +142,30 @@ class Agent:
         self.epochs += 1
 
         all_obs, actions, rewards, dones, masks = batch
-        
-        #print("\n\n")
-        #print(obs.shape, actions.shape, rewards.shape, dones.shape, masks.shape)
-        #print("\n\n")
-        
         next_obs = all_obs[:,1:]
         obs = all_obs[:,:-1]
-        
         all_actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions], dim = 1)
         prev_actions = all_actions[:,:-1]
+        episodes = rewards.shape[0] ; steps = rewards.shape[1]
+        
+        #print("\n\n")
+        #print("all obs: {}. next obs: {}. obs: {}. all actions: {}. prev actions: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
+        #    all_obs.shape, next_obs.shape, obs.shape, all_actions.shape, prev_actions.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
+        #print("\n\n")
         
         
                             
         # Train forward
-        pred_obs_states, mu_b, std_b, state_mu, state_std, log_prob_func = self.forward(obs, prev_actions, actions)   
-        if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs_states, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-        if(self.args.accuracy == "log_prob"): accuracy = -log_prob_func(next_obs)
-        complexity = dkl(mu_b, std_b, torch.zeros(mu_b.shape),  self.args.sigma * torch.ones(std_b.shape))
+        pred_obs = [] ; obs_mus_b = [] ; obs_stds_b = [] ; zq_mus_b = [] ; zq_stds_b = [] ; h = None
+        for step in range(steps):
+            p_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+            pred_obs.append(p_obs) ; obs_mus_b.append(obs_mu) ; obs_stds_b.append(obs_std) ; zq_mus_b.append(zq_mu) ; zq_stds_b.append(zq_std)
+        pred_obs = torch.cat(pred_obs, dim = 1)
+        obs_mus_b = torch.cat(obs_mus_b, dim = 1) ; obs_stds_b = torch.cat(obs_stds_b, dim = 1)
+        zq_mus_b = torch.cat(zq_mus_b, dim = 1) ; zq_stds_b = torch.cat(zq_stds_b, dim = 1)
+        if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+        if(self.args.accuracy == "log_prob"): print("Not yet implemented")
+        complexity = dkl(zq_mus_b, zq_stds_b, torch.zeros(zq_mus_b.shape),  self.args.sigma * torch.ones(zq_stds_b.shape))
                 
         accuracy = accuracy * masks
         accuracy_loss = accuracy.mean()
@@ -176,9 +183,16 @@ class Agent:
         # Get curiosity  
         naive_curiosity = self.args.naive_eta * accuracy
         
-        _, mu_a, std_a, _, _, _ = self.forward(obs, prev_actions, actions)    
+        obs_mus_a = [] ; obs_stds_a = [] ; all_zqs = [] ; zq_mus_a = [] ; zq_stds_a = [] ; h = None
+        for step in range(steps):
+            p_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+            obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std) ; all_zqs.append(zq) ; zq_mus_a.append(zq_mu) ; zq_stds_a.append(zq_std)
+        _, _, _, zq, _, _, _ = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h) ; all_zqs.append(zq)
+        obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
+        all_zqs = torch.cat(all_zqs, dim = 1) ; zq_mus_a = torch.cat(zq_mus_a, dim = 1) ; zq_stds_a = torch.cat(zq_stds_a, dim = 1)
         
-        dkl_changes = dkl(mu_a, std_a, mu_b, std_b).sum(-1).unsqueeze(-1)
+        dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).mean(-1).unsqueeze(-1) + \
+            dkl(zq_mus_a, zq_stds_a, zq_mus_b, zq_stds_b).mean(-1).unsqueeze(-1)
         free_curiosity = self.args.free_eta * dkl_changes   
         
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
@@ -191,23 +205,27 @@ class Agent:
         rewards += curiosity
         
         
+        
+        # zqs for actor, critic 
+        next_zqs = all_zqs[:,1:] ; zqs = all_zqs[:,:-1]
+        
                 
         # Train critics
         with torch.no_grad():
-            next_action, log_pis_next, _ = self.actor(next_obs, actions)
-            Q_target1_next = self.critic1_target(next_obs, actions, next_action)
-            Q_target2_next = self.critic2_target(next_obs, actions, next_action)
+            next_action, log_pis_next = self.actor(next_zqs)
+            Q_target1_next = self.critic1_target(next_zqs, next_action)
+            Q_target2_next = self.critic2_target(next_zqs, next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(obs, prev_actions, actions)
+        Q_1 = self.critic1(zqs.detach(), actions)
         critic1_loss = 0.5*F.mse_loss(Q_1*masks, Q_targets*masks)
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(obs, prev_actions, actions)
+        Q_2 = self.critic2(zqs.detach(), actions)
         critic2_loss = 0.5*F.mse_loss(Q_2*masks, Q_targets*masks)
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
@@ -217,7 +235,7 @@ class Agent:
         
         # Train alpha
         if self.args.alpha == None:
-            _, log_pis, _ = self.actor(obs, prev_actions)
+            _, log_pis = self.actor(zqs.detach())
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy))*masks
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()
@@ -234,7 +252,7 @@ class Agent:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha
-            actions_pred, log_pis, _ = self.actor(obs, prev_actions)
+            actions_pred, log_pis = self.actor(zqs.detach())
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
@@ -244,8 +262,8 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
-                self.critic1(obs, prev_actions, actions_pred), 
-                self.critic2(obs, prev_actions, actions_pred)).mean(-1).unsqueeze(-1)
+                self.critic1(zqs, actions_pred), 
+                self.critic2(zqs, actions_pred)).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()
