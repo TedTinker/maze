@@ -292,8 +292,8 @@ for folder in folders:
             saved_d = pickle.load(handle) ; os.remove(folder + "/" + file)
         for key in saved_d.keys(): 
             if(not key in d): d[key] = []
-            if(key == "arg_title"): d[key] = saved_d[key]
-            else:                   d[key].append(saved_d[key])
+            if(key in ["arg_title", "arg_name"]): d[key] = saved_d[key]
+            else:  d[key].append(saved_d[key])
         
     for key in min_max_dict.keys():
         if(not key in ["args", "arg_title", "arg_name", "spot_names"]):

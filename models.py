@@ -79,8 +79,8 @@ class Forward(nn.Module):
         self.args = args
         
         self.sum = Summarizer(args) 
-        self.zq_var = Variational(args.hidden_size + obs_size + action_size, args.state_size, args.state_var_layers, args = args)
-        self.obs_var = Variational(args.hidden_size + action_size,           obs_size,        args.obs_var_layers, args = args)
+        self.zq_var  = Variational(args.hidden_size + obs_size + action_size, args.state_size, args.state_var_layers, args = args)
+        self.obs_var = Variational(args.hidden_size + action_size,            obs_size,        args.obs_var_layers, args = args)
         
         self.to(args.device)
         
