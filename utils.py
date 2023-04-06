@@ -17,7 +17,7 @@ def estimate_total_duration(proportion_completed, start_time=start_time):
         so_far = datetime.datetime.now() - start_time
         estimated_total = so_far / proportion_completed
         estimated_total = estimated_total - datetime.timedelta(microseconds=estimated_total.microseconds)
-    else: estimated_total = "Estimating..."
+    else: estimated_total = "?:??:??"
     return(estimated_total)
 
 import argparse

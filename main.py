@@ -48,14 +48,16 @@ while any(process.is_alive() for process in processes) or not queue.empty():
         so_far = duration()
         lowest = float(values[0])
         estimated_total = estimate_total_duration(lowest)
-        if(estimated_total == "Estimating..."): to_do = "Estimating..."
+        if(estimated_total == "?:??:??"): to_do = "?:??:??"
         else:                                   to_do = estimated_total - so_far
-        values = [str(floor(100 * float(value))) for value in values]
+        values = [str(floor(100 * float(value))).ljust(3, " ") for value in values]
         for value in values:
             if(value != "100"): string += " " + value
             else:               hundreds += 1 
-        if(hundreds > 0): string += " |||" + " 100" * hundreds
-        string = "{} ({} left):".format(so_far, to_do) + string + "."
+        if(hundreds > 0): string += " ||" + " 100" * hundreds
+        string = "{} ({} left):".format(so_far, to_do) + string
+        if(hundreds == 0): string += " ||"
+        string = string.rstrip() + "."
         print(string, flush=True)
     sleep(1)
 
