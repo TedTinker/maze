@@ -263,7 +263,7 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        print("\n{}: {}.".format(plot_dict["arg_title"], duration()), flush = True)
+        print("\n{}: {}.".format(plot_dict["arg_name"], duration()), flush = True)
 
     
     

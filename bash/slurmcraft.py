@@ -48,7 +48,7 @@ slurm_dict = {
     "n"    : "--curiosity naive",
     "en"   : "--alpha None --curiosity naive",
     
-    "en_log_prob_" : "--alpha None --curiosity naive --accuracy log_prob --naive_eta num_min_max 5 .1 1",
+    "en_log_prob" : "--alpha None --curiosity naive --beta 2.5 --accuracy log_prob --naive_eta .07",
     
     "ef"  : "--alpha None --curiosity free --beta 2.5"}
 

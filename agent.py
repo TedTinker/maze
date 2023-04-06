@@ -6,10 +6,10 @@ from torch.distributions import MultivariateNormal
 import torch.optim as optim
 
 import numpy as np
-from math import log, floor
+from math import log
 from itertools import accumulate
 from copy import deepcopy
-import enlighten
+from math import exp
 
 from utils import default_args, dkl
 from maze import T_Maze, action_size
@@ -67,10 +67,7 @@ class Agent:
         
         
     def training(self, q, i):
-        #manager = enlighten.Manager(width = 150)
-        #E = manager.counter(total = self.args.epochs, unit = "ticks", color = "blue")
         while(True):
-            #E.update()
             self.episode()
             percent_done = str(self.epochs / self.args.epochs)
             q.put((i, percent_done))
@@ -164,8 +161,15 @@ class Agent:
         pred_obs = torch.cat(pred_obs, dim = 1)
         obs_mus_b = torch.cat(obs_mus_b, dim = 1) ; obs_stds_b = torch.cat(obs_stds_b, dim = 1)
         zq_mus_b = torch.cat(zq_mus_b, dim = 1) ; zq_stds_b = torch.cat(zq_stds_b, dim = 1)
-        if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-        if(self.args.accuracy == "log_prob"): print("Not yet implemented")
+        if(self.args.accuracy == "mse"):      
+            accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+        if(self.args.accuracy == "log_prob"): 
+            #dtanh_obs_mus = 1 - torch.tanh(obs_mus_b)**2
+            #adjusted_obs_stds = torch.clamp(obs_stds_b * dtanh_obs_mus, exp(-20), exp(2))
+            #var = adjusted_obs_stds**2
+            #accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - torch.tanh(obs_mus_b)) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
+            var = obs_stds_b**2
+            accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - obs_mus_b) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
         complexity = dkl(zq_mus_b, zq_stds_b, torch.zeros(zq_mus_b.shape),  self.args.sigma * torch.ones(zq_stds_b.shape))
                 
         accuracy = accuracy * masks

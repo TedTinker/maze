@@ -119,13 +119,13 @@ class Actor(nn.Module):
 
         self.to(args.device)
 
-    def forward(self, obs, prev_action, h = None, epsilon = 1e-6):
+    def forward(self, obs, prev_action, h = None):
         x = torch.cat((obs, prev_action), dim=-1)
         h, _ = self.gru(x, h)
         x, mu, std = self.var(h)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
-        log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + epsilon)
+        log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
         return(action, log_prob, h)
     

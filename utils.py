@@ -149,9 +149,9 @@ def init_weights(m):
 
     
 def dkl(mu_1, std_1, mu_2, std_2):
-    std_1 = torch.pow(std_1, 2)
-    std_2 = torch.pow(std_2, 2)
-    term_1 = torch.pow(mu_2 - mu_1, 2) / std_2 
+    std_1 = std_1**2
+    std_2 = std_2**2
+    term_1 = (mu_2 - mu_1)**2 / std_2 
     term_2 = std_1 / std_2 
     term_3 = torch.log(term_2)
     out = (.5 * (term_1 + term_2 - term_3 - 1))
