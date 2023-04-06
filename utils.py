@@ -49,8 +49,10 @@ parser.add_argument('--state_size',         type=int,   default = 32)
 parser.add_argument('--state_var_layers',   type=int,   default = 2)
 parser.add_argument('--obs_var_layers',     type=int,   default = 2)
 parser.add_argument('--actor_var_layers',   type=int,   default = 2)
-parser.add_argument("--beta",               type=float, default = 0)   # Scale complexity loss
-parser.add_argument("--sigma",              type=float, default = 1)      # Scale complexity loss
+parser.add_argument("--beta_obs",           type=float, default = 0)
+parser.add_argument("--beta_zq",            type=float, default = 0)      # Scale complexity loss
+parser.add_argument("--sigma_obs",          type=float, default = 1)      # Scale complexity loss
+parser.add_argument("--sigma_zq",           type=float, default = 1)      # Scale complexity loss
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
 parser.add_argument('--actor_lr',           type=float, default = .01)
@@ -61,7 +63,7 @@ parser.add_argument('--action_prior',       type=str,   default = "normal")
 parser.add_argument('--capacity',           type=int,   default = 100)
 
 # Training
-parser.add_argument('--epochs',             type=int,   default = 5000)
+parser.add_argument('--epochs',             type=int,   default = 2000)
 parser.add_argument('--steps_per_epoch',    type=int,   default = 10)
 parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)

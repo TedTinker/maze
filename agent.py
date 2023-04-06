@@ -170,14 +170,16 @@ class Agent:
             #accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - torch.tanh(obs_mus_b)) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
             var = obs_stds_b**2
             accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - obs_mus_b) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
-        complexity = dkl(zq_mus_b, zq_stds_b, torch.zeros(zq_mus_b.shape),  self.args.sigma * torch.ones(zq_stds_b.shape))
+        obs_complexity = self.args.beta_obs * dkl(obs_mus_b, obs_stds_b, torch.zeros(obs_mus_b.shape), self.args.sigma_obs * torch.ones(obs_stds_b.shape))
+        zq_complexity  = self.args.beta_zq  * dkl(zq_mus_b,  zq_stds_b,  torch.zeros(zq_mus_b.shape),  self.args.sigma_zq  * torch.ones(zq_stds_b.shape))
                 
         accuracy = accuracy * masks
         accuracy_loss = accuracy.mean()
-        complexity = complexity * masks
-        complexity_loss = self.args.beta * complexity.mean()
+        obs_complexity = obs_complexity * masks
+        zq_complexity  = zq_complexity  * masks
+        complexity_loss = obs_complexity.mean() + zq_complexity.mean()
         forward_loss = accuracy_loss + complexity_loss
-        if(self.args.beta == 0): complexity = None ; complexity_loss = None
+        if(self.args.beta_obs == 0 and self.args.beta_zq == 0): complexity_loss = None
         
         self.forward_opt.zero_grad()
         forward_loss.backward()
@@ -186,7 +188,7 @@ class Agent:
                         
         
         # Get curiosity  
-        naive_curiosity = self.args.naive_eta * accuracy
+        naive_curiosity = self.args.naive_eta * accuracy * masks
         
         obs_mus_a = [] ; obs_stds_a = [] ; all_zqs = [] ; zq_mus_a = [] ; zq_stds_a = [] ; h = None
         for step in range(steps):
@@ -196,14 +198,12 @@ class Agent:
         obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
         all_zqs = torch.cat(all_zqs, dim = 1) ; zq_mus_a = torch.cat(zq_mus_a, dim = 1) ; zq_stds_a = torch.cat(zq_stds_a, dim = 1)
         
-        dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).mean(-1).unsqueeze(-1) + \
-            dkl(zq_mus_a, zq_stds_a, zq_mus_b, zq_stds_b).mean(-1).unsqueeze(-1)
-        free_curiosity = self.args.free_eta * dkl_changes   
+        dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) # + dkl(zq_mus_a, zq_stds_a, zq_mus_b, zq_stds_b).sum(-1).unsqueeze(-1)
+        free_curiosity = self.args.free_eta * dkl_changes * masks
         
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
         elif(self.args.curiosity == "free"): curiosity = free_curiosity
         else:                                curiosity = torch.zeros(rewards.shape)
-        curiosity *= masks
         
         extrinsic = torch.mean(rewards).item()
         intrinsic_curiosity = curiosity.mean().item()
@@ -288,7 +288,6 @@ class Agent:
             accuracy_loss = accuracy_loss.item()
         if(complexity_loss != None): 
             complexity_loss = complexity_loss.item()
-            if(self.args.beta == 0): complexity_loss = None
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): 

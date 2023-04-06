@@ -310,8 +310,7 @@ for folder in folders:
     with open(folder + "/min_max_dict.pickle", "wb") as handle:
         pickle.dump(min_max_dict, handle)
     
-print("Done collecting dictionaries!", flush = True)
-print("\n\nDuration: {}".format(duration()), flush = True)
+print("\nDone collecting dictionaries! Duration: {}.".format(duration()), flush = True)
 
 plot_dicts = [] ; min_max_dicts = []
     
@@ -345,4 +344,4 @@ for key in plot_dicts[0].keys():
         min_max_dict[key] = (minimum, maximum)
         
 plots(plot_dicts, min_max_dict)
-print("\nDuration: {}. Done!".format(duration()))
+print("\nDuration: {}. Done!".format(duration()), flush = True)
