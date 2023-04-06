@@ -4,6 +4,7 @@ import pickle, torch, random
 import numpy as np
 from multiprocessing import Process, Queue
 from time import sleep 
+from math import floor
 
 from utils import args, folder, duration
 from agent import Agent
@@ -44,6 +45,7 @@ while any(process.is_alive() for process in processes) or not queue.empty():
         prev_progress_dict = progress_dict.copy()
         string = "" ; hundreds = 0
         values = list(progress_dict.values()) ; values.sort()
+        values = [str(floor(100 * float(value))) for value in values]
         for value in values:
             if(value != "100"): string += " " + value
             else:               hundreds += 1 

@@ -72,7 +72,7 @@ class Agent:
         while(True):
             #E.update()
             self.episode()
-            percent_done = str(floor(100 * self.epochs / self.args.epochs))
+            percent_done = str(self.epochs / self.args.epochs)
             q.put((i, percent_done))
             if(self.epochs >= self.args.epochs): break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
