@@ -6,7 +6,7 @@ from multiprocessing import Process, Queue
 from time import sleep 
 from math import floor
 
-from utils import args, folder, duration
+from utils import args, folder, duration, estimate_total_duration
 from agent import Agent
 
 print("\nname:\n{}".format(args.arg_name))
@@ -45,12 +45,17 @@ while any(process.is_alive() for process in processes) or not queue.empty():
         prev_progress_dict = progress_dict.copy()
         string = "" ; hundreds = 0
         values = list(progress_dict.values()) ; values.sort()
+        so_far = duration()
+        lowest = float(values[0])
+        estimated_total = estimate_total_duration(lowest)
+        if(estimated_total == "Estimating..."): to_do = "Estimating..."
+        else:                                   to_do = estimated_total - so_far
         values = [str(floor(100 * float(value))) for value in values]
         for value in values:
             if(value != "100"): string += " " + value
             else:               hundreds += 1 
         if(hundreds > 0): string += " |||" + " 100" * hundreds
-        string = "Duration: {} / {} :".format(duration(), "estimate") + string + "."
+        string = "{} ({} left):".format(so_far, to_do) + string + "."
         print(string, flush=True)
     sleep(1)
 

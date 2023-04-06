@@ -12,6 +12,14 @@ def duration(start_time = start_time):
     change_time = change_time - datetime.timedelta(microseconds=change_time.microseconds)
     return(change_time)
 
+def estimate_total_duration(proportion_completed, start_time=start_time):
+    if(proportion_completed != 0): 
+        so_far = datetime.datetime.now() - start_time
+        estimated_total = so_far / proportion_completed
+        estimated_total = estimated_total - datetime.timedelta(microseconds=estimated_total.microseconds)
+    else: estimated_total = "Estimating..."
+    return(estimated_total)
+
 import argparse
 import os 
 
