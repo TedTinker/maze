@@ -48,29 +48,8 @@ class Variational(nn.Module):
         x = mu + e * std
         return(x, mu, std)
     
-    
-
-class Summarizer(nn.Module): 
-    
-    def __init__(self, args = default_args):
-        super(Summarizer, self).__init__()
-        
-        self.args = args
-        self.gru = nn.GRU(
-            input_size =  args.hidden_size,
-            hidden_size = args.hidden_size,
-            batch_first = True)
-        
-        self.gru.apply(init_weights)
-        self.to(args.device)
-        
-    def forward(self, zq, h = None):
-        h = h if h == None else h.permute(1, 0, 2)
-        h, _ = self.gru(zq, h)
-        return(h)
         
         
-
 class Forward(nn.Module):
     
     def __init__(self, args = default_args):
@@ -78,10 +57,14 @@ class Forward(nn.Module):
         
         self.args = args
         
-        self.sum = Summarizer(args) 
+        self.gru = nn.GRU(
+            input_size =  args.hidden_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
         self.zq_var  = Variational(args.hidden_size + obs_size + action_size, args.state_size, args.state_var_layers, args = args)
         self.obs_var = Variational(args.hidden_size + action_size,            obs_size,        args.obs_var_layers, args = args)
         
+        self.gru.apply(init_weights)
         self.to(args.device)
         
     def zq(self, obs, prev_action, h = None):
@@ -91,7 +74,8 @@ class Forward(nn.Module):
         x = torch.cat((h, obs, prev_action), dim=-1)
         zq, zq_mu, zq_std = self.zq_var(x)
         zq = torch.tanh(zq)
-        h = self.sum(zq, h)
+        h = h if h == None else h.permute(1, 0, 2)
+        h, _ = self.gru(zq, h)
         return(zq, zq_mu, zq_std, h)
         
     def forward(self, obs, prev_action, action, h = None):
@@ -117,6 +101,7 @@ class Actor(nn.Module):
             batch_first = True)
         self.var = Variational(args.hidden_size, action_size, args.actor_var_layers, args = args)
 
+        self.gru.apply(init_weights)
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
