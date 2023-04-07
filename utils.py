@@ -42,7 +42,7 @@ parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--step_lim_punishment',type=int,   default = -1)
 parser.add_argument('--wall_punishment',    type=int,   default = -1)
 parser.add_argument('--non_one',            type=int,   default = -1)
-parser.add_argument('--random_spot',        type=bool,  default = False)
+parser.add_argument('--randomness',         type=bool,  default = True)
 
 # Module 
 parser.add_argument('--hidden_size',        type=int,   default = 32)
