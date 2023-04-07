@@ -8,9 +8,9 @@ from utils import default_args
 
 class Spot:
     
-    def __init__(self, pos, exit_reward = None, name = "NONE"):
+    def __init__(self, pos, exit_reward = None, name = "NONE", random_spot = False):
         self.pos = pos ; self.exit_reward = exit_reward
-        self.name = name
+        self.name = name ; self.random_spot = random_spot
             
         
 
@@ -20,20 +20,21 @@ class T_Maze:
         self.args = args
         self.steps = 0
         self.maze = [
-            Spot((0, 0)), Spot((0, 1)), 
+            Spot((0, 0)), Spot((0, 1), random_spot = args.random_spot), 
             Spot((-1, 1), 1, "BAD"), Spot((1, 1)), Spot((1, 2)), 
             Spot((2, 2)), Spot((3, 2)), Spot((3, 1), 10, "GOOD")]
         self.agent_pos = (0, 0)
         
     def obs(self):
         pos = [1 if spot.pos == self.agent_pos else self.args.non_one for spot in self.maze]
+        random_spot = False
         right = self.args.non_one ; left = self.args.non_one ; up = self.args.non_one ; down = self.args.non_one
         for spot in self.maze:
-            if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
-            if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1 
-            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1 
-            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1 
-        pos += [right, left, up, down]
+            if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 ; random_spot = spot.random_spot
+            if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1  ; random_spot = spot.random_spot
+            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1    ; random_spot = spot.random_spot
+            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1  ; random_spot = spot.random_spot
+        pos += [right, left, up, down, 0 if not random_spot else choice([-1,1])]
         return(torch.tensor(pos).unsqueeze(0).float())
     
     def obs_str(self):

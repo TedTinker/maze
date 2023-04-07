@@ -42,6 +42,7 @@ parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--step_lim_punishment',type=int,   default = -1)
 parser.add_argument('--wall_punishment',    type=int,   default = -1)
 parser.add_argument('--non_one',            type=int,   default = -1)
+parser.add_argument('--random_spot',        type=bool,  default = False)
 
 # Module 
 parser.add_argument('--hidden_size',        type=int,   default = 32)
@@ -71,8 +72,9 @@ parser.add_argument('--GAMMA',              type=int,   default = .99)
 parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors
 parser.add_argument("--alpha",              type=str,   default = 0)        # Soft-Actor-Critic entropy aim
 parser.add_argument("--target_entropy",     type=float, default = -2)       # Soft-Actor-Critic entropy aim
-parser.add_argument("--naive_eta",        type=float, default = .25)        # Scale curiosity
-parser.add_argument("--free_eta",           type=float, default = 10)        # Scale curiosity
+parser.add_argument("--naive_eta",          type=float, default = .25)        # Scale curiosity
+parser.add_argument("--free_eta_obs",       type=float, default = 10)        # Scale curiosity
+parser.add_argument("--free_eta_zq",        type=float, default = 0)        # Scale curiosity
 parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
 parser.add_argument('--accuracy',           type=str,   default = "mse")
 parser.add_argument("--curiosity",          type=str,   default = "none")     # Which kind of curiosity

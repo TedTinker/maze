@@ -185,9 +185,6 @@ class Agent:
             self.forward_opt.zero_grad()
             forward_loss.backward()
             self.forward_opt.step()
-
-
-        
         else:
             pred_obs, obs_mus_b, obs_stds_b = self.forward(obs, prev_actions, actions)   
             if(self.args.accuracy == "mse"):      
@@ -215,7 +212,7 @@ class Agent:
                         
         
         # Get curiosity  
-        naive_curiosity = self.args.naive_eta * accuracy * masks
+        naive_curiosity = self.args.naive_eta * accuracy
         
         if(self.args.state_forward):
             obs_mus_a = [] ; obs_stds_a = [] ; all_zqs = [] ; zq_mus_a = [] ; zq_stds_a = [] ; h = None
@@ -224,13 +221,13 @@ class Agent:
                 obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std) ; all_zqs.append(zq) ; zq_mus_a.append(zq_mu) ; zq_stds_a.append(zq_std)
             obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
             all_zqs = torch.cat(all_zqs, dim = 1) ; zq_mus_a = torch.cat(zq_mus_a, dim = 1) ; zq_stds_a = torch.cat(zq_stds_a, dim = 1)
-            dkl_changes  = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) 
-            dkl_changes += dkl(zq_mus_a,  zq_stds_a,  zq_mus_b,  zq_stds_b).sum(-1).unsqueeze(-1) 
+            dkl_changes  = self.args.free_eta_obs * dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) * masks
+            dkl_changes += self.args.free_eta_zq  * dkl(zq_mus_a,  zq_stds_a,  zq_mus_b,  zq_stds_b).sum( -1).unsqueeze(-1) * masks
         else:
             _, obs_mus_a, obs_stds_a = self.forward(obs, prev_actions, actions)  
-            dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) 
+            dkl_changes = self.args.free_eta_obs * dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) * masks
             
-        free_curiosity = self.args.free_eta * dkl_changes * masks
+        free_curiosity = dkl_changes * masks
         
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
         elif(self.args.curiosity == "free"): curiosity = free_curiosity
