@@ -50,7 +50,7 @@ slurm_dict = {
     
     "en_log_prob" : "--alpha None --curiosity naive --beta_obs 2.5 --beta_zq 0 --accuracy log_prob --naive_eta .07",
     
-    "ef_"  : "--alpha None --curiosity free --beta_obs 1 5 10 50 --beta_zq 0 --free_eta 1 3 6 10 30"}
+    "ef_"  : "--alpha None --curiosity free --beta_obs num_min_max 5 1 3 --beta_zq 0 --free_eta num_min_max 5 5 15"}
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():
