@@ -2,7 +2,7 @@
 from random import choice
 import torch
 
-from utils import default_args
+from utils import default_args, args
 
 
 
@@ -20,7 +20,7 @@ class T_Maze:
         self.args = args
         self.steps = 0
         self.maze = [
-            Spot((0, 0)), Spot((0, 1), random_spot = args.randomness), 
+            Spot((0, 0)), Spot((0, 1), random_spot = args.randomness != 0), 
             Spot((-1, 1), 1, "BAD"), Spot((1, 1)), Spot((1, 2)), 
             Spot((2, 2)), Spot((3, 2)), Spot((3, 1), 10, "GOOD")]
         self.agent_pos = (0, 0)
@@ -35,7 +35,8 @@ class T_Maze:
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1    
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1  
             if(spot.pos == self.agent_pos): random_spot = spot.random_spot
-        pos += [right, left, up, down, choice([-1,1]) if random_spot else 0]
+        pos += [right, left, up, down]
+        pos += [choice([-1,1]) if random_spot else 0 for _ in range(self.args.randomness)]
         return(torch.tensor(pos).unsqueeze(0).float())
     
     def obs_str(self):
@@ -92,7 +93,7 @@ class T_Maze:
     
     
     
-t_maze = T_Maze()
+t_maze = T_Maze(args)
 obs_size = t_maze.obs().shape[-1]
 action_size = 2
     
