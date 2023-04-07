@@ -152,7 +152,7 @@ class Agent:
         #print("\n\n")
         
         
-                            
+        """     
         # Train forward
         pred_obs = [] ; obs_mus_b = [] ; obs_stds_b = [] ; zq_mus_b = [] ; zq_stds_b = [] ; h = None
         for step in range(steps):
@@ -184,12 +184,38 @@ class Agent:
         self.forward_opt.zero_grad()
         forward_loss.backward()
         self.forward_opt.step()
+        """     
+        
+        # Train forward
+        pred_obs, obs_mus_b, obs_stds_b = self.forward(obs, prev_actions, actions)   
+        if(self.args.accuracy == "mse"):      
+            accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+        if(self.args.accuracy == "log_prob"): 
+            #dtanh_obs_mus = 1 - torch.tanh(obs_mus_b)**2
+            #adjusted_obs_stds = torch.clamp(obs_stds_b * dtanh_obs_mus, exp(-20), exp(2))
+            #var = adjusted_obs_stds**2
+            #accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - torch.tanh(obs_mus_b)) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
+            var = obs_stds_b**2
+            accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - obs_mus_b) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
+        obs_complexity = self.args.beta_obs * dkl(obs_mus_b, obs_stds_b, torch.zeros(obs_mus_b.shape), self.args.sigma_obs * torch.ones(obs_stds_b.shape))
+                
+        accuracy = accuracy * masks
+        accuracy_loss = accuracy.mean()
+        obs_complexity = obs_complexity * masks
+        complexity_loss = obs_complexity.mean()
+        forward_loss = accuracy_loss + complexity_loss
+        if(self.args.beta_obs == 0): complexity_loss = None
+        
+        self.forward_opt.zero_grad()
+        forward_loss.backward()
+        self.forward_opt.step()
         
                         
         
         # Get curiosity  
         naive_curiosity = self.args.naive_eta * accuracy * masks
         
+        """
         obs_mus_a = [] ; obs_stds_a = [] ; all_zqs = [] ; zq_mus_a = [] ; zq_stds_a = [] ; h = None
         for step in range(steps):
             p_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
@@ -197,8 +223,11 @@ class Agent:
         _, _, _, zq, _, _, _ = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h) ; all_zqs.append(zq)
         obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
         all_zqs = torch.cat(all_zqs, dim = 1) ; zq_mus_a = torch.cat(zq_mus_a, dim = 1) ; zq_stds_a = torch.cat(zq_stds_a, dim = 1)
+        """
         
-        dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) # + dkl(zq_mus_a, zq_stds_a, zq_mus_b, zq_stds_b).sum(-1).unsqueeze(-1)
+        pred_obs, obs_mus_a, obs_stds_a = self.forward(obs, prev_actions, actions)  
+        
+        dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) 
         free_curiosity = self.args.free_eta * dkl_changes * masks
         
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
@@ -210,10 +239,10 @@ class Agent:
         rewards += curiosity
         
         
-        
+        """
         # zqs for actor, critic 
         next_zqs = all_zqs[:,1:] ; zqs = all_zqs[:,:-1]
-        
+        """
                 
         # Train critics
         with torch.no_grad():

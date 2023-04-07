@@ -49,7 +49,8 @@ class Variational(nn.Module):
         return(x, mu, std)
     
         
-        
+
+"""
 class Forward(nn.Module):
     
     def __init__(self, args = default_args):
@@ -85,6 +86,34 @@ class Forward(nn.Module):
         #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
+"""
+
+
+
+class Forward(nn.Module):
+    
+    def __init__(self, args = default_args):
+        super(Forward, self).__init__()
+        
+        self.args = args
+        
+        self.gru = nn.GRU(
+            input_size =  obs_size + action_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
+        self.obs_var = Variational(args.hidden_size + action_size,            obs_size,        args.obs_var_layers, args = args)
+        
+        self.gru.apply(init_weights)
+        self.to(args.device)
+        
+    def forward(self, obs, prev_action, action, h = None):
+        x = torch.cat((obs, prev_action), dim=-1)
+        h, _ = self.gru(x, h)
+        x = torch.cat((h, action), dim=-1)
+        pred_obs, obs_mu, obs_std = self.obs_var(x)
+        #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
+        pred_obs = torch.tanh(pred_obs)
+        return(pred_obs, obs_mu, obs_std)
         
 
 
