@@ -101,7 +101,7 @@ class Agent:
             if(not done):
                 with torch.no_grad():
                     o = t_maze.obs().unsqueeze(0)
-                    a, _, _ = self.actor(o, prev_a, h)
+                    a, _, h = self.actor(o, prev_a, h)
                     action = torch.flatten(a).tolist()
                     r, spot_name, done = t_maze.action(action[0], action[1], verbose)
                     no = t_maze.obs().unsqueeze(0)
@@ -225,7 +225,7 @@ class Agent:
         all_zqs = torch.cat(all_zqs, dim = 1) ; zq_mus_a = torch.cat(zq_mus_a, dim = 1) ; zq_stds_a = torch.cat(zq_stds_a, dim = 1)
         """
         
-        pred_obs, obs_mus_a, obs_stds_a = self.forward(obs, prev_actions, actions)  
+        _, obs_mus_a, obs_stds_a = self.forward(obs, prev_actions, actions)  
         
         dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) 
         free_curiosity = self.args.free_eta * dkl_changes * masks
