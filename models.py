@@ -50,11 +50,10 @@ class Variational(nn.Module):
     
         
 
-"""
-class Forward(nn.Module):
+class State_Forward(nn.Module):
     
     def __init__(self, args = default_args):
-        super(Forward, self).__init__()
+        super(State_Forward, self).__init__()
         
         self.args = args
         
@@ -86,7 +85,6 @@ class Forward(nn.Module):
         #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
-"""
 
 
 
@@ -179,6 +177,15 @@ if __name__ == "__main__":
     args = default_args
     args.device = "cpu"
     args.dkl_rate = 1
+    
+    forward = State_Forward(args)
+    
+    print("\n\n")
+    print(forward)
+    print()
+    print(torch_summary(forward, ((3, obs_size), (3, action_size), (3, action_size))))
+    
+    
     
     forward = Forward(args)
     

@@ -50,7 +50,20 @@ slurm_dict = {
     
     "en_log_prob" : "--alpha None --curiosity naive --beta_obs 2.5 --beta_zq 0 --accuracy log_prob --naive_eta .07",
     
-    "ef_"  : "--alpha None --curiosity free --beta_obs num_min_max 5 1 3 --beta_zq 0 --free_eta num_min_max 5 5 15"}
+    "ef"  : "--alpha None --curiosity free --beta_obs 2 --beta_zq 0 --free_eta 7.5",
+    
+    "d_state" : "--state_forward True",
+    
+    "e_state"    : "--state_forward True --alpha None",
+
+    "n_state"    : "--state_forward True --curiosity naive",
+    "en_state"   : "--state_forward True --alpha None --curiosity naive",
+    
+    "en_log_prob_state" : "--state_forward True --alpha None --curiosity naive --beta_obs 2.5 --beta_zq 0 --accuracy log_prob --naive_eta .07",
+    
+    "ef_state"  : "--state_forward True --alpha None --curiosity free --beta_obs 2 --beta_zq 0 --free_eta 7.5",
+    
+    }
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():
