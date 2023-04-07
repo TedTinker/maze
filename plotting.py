@@ -263,7 +263,7 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        print("\n{}: {}.".format(plot_dict["arg_name"], duration()), flush = True)
+        print("{}: {}.".format(plot_dict["arg_name"], duration()), flush = True)
 
     
     
@@ -278,7 +278,7 @@ print("name:\n{}".format(args.arg_name), flush = True)
 
 os.chdir("saved")
 folders = os.listdir() ; folders.sort()
-print("{} folders.".format(len(folders)), flush = True)
+print("\n{} folders.".format(len(folders)), flush = True)
 
 for folder in folders:
     plot_dict = {} ; min_max_dict = {}
@@ -310,7 +310,7 @@ for folder in folders:
     with open(folder + "/min_max_dict.pickle", "wb") as handle:
         pickle.dump(min_max_dict, handle)
     
-print("\nDone collecting dictionaries! Duration: {}.".format(duration()), flush = True)
+print("\nDone collecting dictionaries! Duration: {}.\n".format(duration()), flush = True)
 
 plot_dicts = [] ; min_max_dicts = []
     

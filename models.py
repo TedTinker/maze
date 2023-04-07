@@ -95,8 +95,8 @@ class Forward(nn.Module):
         return(zq, zq_mu, zq_std, h)
         
     def forward(self, obs, prev_action, action, h = None):
-        zq, zq_mu, zq_std, h = self.zq(obs, prev_action, h) ; action = action.unsqueeze(1)
-        x = torch.cat((h, action), dim=-1)
+        zq, zq_mu, zq_std, h = self.zq(obs, prev_action, h)
+        x = torch.cat((h, action.unsqueeze(1)), dim=-1)
         pred_obs, obs_mu, obs_std = self.obs_var(x)
         #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         pred_obs = torch.tanh(pred_obs)
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(actor)
     print()
-    print(torch_summary(actor, ((3, 1, args.state_size))))
+    print(torch_summary(actor, ((3, 1, obs_size), (3, 1, action_size))))
     
     
     
