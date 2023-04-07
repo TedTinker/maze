@@ -50,7 +50,7 @@ parser.add_argument('--state_size',         type=int,   default = 32)
 parser.add_argument('--state_var_layers',   type=int,   default = 2)
 parser.add_argument('--obs_var_layers',     type=int,   default = 3)
 parser.add_argument('--actor_var_layers',   type=int,   default = 1)
-parser.add_argument("--beta_obs",           type=float, default = 0)
+parser.add_argument("--beta_obs",           type=float, default = 2)
 parser.add_argument("--beta_zq",            type=float, default = 0)      # Scale complexity loss
 parser.add_argument("--sigma_obs",          type=float, default = 1)      # Scale complexity loss
 parser.add_argument("--sigma_zq",           type=float, default = 1)      # Scale complexity loss

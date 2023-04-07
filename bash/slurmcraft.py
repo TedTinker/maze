@@ -49,12 +49,12 @@ slurm_dict = {
     "en"   : "--alpha None --curiosity naive",
     "en_rand"   : "--alpha None --curiosity naive --randomness 10",
     
-    "en_log_prob" : "--alpha None --curiosity naive --beta_obs 2.5 --beta_zq 0 --accuracy log_prob --naive_eta .07",
+    "en_log_prob" : "--alpha None --curiosity naive --beta_zq 0 --accuracy log_prob --naive_eta .07",
     
-    "ef"  : "--alpha None --curiosity free --beta_obs 2 --beta_zq 0 --free_eta_obs 7.5",
-    "ef_rand"  : "--alpha None --curiosity free --beta_obs 2 --beta_zq 0 --free_eta_obs 7.5 --randomness 10",
+    "ef"  : "--alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5",
+    "ef_rand"  : "--alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5 --randomness 10",
     
-    "ef_log_prob" : "--alpha None --curiosity free --beta_obs 2 --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
+    "ef_log_prob" : "--alpha None --curiosity free --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
     
     "d_state" : "--state_forward True",
     
@@ -63,11 +63,11 @@ slurm_dict = {
     "n_state"    : "--state_forward True --curiosity naive",
     "en_state"   : "--state_forward True --alpha None --curiosity naive",
     
-    "en_log_prob_state" : "--state_forward True --alpha None --curiosity naive --beta_obs 2.5 --beta_zq 0 --accuracy log_prob --naive_eta .07",
+    "en_log_prob_state" : "--state_forward True --alpha None --curiosity naive --beta_zq 0 --accuracy log_prob --naive_eta .07",
     
-    "ef_state"  : "--state_forward True --alpha None --curiosity free --beta_obs 2 --beta_zq 0 --free_eta_obs 7.5",
+    "ef_state"  : "--state_forward True --alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5",
     
-    "ef_log_prob_state" : "--state_forward True --alpha None --curiosity free --beta_obs 2 --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
+    "ef_log_prob_state" : "--state_forward True --alpha None --curiosity free --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
     
     }
 
