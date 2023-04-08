@@ -25,18 +25,25 @@ class State_Forward(nn.Module):
             hidden_size = args.hidden_size,
             batch_first = True)
         self.zq_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
+            nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         self.zq_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
+            nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         self.obs_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size))
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, obs_size), 
+            nn.Tanh())
         self.obs_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Tanh(),
             nn.Linear(args.hidden_size, obs_size))
         
         self.gru.apply(init_weights)
@@ -56,7 +63,6 @@ class State_Forward(nn.Module):
         zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         zq = zq_mu + e * zq_std
-        zq = torch.tanh(zq)
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(zq, h)
         return(zq, zq_mu, zq_std, h)
@@ -70,7 +76,6 @@ class State_Forward(nn.Module):
         e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_obs = obs_mu + e * obs_std
         #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
-        pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
 
 
@@ -87,12 +92,17 @@ class Forward(nn.Module):
             hidden_size = args.hidden_size,
             batch_first = True)
         self.obs_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size))
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, obs_size), 
+            nn.Tanh())
         self.obs_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Tanh(),
             nn.Linear(args.hidden_size, obs_size))
         
         self.gru.apply(init_weights)
@@ -110,7 +120,6 @@ class Forward(nn.Module):
         e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_obs = obs_mu + e * obs_std
         #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
-        pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std)
         
 
