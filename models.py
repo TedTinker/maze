@@ -125,15 +125,24 @@ class Actor(nn.Module):
             input_size =  obs_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
-        self.var = Variational(args.hidden_size, action_size, args.actor_var_layers, args = args)
+        self.mu = nn.Sequential(
+            nn.Linear(args.hidden_size, action_size))
+        self.rho = nn.Sequential(
+            nn.Linear(args.hidden_size, action_size))
 
         self.gru.apply(init_weights)
+        self.mu.apply(init_weights)
+        self.rho.apply(init_weights)
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
         x = torch.cat((obs, prev_action), dim=-1)
         h, _ = self.gru(x, h)
-        x, mu, std = self.var(h)
+        mu = self.mu(h)
+        std = torch.log1p(torch.exp(self.rho(h)))
+        std = torch.clamp(std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        x = mu + e * std
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
