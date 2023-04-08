@@ -98,16 +98,29 @@ class Forward(nn.Module):
             input_size =  obs_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
-        self.obs_var = Variational(args.hidden_size + action_size,            obs_size,        args.obs_var_layers, args = args)
+        self.obs_mu = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, obs_size))
+        self.obs_rho = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, obs_size))
         
         self.gru.apply(init_weights)
+        self.obs_mu.apply(init_weights)
+        self.obs_rho.apply(init_weights)
         self.to(args.device)
         
     def forward(self, obs, prev_action, action, h = None):
         x = torch.cat((obs, prev_action), dim=-1)
         h, _ = self.gru(x, h)
         x = torch.cat((h, action), dim=-1)
-        pred_obs, obs_mu, obs_std = self.obs_var(x)
+        obs_mu = self.obs_mu(x)
+        obs_std = torch.log1p(torch.exp(self.obs_rho(x)))
+        obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        pred_obs = obs_mu + e * obs_std
         #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std)
