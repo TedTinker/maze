@@ -166,7 +166,7 @@ class Agent:
                 accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
             if(self.args.accuracy == "log_prob"): 
                 #dtanh_obs_mus = 1 - torch.tanh(obs_mus_b)**2
-                #adjusted_obs_stds = torch.clamp(obs_stds_b * dtanh_obs_mus, exp(-20), exp(2))
+                #adjusted_obs_stds = torch.clamp(obs_stds_b * dtanh_obs_mus, self.args.std_min, self.args.std_max)
                 #var = adjusted_obs_stds**2
                 #accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - torch.tanh(obs_mus_b)) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
                 var = obs_stds_b**2
@@ -191,7 +191,7 @@ class Agent:
                 accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
             if(self.args.accuracy == "log_prob"): 
                 #dtanh_obs_mus = 1 - torch.tanh(obs_mus_b)**2
-                #adjusted_obs_stds = torch.clamp(obs_stds_b * dtanh_obs_mus, exp(-20), exp(2))
+                #adjusted_obs_stds = torch.clamp(obs_stds_b * dtanh_obs_mus, self.args.std_min, self.args.std_max)
                 #var = adjusted_obs_stds**2
                 #accuracy = 0.5 * (torch.log(2 * np.pi * var) + ((next_obs - torch.tanh(obs_mus_b)) ** 2) / (var + 1e-6)).sum(-1).unsqueeze(-1)
                 var = obs_stds_b**2

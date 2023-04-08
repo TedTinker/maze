@@ -4,6 +4,7 @@
 # Use log_prob accuracy loss.
 
 import datetime 
+from math import exp
 
 start_time = datetime.datetime.now()
     
@@ -45,7 +46,9 @@ parser.add_argument('--non_one',            type=int,   default = -1)
 parser.add_argument('--randomness',         type=bool,  default = 0)
 
 # Module 
-parser.add_argument('--hidden_size',        type=int,   default = 32)
+parser.add_argument('--hidden_size',        type=int,   default = 32)   
+parser.add_argument('--std_min',            type=int,   default = exp(-20))
+parser.add_argument('--std_max',            type=int,   default = exp(2))
 parser.add_argument('--state_size',         type=int,   default = 32)
 parser.add_argument('--state_var_layers',   type=int,   default = 2)
 parser.add_argument('--obs_var_layers',     type=int,   default = 3)

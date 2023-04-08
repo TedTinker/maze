@@ -15,11 +15,10 @@ from maze import obs_size, action_size
 
 class Variational(nn.Module):
     
-    def __init__(self, input_size, output_size, layers, std_min = exp(-20), std_max = exp(2), args = default_args):
+    def __init__(self, input_size, output_size, layers, args = default_args):
         super(Variational, self).__init__()
         
         self.args = args
-        self.std_min = std_min ; self.std_max = std_max
         
         self.mu = torch.nn.ModuleList()
         self.rho = torch.nn.ModuleList()
@@ -43,7 +42,7 @@ class Variational(nn.Module):
             if(i == 0): mu = mu_layer(x)  ; rho = rho_layer(x)
             else:       mu = mu_layer(mu) ; rho = rho_layer(rho)
         std = torch.log1p(torch.exp(rho))
-        std = torch.clamp(std, min = self.std_min, max = self.std_max)
+        std = torch.clamp(std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         x = mu + e * std
         return(x, mu, std)
