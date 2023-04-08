@@ -10,42 +10,6 @@ from math import exp
 
 from utils import default_args, init_weights
 from maze import obs_size, action_size
-
-
-
-class Variational(nn.Module):
-    
-    def __init__(self, input_size, output_size, layers, args = default_args):
-        super(Variational, self).__init__()
-        
-        self.args = args
-        
-        self.mu = torch.nn.ModuleList()
-        self.rho = torch.nn.ModuleList()
-        for i in range(layers):
-            in_size = args.hidden_size ; out_size = args.hidden_size
-            if(i == 0): in_size = input_size
-            if(i == layers - 1): out_size = output_size
-            self.mu.append(nn.Sequential(
-                nn.Linear(in_size, out_size),
-                nn.Tanh() if i != layers - 1 else nn.Identity()))
-            self.rho.append(nn.Sequential(
-                nn.Linear(in_size, out_size),
-                nn.Tanh() if i != layers - 1 else nn.Identity()))
-        
-        self.mu.apply(init_weights)
-        self.rho.apply(init_weights)
-        self.to(args.device)
-        
-    def forward(self, x):
-        for i, (mu_layer, rho_layer) in enumerate(zip(self.mu, self.rho)):
-            if(i == 0): mu = mu_layer(x)  ; rho = rho_layer(x)
-            else:       mu = mu_layer(mu) ; rho = rho_layer(rho)
-        std = torch.log1p(torch.exp(rho))
-        std = torch.clamp(std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = mu + e * std
-        return(x, mu, std)
     
         
 
@@ -60,10 +24,26 @@ class State_Forward(nn.Module):
             input_size =  args.hidden_size,
             hidden_size = args.hidden_size,
             batch_first = True)
-        self.zq_var  = Variational(args.hidden_size + obs_size + action_size, args.state_size, args.state_var_layers, args = args)
-        self.obs_var = Variational(args.hidden_size + action_size,            obs_size,        args.obs_var_layers, args = args)
+        self.zq_mu = nn.Sequential(
+            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, args.state_size))
+        self.zq_rho = nn.Sequential(
+            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, args.state_size))
+        self.obs_mu = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, obs_size))
+        self.obs_rho = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), nn.Tanh(),
+            nn.Linear(args.hidden_size, obs_size))
         
         self.gru.apply(init_weights)
+        self.zq_mu.apply(init_weights)
+        self.zq_rho.apply(init_weights)
+        self.obs_mu.apply(init_weights)
+        self.obs_rho.apply(init_weights)
         self.to(args.device)
         
     def zq(self, obs, prev_action, h = None):
@@ -71,7 +51,11 @@ class State_Forward(nn.Module):
         if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
         x = torch.cat((h, obs, prev_action), dim=-1)
-        zq, zq_mu, zq_std = self.zq_var(x)
+        zq_mu = self.zq_mu(x)
+        zq_std = torch.log1p(torch.exp(self.zq_rho(x)))
+        zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        zq = zq_mu + e * zq_std
         zq = torch.tanh(zq)
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(zq, h)
@@ -80,7 +64,11 @@ class State_Forward(nn.Module):
     def forward(self, obs, prev_action, action, h = None):
         zq, zq_mu, zq_std, h = self.zq(obs, prev_action, h)
         x = torch.cat((h, action.unsqueeze(1)), dim=-1)
-        pred_obs, obs_mu, obs_std = self.obs_var(x)
+        obs_mu = self.obs_mu(x)
+        obs_std = torch.log1p(torch.exp(self.obs_rho(x)))
+        obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        pred_obs = obs_mu + e * obs_std
         #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         pred_obs = torch.tanh(pred_obs)
         return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
