@@ -71,9 +71,7 @@ class State_Forward(nn.Module):
         zp_mu = self.zp_mu(x)
         zp_std = torch.log1p(torch.exp(self.zp_rho(x)))
         zp_std = torch.clamp(zp_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(zp_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        zp = zp_mu + e * zp_std
-        return(zp, zp_mu, zp_std)
+        return((zp_mu, zp_std))
         
     def zq(self, obs, prev_action, h = None):
         x = torch.cat((h, obs, prev_action), dim=-1)
@@ -82,14 +80,14 @@ class State_Forward(nn.Module):
         zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         zq = zq_mu + e * zq_std
-        return(zq, zq_mu, zq_std)
+        return(zq, (zq_mu, zq_std))
         
     def forward(self, obs, prev_action, action, h = None):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
         if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
-        zp, zp_mu, zp_std = self.zp(prev_action, h)
-        zq, zq_mu, zq_std = self.zq(obs, prev_action, h)
+        zp_dist = self.zp(prev_action, h)
+        zq, zq_dist = self.zq(obs, prev_action, h)
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(zq, h)
         x = torch.cat((h, action.unsqueeze(1)), dim=-1)
@@ -98,7 +96,7 @@ class State_Forward(nn.Module):
         obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_obs = obs_mu + e * obs_std
-        return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
+        return(pred_obs, (obs_mu, obs_std), zp_dist, zq_dist, h)
 
 
 
@@ -141,7 +139,7 @@ class Forward(nn.Module):
         obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_obs = obs_mu + e * obs_std
-        return(pred_obs, obs_mu, obs_std)
+        return(pred_obs, (obs_mu, obs_std))
         
 
 
