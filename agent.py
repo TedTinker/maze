@@ -64,7 +64,7 @@ class Agent:
             "arg_title" : self.args.arg_title,
             "arg_name" : self.args.arg_name,
             "rewards" : [], "spot_names" : [], 
-            "accuracy" : [], "complexity" : [], 
+            "accuracy" : [], "complexity" : [], "zp" : [],
             "alpha" : [], "actor" : [], 
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
@@ -126,10 +126,11 @@ class Agent:
                         self.plot_dict["spot_names"].append(spot_name)
                         self.plot_dict["accuracy"].append(l[0][0])
                         self.plot_dict["complexity"].append(l[0][1])
-                        self.plot_dict["alpha"].append(l[0][2])
-                        self.plot_dict["actor"].append(l[0][3])
-                        self.plot_dict["critic_1"].append(l[0][4])
-                        self.plot_dict["critic_2"].append(l[0][5])
+                        self.plot_dict["zp"].append(l[0][2])
+                        self.plot_dict["alpha"].append(l[0][3])
+                        self.plot_dict["actor"].append(l[0][4])
+                        self.plot_dict["critic_1"].append(l[0][5])
+                        self.plot_dict["critic_2"].append(l[0][6])
                         self.plot_dict["extrinsic"].append(e)
                         self.plot_dict["intrinsic_curiosity"].append(ic)
                         self.plot_dict["intrinsic_entropy"].append(ie)
@@ -217,6 +218,8 @@ class Agent:
             self.forward_opt.zero_grad()
             forward_loss.backward()
             self.forward_opt.step()
+            
+            zp_loss = None
         
                         
         
@@ -312,6 +315,8 @@ class Agent:
             accuracy_loss = accuracy_loss.item()
         if(complexity_loss != None): 
             complexity_loss = complexity_loss.item()
+        if(zp_loss != None): 
+            zp_loss = zp_loss.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): 
@@ -320,7 +325,7 @@ class Agent:
         if(critic2_loss != None): 
             critic2_loss = critic2_loss.item()
             critic2_loss = log(critic2_loss) if critic2_loss > 0 else critic2_loss
-        losses = np.array([[accuracy_loss, complexity_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
+        losses = np.array([[accuracy_loss, complexity_loss, zp_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         naive_curiosity = naive_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()
