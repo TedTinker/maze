@@ -187,11 +187,13 @@ class Agent:
             forward_loss.backward()
             self.forward_opt.step()
             
-            zp_mus = [] ; zp_stds = [] ; zq_mus = [] ; zq_stds = [] ; h = None
+            obs_mus_a = [] ; obs_stds_a = [] ; zp_mus = [] ; zp_stds = [] ; zq_mus = [] ; zq_stds = [] ; h = None
             for step in range(steps):
-                _, _, (zp_mu, zp_std), (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+                _, (obs_mu, obs_std), (zp_mu, zp_std), (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+                obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std)
                 zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
                 zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
+            obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
             zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
             zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
             zp_loss = dkl(zp_mus,  zp_stds, zq_mus,  zq_stds).mean()
@@ -221,16 +223,9 @@ class Agent:
         # Get curiosity  
         naive_curiosity = self.args.naive_eta * accuracy
         
-        if(self.args.state_forward):
-            obs_mus_a = [] ; obs_stds_a = [] ; h = None
-            for step in range(steps):
-                p_obs, (obs_mu, obs_std), _, _, h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
-                obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std)
-            obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
-            dkl_changes  = self.args.free_eta_obs * dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) * masks
-        else:
-            _, (obs_mus_a, obs_stds_a) = self.forward(obs, prev_actions, actions)  
-            dkl_changes = self.args.free_eta_obs * dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) * masks
+        if(self.args.state_forward): pass
+        else: _, (obs_mus_a, obs_stds_a) = self.forward(obs, prev_actions, actions)  
+        dkl_changes = self.args.free_eta_obs * dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1) * masks
             
         free_curiosity = dkl_changes * masks
         
