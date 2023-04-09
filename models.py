@@ -24,6 +24,16 @@ class State_Forward(nn.Module):
             input_size =  args.hidden_size,
             hidden_size = args.hidden_size,
             batch_first = True)
+        
+        self.zp_mu = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.state_size))
+        self.zp_rho = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.state_size))
+        
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
             nn.Tanh(),
@@ -32,6 +42,7 @@ class State_Forward(nn.Module):
             nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
+        
         self.obs_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
@@ -47,35 +58,46 @@ class State_Forward(nn.Module):
             nn.Linear(args.hidden_size, obs_size))
         
         self.gru.apply(init_weights)
+        self.zp_mu.apply(init_weights)
+        self.zp_rho.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_rho.apply(init_weights)
         self.obs_mu.apply(init_weights)
         self.obs_rho.apply(init_weights)
         self.to(args.device)
         
+    def zp(self, prev_action, h = None):
+        x = torch.cat((h, prev_action), dim=-1)
+        zp_mu = self.zp_mu(x)
+        zp_std = torch.log1p(torch.exp(self.zp_rho(x)))
+        zp_std = torch.clamp(zp_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(zp_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        zp = zp_mu + e * zp_std
+        return(zp, zp_mu, zp_std)
+        
     def zq(self, obs, prev_action, h = None):
-        if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
-        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
-        if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
         x = torch.cat((h, obs, prev_action), dim=-1)
         zq_mu = self.zq_mu(x)
         zq_std = torch.log1p(torch.exp(self.zq_rho(x)))
         zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         zq = zq_mu + e * zq_std
-        h = h if h == None else h.permute(1, 0, 2)
-        h, _ = self.gru(zq, h)
-        return(zq, zq_mu, zq_std, h)
+        return(zq, zq_mu, zq_std)
         
     def forward(self, obs, prev_action, action, h = None):
-        zq, zq_mu, zq_std, h = self.zq(obs, prev_action, h)
+        if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
+        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
+        if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
+        zp, zp_mu, zp_std = self.zp(prev_action, h)
+        zq, zq_mu, zq_std = self.zq(obs, prev_action, h)
+        h = h if h == None else h.permute(1, 0, 2)
+        h, _ = self.gru(zq, h)
         x = torch.cat((h, action.unsqueeze(1)), dim=-1)
         obs_mu = self.obs_mu(x)
         obs_std = torch.log1p(torch.exp(self.obs_rho(x)))
         obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_obs = obs_mu + e * obs_std
-        #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         return(pred_obs, obs_mu, obs_std, zq, zq_mu, zq_std, h)
 
 
@@ -119,7 +141,6 @@ class Forward(nn.Module):
         obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_obs = obs_mu + e * obs_std
-        #pred_obs = torch.clamp(pred_obs, min = -1, max = 1)
         return(pred_obs, obs_mu, obs_std)
         
 
