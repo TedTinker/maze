@@ -33,8 +33,15 @@ class Agent:
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        self.forward = State_Forward(self.args) if args.state_forward else Forward(args)
-        self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
+        if args.state_forward:
+            self.forward = State_Forward(self.args)
+            without_zp = list(self.forward.gru.parameters()) + list(self.forward.zq_mu.parameters()) + list(self.forward.zq_rho.parameters()) + list(self.forward.obs_mu.parameters()) + list(self.forward.obs_rho.parameters())
+            just_zp = list(self.forward.zp_mu.parameters()) + list(self.forward.zp_rho.parameters())
+            self.forward_opt = optim.Adam(without_zp, lr=self.args.forward_lr, weight_decay=0)   
+            self.zp_opt = optim.Adam(just_zp, lr=self.args.forward_lr, weight_decay=0)   
+        else:
+            self.forward = Forward(self.args)
+            self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
                            
         self.actor = Actor(args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
