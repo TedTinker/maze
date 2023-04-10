@@ -75,10 +75,12 @@ class Agent:
         
     def training(self, q, i):
         while(True):
+            for j, epochs in enumerate(self.args.epochs): 
+                if(self.epochs < epochs): self.map_number = j ; break
             self.episode()
-            percent_done = str(self.epochs / self.args.epochs[0])
+            percent_done = str(self.epochs / sum(self.args.epochs))
             q.put((i, percent_done))
-            if(self.epochs >= self.args.epochs[0]): break
+            if(self.epochs >= sum(self.args.epochs)): break
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
@@ -121,7 +123,7 @@ class Agent:
                 if(plot_data == False): print("Not getting an epoch!")
                 else:
                     l, e, ic, ie, naive, free = plot_data
-                    if(self.epochs == 1 or self.epochs >= self.args.epochs[0] or self.epochs % self.args.keep_data == 0):
+                    if(self.epochs == 1 or self.epochs >= sum(self.args.epochs) or self.epochs % self.args.keep_data == 0):
                         self.plot_dict["rewards"].append(r)
                         self.plot_dict["spot_names"].append(spot_name)
                         self.plot_dict["accuracy"].append(l[0][0])
