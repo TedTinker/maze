@@ -1,5 +1,5 @@
 #%%
-from random import choices
+from random import choice
 import pandas as pd
 import numpy as np
 import pybullet as p
@@ -75,7 +75,7 @@ def enable_opengl():
 
 
 class Arena():
-    def __init__(self, arena_name, args = args, GUI = False):
+    def __init__(self, arena_name, GUI = False, args = args):
         #enable_opengl()
         self.args = args
         self.arena_name = arena_name
@@ -172,8 +172,7 @@ class Arena():
         if(type(reward) != tuple): pass
         else:
             weights = [w for w, r in reward]
-            reward_index = choices([i for i in range(len(reward))], weights = weights)[0]
-            reward = reward[reward_index][1]
+            reward = choice([i for i in range(len(reward))], weights = weights)[0]
         return(col, which, reward)
     
     def other_collisions(self, num):
@@ -185,9 +184,71 @@ class Arena():
 
 
 
-if __name__ == "__main__":
-    arena = Arena(arena_name = "3", GUI = True)
-    arena.start_arena()
+import torch
+from torchvision.transforms.functional import resize
+
+class Hard_Maze:
+    
+    def __init__(self, arena_name, GUI = False, args = default_args):
+        self.args = args
+        self.steps = 0
+        self.maze = Arena(arena_name, GUI, args)
+        
+    def obs(self):
+        x, y = cos(self.body.yaw), sin(self.body.yaw)
+        view_matrix = p.computeViewMatrix(
+            cameraEyePosition = [self.body.pos[0], self.body.pos[1], .4], 
+            cameraTargetPosition = [self.body.pos[0] - x, self.body.pos[1] - y, .4], 
+            cameraUpVector = [0, 0, 1], physicsClientId = self.arena.physicsClient)
+        proj_matrix = p.computeProjectionMatrixFOV(
+            fov = 90, aspect = 1, nearVal = .01, 
+            farVal = 10, physicsClientId = self.arena.physicsClient)
+        _, _, rgba, depth, _ = p.getCameraImage(
+            width=32, height=32,
+            projectionMatrix=proj_matrix, viewMatrix=view_matrix, shadow = 0,
+            physicsClientId = self.arena.physicsClient)
+        
+        rgb = np.divide(rgba[:,:,:-1], 255) * 2 - 1
+        d = np.nan_to_num(np.expand_dims(depth, axis=-1), nan=1)
+        if(d.max() == d.min()): pass
+        else: d = (d.max() - d)/(d.max()-d.min())
+        d = d*2 - 1
+        rgbd = np.concatenate([rgb, d], axis = -1)
+        rgbd = torch.from_numpy(rgbd).float()
+        rgbd = resize(rgbd.permute(-1,0,1), (self.args.image_size, self.args.image_size)).permute(1,2,0)
+        spe = torch.tensor(self.body.spe).unsqueeze(0)
+        return(rgbd, spe)
+        
+    def action(self, x, y, verbose = False):
+        if(abs(x) > abs(y)): y = 0 ; x = 1 if x > 0 else -1
+        else:                x = 0 ; y = 1 if y > 0 else -1 
+        new_pos = (self.agent_pos[0] + x, self.agent_pos[1] + y)
+        
+        self.steps += 1
+        wall = True ; exit = False ; reward = 0 ; spot_name = "NONE" ; done = False
+        
+        for spot in self.maze:
+            if(spot.pos == new_pos):
+                wall = False
+                self.agent_pos = new_pos ; reward = 0 ; spot_name = spot.name
+                if(spot.exit_reward != None):
+                    done = True ; exit = True
+                    reward = choice(spot.exit_reward)
+        
+        if(wall): reward += self.args.wall_punishment
+        if(self.steps == self.args.max_steps and exit == False):
+            reward += self.args.step_lim_punishment
+            done = True
+            
+        #if(verbose): print("\n\nRaw Action: x {}, y {}.".format(x, y))
+        if(verbose): print("\n\nStep: {}. Action: {}.".format(self.steps, "Right" if x == 1 else "Left" if x == -1 else "Up" if y == 1 else "Down"))
+        if(verbose): print("\n{}\n".format(self))
+        if(verbose): print("Reward: {}. Spot name: {}. Done: {}.".format(reward, spot_name, done))
+        if(verbose): print(self.obs_str())
+        if(verbose): print(self.obs())
+        return(reward, spot_name, done)    
+    
+
 
 
 # %%
