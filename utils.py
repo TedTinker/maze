@@ -50,8 +50,6 @@ parser.add_argument('--better_reward',      type=tuple_type, default = (10,))
 parser.add_argument('--randomness',         type=bool,  default = 0)
 
 # Hard Maze
-parser.add_argument('--boxes_per_cube',     type=int,   default = 1)  
-parser.add_argument('--bigger_cube',        type=float, default = 1.05)    
 parser.add_argument('--body_size',          type=float, default = 2)    
 parser.add_argument('--image_size',         type=int,   default = 8)
 parser.add_argument('--min_speed',          type=float, default = 50)
