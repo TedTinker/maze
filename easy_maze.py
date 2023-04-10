@@ -92,17 +92,17 @@ class Easy_Maze:
     
     
     
-easy_maze = Easy_Maze(args)
-obs_size = easy_maze.obs().shape[-1]
+maze = Easy_Maze(args)
+obs_size = maze.obs().shape[-1]
 action_size = 2
     
 if __name__ == "__main__":        
 
-    print("{}\n\n{}".format(easy_maze, easy_maze.obs_str()))
+    print("{}\n\n{}".format(maze, maze.obs_str()))
     
     actions = [[1,0], [0,1], [-1,0]]
     for action in actions:
-        reward, name, done = easy_maze.action(action[0], action[1], verbose = True)
+        reward, name, done = maze.action(action[0], action[1], verbose = True)
 
 
 # %%

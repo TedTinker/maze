@@ -1,5 +1,4 @@
 #%%
-from random import choice
 import numpy as np
 import pybullet as p
 from math import pi, degrees, sin, cos
@@ -56,7 +55,7 @@ class Hard_Maze:
         x = -cos(new_yaw)*speed / self.args.steps_per_step
         y = -sin(new_yaw)*speed / self.args.steps_per_step
         self.maze.resetBaseVelocity(x, y)
-        _, self.body.yaw, _ = self.maze.get_pos_yaw_spe()
+        _, self.agent_yaw, _ = self.maze.get_pos_yaw_spe()
                 
         if(verbose):
             print("\n\nOld yaw:\t{}\nChange:\t\t{}\nNew yaw:\t{}".format(
@@ -65,14 +64,16 @@ class Hard_Maze:
             self.render(view = "body")  
             print("\n")
         
-    def action(self, action, verbose = False):
+    def action(self, yaw, spe, verbose = False):
         self.steps += 1
 
-        yaw = -action[0].item() * self.args.max_yaw_change
-        spe = self.args.min_speed + ((action[1].item() + 1)/2) * \
+        yaw = -yaw * self.args.max_yaw_change
+        yaw = [-self.args.max_yaw_change, self.args.max_yaw_change, yaw] ; yaw.sort() ; yaw = yaw[1]
+        
+        spe = self.args.min_speed + ((spe + 1)/2) * \
             (self.args.max_speed - self.args.min_speed)
+        spe = [self.args.min_speed, self.args.max_speed, spe] ; spe.sort() ; spe = spe[1]
             
-        yaw, spe = self.real_yaw_spe(yaw, spe)
         self.change_velocity(yaw, spe)
       
         for _ in range(self.args.steps_per_step):
@@ -89,4 +90,15 @@ class Hard_Maze:
 
         return(reward, which, end)
     
+    
+    
+if __name__ == "__main__":        
+    from random import random
+    from time import sleep
+
+    maze = Hard_Maze("t", True, args)
+    done = False
+    while(done == False):
+        reward, name, done = maze.action(random(), random(), verbose = True)
+        sleep(1)
 # %%

@@ -88,7 +88,7 @@ class Arena():
             plane_id = p.loadURDF("plane.urdf", position, globalScaling=.5, useFixedBase=True, physicsClientId=self.physicsClient)
             plane_ids.append(plane_id)
 
-        self.ends = {} ; colors = {} 
+        self.ends = {} ; self.colors = {} 
         for loc in ((x, y) for x in range(w) for y in range(h)):
             pos = [loc[0], loc[1], .5]
             if ((arena_map[loc] == [255]).all()):
@@ -102,9 +102,9 @@ class Arena():
                 color = np.append(color, 1)
                 cube = p.loadURDF("cube.urdf", (pos[0], pos[1], pos[2]), ors, 
                                   useFixedBase=True, physicsClientId=self.physicsClient)
-                colors[cube] = color
+                self.colors[cube] = color
         
-        for cube, color in colors.items():
+        for cube, color in self.colors.items():
             p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)
 
         inherent_roll = pi/2
@@ -138,7 +138,7 @@ class Arena():
     
     def pos_in_box(self, box):
         (min_x, max_x), (min_y, max_y) = box 
-        pos, _, _ = self.get_pos_yaw_spe(self.body_num)
+        pos, _, _ = self.get_pos_yaw_spe()
         in_x = pos[0] >= min_x and pos[0] <= max_x 
         in_y = pos[1] >= min_y and pos[1] <= max_y 
         return(in_x and in_y)
@@ -148,7 +148,7 @@ class Arena():
         which = ("FAIL", -1)
         reward = 0
         for end_name, (end, end_reward) in self.ends.items():
-            if self.pos_in_box(self.body_num, end):
+            if self.pos_in_box(end):
                 col = True
                 which = (end_name, end_reward)
                 reward = end_reward
