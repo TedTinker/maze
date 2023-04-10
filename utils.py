@@ -39,6 +39,7 @@ parser.add_argument("--previous_agents",    type=int,   default = 0)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
 # Maze 
+parser.add_argument('--which_maze',         type=str,   default = "easy")
 parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--step_lim_punishment',type=int,   default = -1)
 parser.add_argument('--wall_punishment',    type=int,   default = -1)
