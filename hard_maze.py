@@ -88,10 +88,4 @@ class Hard_Maze:
         if(end): p.disconnect(self.maze.physicsClient)
 
         return(reward, which, end)
-    
-
-
-hard_maze = Hard_Maze("t", GUI = False, args = args)
-rgbd, spe = hard_maze.obs()
-rgbd_size = rgbd.shape ; spe_size = spe.shape ; hard_action_size = 2
 # %%

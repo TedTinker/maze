@@ -54,9 +54,9 @@ while any(process.is_alive() for process in processes) or not queue.empty():
         for value in values:
             if(value != "100"): string += " " + value
             else:               hundreds += 1 
-        if(hundreds > 0): string += " ||" + " 100" * hundreds
+        if(hundreds > 0): string += " ##" + " 100" * hundreds
         string = "{} ({} left):".format(so_far, to_do) + string
-        if(hundreds == 0): string += " ||"
+        if(hundreds == 0): string += " ##"
         string = string.rstrip() + "."
         print(string, flush=True)
     sleep(1)

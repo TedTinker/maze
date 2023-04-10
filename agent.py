@@ -13,7 +13,7 @@ from math import exp
 
 from utils import default_args, dkl
 from easy_maze import Easy_Maze, action_size
-from buffer import RecurrentReplayBuffer
+from buffer import RecurrentReplayBuffer, HardRecurrentReplayBuffer
 from models import State_Forward, Forward, Actor, Critic
 
 
@@ -58,7 +58,7 @@ class Agent:
         
         self.train()
         
-        self.memory = RecurrentReplayBuffer(self.args)
+        self.memory = RecurrentReplayBuffer(self.args) if args.maze_list == ("easy",) else HardRecurrentReplayBuffer(self.args)
         self.plot_dict = {
             "args" : self.args,
             "arg_title" : self.args.arg_title,
