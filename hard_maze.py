@@ -1,109 +1,193 @@
 #%%
-from random import choice
-import torch
+from random import choices
+import pandas as pd
+import numpy as np
+import pybullet as p
+import cv2
+from itertools import product
+from math import pi, sin, cos
 
 from utils import default_args, args
 
 
 
-class Spot:
-    
-    def __init__(self, pos, exit_reward = None, name = "NONE", random_spot = False):
-        self.pos = pos ; self.exit_reward = exit_reward
-        self.name = name ; self.random_spot = random_spot
-            
+class Exit:
+    def __init__(self, name, pos, rew):     # Position (Y, X)
+        self.name = name ; self.pos = pos ; self.rew = rew
         
+class Arena_Dict:
+    def __init__(self, start, exits):
+        self.start = start 
+        self.exits = pd.DataFrame(
+            data = [[exit.name, exit.pos, exit.rew] for exit in exits],
+            columns = ["Name", "Position", "Reward"])
+        
+arena_dict = {
+    "t.png" : Arena_Dict(
+        (3, 2),
+        [Exit(  "L",    (2,0), args.default_reward),
+        Exit(   "R",    (2,7), args.better_reward)]),
+    "1.png" : Arena_Dict(
+        (2,2), 
+        [Exit(  "L",    (1,0), args.default_reward),
+        Exit(   "R",    (1,4), args.better_reward)]),
+    "2.png" : Arena_Dict(
+        (3,3), 
+        [Exit(  "LL",   (4,1), args.better_reward),
+        Exit(   "LR",   (0,1), args.default_reward),
+        Exit(   "RL",   (0,5), args.default_reward),
+        Exit(   "RR",   (4,5), args.default_reward)]),
+    "3.png" : Arena_Dict(
+        (4,4), 
+        [Exit(  "LLL",  (6,3), args.default_reward),
+        Exit(   "LLR",  (6,1), args.default_reward),
+        Exit(   "LRL",  (0,1), args.default_reward),
+        Exit(   "LRR",  (0,3), args.default_reward),
+        Exit(   "RLL",  (0,5), args.better_reward),
+        Exit(   "RLR",  (0,7), args.default_reward),
+        Exit(   "RRL",  (6,7), args.default_reward),
+        Exit(   "RRR",  (6,5), args.default_reward)])}
 
-class Hard_Maze:
-    
-    def __init__(self, args = default_args):
+
+
+def get_physics(GUI, w, h):
+    if(GUI):
+        physicsClient = p.connect(p.GUI)
+        p.resetDebugVisualizerCamera(1,90,-89,(w/2,h/2,w), physicsClientId = physicsClient)
+    else:   
+        physicsClient = p.connect(p.DIRECT)
+    p.setAdditionalSearchPath("pybullet_data/")
+    return(physicsClient)
+
+def enable_opengl():
+    import pkgutil
+    egl = pkgutil.get_loader('eglRenderer')
+    import pybullet_data
+
+    p.connect(p.DIRECT)
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    plugin = p.loadPlugin(egl.get_filename(), "_eglRendererPlugin")
+    # print("plugin=", plugin)
+
+    p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+    p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+
+
+
+class Arena():
+    def __init__(self, arena_name, args = args, GUI = False):
+        #enable_opengl()
         self.args = args
-        self.steps = 0
-        self.maze = [
-            Spot((0, 0)), Spot((0, 1), random_spot = args.randomness != 0), 
-            Spot((-1, 1), 1, "BAD"), Spot((1, 1)), Spot((1, 2)), 
-            Spot((2, 2)), Spot((3, 2)), Spot((3, 1), 10, "GOOD")]
-        self.agent_pos = (0, 0)
-        
-    def obs(self):
-        pos = [1 if spot.pos == self.agent_pos else self.args.non_one for spot in self.maze]
-        random_spot = False
-        right = self.args.non_one ; left = self.args.non_one ; up = self.args.non_one ; down = self.args.non_one
-        for spot in self.maze:
-            if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
-            if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1  
-            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1    
-            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1  
-            if(spot.pos == self.agent_pos): random_spot = spot.random_spot
-        pos += [right, left, up, down]
-        pos += [choice([-1,1]) if random_spot else 0 for _ in range(self.args.randomness)]
-        return(torch.tensor(pos).unsqueeze(0).float())
-    
-    def obs_str(self):
-        obs = self.obs().squeeze(0)
-        spot_num = torch.argmax(obs[:-4]).item()
-        r = bool(obs[-4].item()==1)
-        l = bool(obs[-3].item()==1)
-        u = bool(obs[-2].item()==1)
-        d = bool(obs[-1].item()==1)
-        return("Observation: Spot #{}. Right {}. Left {}. Up {}. Down {}.".format(
-            spot_num, r, l, u, d))
-        
-    def action(self, x, y, verbose = False):
-        if(abs(x) > abs(y)): y = 0 ; x = 1 if x > 0 else -1
-        else:                x = 0 ; y = 1 if y > 0 else -1 
-        new_pos = (self.agent_pos[0] + x, self.agent_pos[1] + y)
-        
-        self.steps += 1
-        wall = True ; exit = False ; reward = 0 ; spot_name = "NONE" ; done = False
-        
-        for spot in self.maze:
-            if(spot.pos == new_pos):
-                wall = False
-                self.agent_pos = new_pos ; reward = 0 ; spot_name = spot.name
-                if(spot.exit_reward != None):
-                    done = True ; exit = True
-                    if(type(spot.exit_reward) == tuple): reward = choice(spot.exit_reward)
-                    else:                                reward = spot.exit_reward
-        
-        if(wall): reward += self.args.wall_punishment
-        if(self.steps == self.args.max_steps and exit == False):
-            reward += self.args.step_lim_punishment
-            done = True
-            
-        #if(verbose): print("\n\nRaw Action: x {}, y {}.".format(x, y))
-        if(verbose): print("\n\nStep: {}. Action: {}.".format(self.steps, "Right" if x == 1 else "Left" if x == -1 else "Up" if y == 1 else "Down"))
-        if(verbose): print("\n{}\n".format(self))
-        if(verbose): print("Reward: {}. Spot name: {}. Done: {}.".format(reward, spot_name, done))
-        if(verbose): print(self.obs_str())
-        if(verbose): print(self.obs())
-        return(reward, spot_name, done)    
-    
-    def __str__(self):
-        to_print = ""
-        for y in [2, 1, 0]:
-            for x in [-1, 0, 1, 2, 3]:
-                portrayal = " "
-                for spot in self.maze:
-                    if(spot.pos == (x, y)): portrayal = "O"
-                if(self.agent_pos == (x, y)): portrayal = "X"
-                to_print += portrayal 
-            if(y != 0): to_print += "\n"
-        return(to_print)
-    
-    
-    
-hard_maze = Hard_Maze(args)
-obs_size = hard_maze.obs().shape[-1]
-action_size = 2
-    
-if __name__ == "__main__":        
+        self.arena_name = arena_name
+        self.start = arena_dict[arena_name + ".png"].start
+        self.exits = arena_dict[arena_name + ".png"].exits
+        self.arena_map = cv2.imread("arenas/" + arena_name + ".png")
+        self.w, self.h, _ = self.arena_map.shape
+        self.physicsClient = get_physics(GUI, self.w, self.h)
+        self.ends = {}
+        self.colors = {}
+        self.already_constructed = False
 
-    print("{}\n\n{}".format(hard_maze, hard_maze.obs_str()))
+    def start_arena(self):
+        if(not self.already_constructed):
+            p.loadURDF("plane.urdf", [0,0,0], globalScaling = .5,
+                       useFixedBase = True, physicsClientId = self.physicsClient) 
+            p.loadURDF("plane.urdf", [10,0,0], globalScaling = .5,
+                       useFixedBase = True, physicsClientId = self.physicsClient) 
+            p.loadURDF("plane.urdf", [0,10,0], globalScaling = .5,
+                       useFixedBase = True, physicsClientId = self.physicsClient) 
+            p.loadURDF("plane.urdf", [10,10,0], globalScaling = .5,
+                       useFixedBase = True, physicsClientId = self.physicsClient) 
+            self.ends = {}
+            for loc in ((x,y) for x in range(self.w) for y in range(self.h)):
+                pos = [loc[0],loc[1],.5]
+                if((self.arena_map[loc] == [255]).all()):
+                    if(not self.exits.loc[self.exits["Position"] == loc].empty):
+                        row = self.exits.loc[self.exits["Position"] == loc]
+                        end_pos = ((pos[0]-.5, pos[0] + .5), (pos[1] - .5, pos[1] + .5))
+                        self.ends[row["Name"].values[0]] = (end_pos, row["Reward"].values[0])
+                else:
+                    ors = p.getQuaternionFromEuler([0,0,0])
+                    color = self.arena_map[loc][::-1] / 255
+                    color = np.append(color, 1)
+                    cube_size = 1/self.args.boxes_per_cube
+                    cubes = [p.loadURDF("cube.urdf", (pos[0]+i*cube_size, pos[1]+j*cube_size, pos[2]+k*cube_size), 
+                                    ors, globalScaling = cube_size, useFixedBase = True, physicsClientId = self.physicsClient) \
+                                        for i, j, k in product([l/2 for l in range(-self.args.boxes_per_cube+1, self.args.boxes_per_cube+1, 2)], repeat=3)]
+                    bigger_cube = p.loadURDF("cube.urdf", pos, ors, globalScaling = self.args.bigger_cube,
+                                    useFixedBase = True, 
+                                    physicsClientId = self.physicsClient)
+                    self.colors[bigger_cube] = (0,0,0,0)
+                    for cube in cubes:
+                        self.colors[cube] = color
+            self.already_constructed = True
+            
+            self.colorize()
+            #p.saveWorld("arenas/" + self.args.arena_name + ".urdf")
+                
+        inherent_roll = pi/2
+        inherent_pitch = 0
+        yaw = 0
+        spe = self.args.min_speed
+        color = [1,0,0,1]
+        file = "ted_duck.urdf"
+        
+        pos = (self.start[0], self.start[1], .5)
+        orn = p.getQuaternionFromEuler([inherent_roll,inherent_pitch,yaw])
+        num = p.loadURDF(file,pos,orn,
+                           globalScaling = self.args.body_size, 
+                           physicsClientId = self.physicsClient)
+        p.changeDynamics(num, 0, maxJointVelocity=10000)
+        x, y = cos(yaw)*spe, sin(yaw)*spe
+        p.resetBaseVelocity(num, (x,y,0),(0,0,0), physicsClientId = self.physicsClient)
+        p.changeVisualShape(num, -1, rgbaColor = color, physicsClientId = self.physicsClient)
+                    
+    def colorize(self):
+        for cube, color in self.colors.items():
+            p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)
+        
+    def get_pos_yaw_spe(self, num):
+        pos, ors = p.getBasePositionAndOrientation(num, physicsClientId = self.physicsClient)
+        yaw = p.getEulerFromQuaternion(ors)[-1]
+        (x, y, _), _ = p.getBaseVelocity(num, physicsClientId = self.physicsClient)
+        spe = (x**2 + y**2)**.5
+        return(pos, yaw, spe)
     
-    actions = [[1,0], [0,1], [-1,0]]
-    for action in actions:
-        reward, name, done = hard_maze.action(action[0], action[1], verbose = True)
+    def pos_in_box(self, num, box):
+        (min_x, max_x), (min_y, max_y) = box 
+        pos, _, _ = self.get_pos_yaw_spe(num)
+        in_x = pos[0] >= min_x and pos[0] <= max_x 
+        in_y = pos[1] >= min_y and pos[1] <= max_y 
+        return(in_x and in_y)
+    
+    def end_collisions(self, num):
+        col = False
+        which = ("FAIL", -1)
+        reward = 0
+        for end_name, (end, end_reward) in self.ends.items():
+            if self.pos_in_box(num, end):
+                col = True
+                which = (end_name, end_reward)
+                reward = end_reward
+        if(type(reward) != tuple): pass
+        else:
+            weights = [w for w, r in reward]
+            reward_index = choices([i for i in range(len(reward))], weights = weights)[0]
+            reward = reward[reward_index][1]
+        return(col, which, reward)
+    
+    def other_collisions(self, num):
+        col = False
+        for cube in self.colors.keys():
+            if 0 < len(p.getContactPoints(num, cube, physicsClientId = self.physicsClient)):
+                col = True
+        return(col)
+
+
+
+if __name__ == "__main__":
+    arena = Arena(arena_name = "3", GUI = True)
+    arena.start_arena()
 
 
 # %%

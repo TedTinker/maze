@@ -20,9 +20,9 @@ class Easy_Maze:
         self.args = args
         self.steps = 0
         self.maze = [
-            Spot((0, 0)), Spot((0, 1), random_spot = args.randomness != 0), 
-            Spot((-1, 1), 1, "BAD"), Spot((1, 1)), Spot((1, 2)), 
-            Spot((2, 2)), Spot((3, 2)), Spot((3, 1), 10, "GOOD")]
+            Spot((0, 0)), Spot((0, 1), random_spot = self.args.randomness != 0), 
+            Spot((-1, 1), self.args.default_reward, "BAD"), Spot((1, 1)), Spot((1, 2)), 
+            Spot((2, 2)), Spot((3, 2)), Spot((3, 1), self.args.better_reward, "GOOD")]
         self.agent_pos = (0, 0)
         
     def obs(self):
@@ -63,8 +63,7 @@ class Easy_Maze:
                 self.agent_pos = new_pos ; reward = 0 ; spot_name = spot.name
                 if(spot.exit_reward != None):
                     done = True ; exit = True
-                    if(type(spot.exit_reward) == tuple): reward = choice(spot.exit_reward)
-                    else:                                reward = spot.exit_reward
+                    reward = choice(spot.exit_reward)
         
         if(wall): reward += self.args.wall_punishment
         if(self.steps == self.args.max_steps and exit == False):
