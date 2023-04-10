@@ -7,10 +7,12 @@ from time import sleep
 from math import floor
 
 from utils import args, folder, duration, estimate_total_duration
-from agent import Agent
 
 print("\nname:\n{}".format(args.arg_name))
 print("\nagents: {}. previous_agents: {}.".format(args.agents, args.previous_agents))
+
+if(args.hard_maze): from hard_agent import Agent
+else:               from easy_agent import Agent
 
 
 

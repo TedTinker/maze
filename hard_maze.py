@@ -86,10 +86,7 @@ class Hard_Maze:
         exit = which[0] != "NONE"
         if(end and not exit): reward = self.args.step_lim_punishment
         if(end): p.disconnect(self.maze.physicsClient)
-        
-    def __str__(self):
-        to_print = "This maze is too complicated to print."
-        return(to_print)
 
         return(reward, which, end)
+    
 # %%
