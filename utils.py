@@ -24,7 +24,7 @@ def estimate_total_duration(proportion_completed, start_time=start_time):
 import argparse
 import os 
 
-if(os.getcwd().split("/")[-1] != "easy_maze"): os.chdir("easy_maze")
+if(os.getcwd().split("/")[-1] != "maze"): os.chdir("maze")
 
 import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

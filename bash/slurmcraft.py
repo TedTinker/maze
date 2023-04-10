@@ -11,7 +11,7 @@ if(type(args.arg_list) != list): args.arg_list = json.loads(args.arg_list)
 combined = "___{}___".format("+".join(args.arg_list))    
 
 import os 
-try:    os.chdir("easy_maze/bash")
+try:    os.chdir("maze/bash")
 except: pass
 
 
@@ -116,7 +116,7 @@ if(__name__ == "__main__"):
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/main.py --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
+singularity exec maze.sif python maze/main.py --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
 """.format(partition, max_cpus, name, slurm_dict[name])[1:])
             
 
@@ -129,7 +129,7 @@ singularity exec t_maze.sif python easy_maze/main.py --arg_name {} {} --agents $
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec t_maze.sif python easy_maze/plotting.py --arg_name {}
+singularity exec maze.sif python maze/plotting.py --arg_name {}
 """.format(partition, combined)[1:])
 # %%
 

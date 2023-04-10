@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 from collections import namedtuple
 from utils import default_args
-from maze import obs_size, action_size
+from easy_maze import obs_size, action_size
         
 
 

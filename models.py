@@ -3,13 +3,10 @@
 import torch
 from torch import nn 
 from torch.distributions import Normal
-import torch.nn.functional as F
 from torchinfo import summary as torch_summary
 
-from math import exp
-
 from utils import default_args, init_weights
-from maze import obs_size, action_size
+from easy_maze import obs_size, action_size
     
         
 

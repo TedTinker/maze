@@ -12,7 +12,7 @@ from copy import deepcopy
 from math import exp
 
 from utils import default_args, dkl
-from maze import T_Maze, action_size
+from easy_maze import Easy_Maze, action_size
 from buffer import RecurrentReplayBuffer
 from models import State_Forward, Forward, Actor, Critic
 
@@ -99,19 +99,19 @@ class Agent:
     
     def episode(self, push = True, verbose = False):
         done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
-        t_maze = T_Maze(self.args)
+        easy_maze = Easy_Maze(self.args)
         if(verbose): print("\n\n\n\n\nSTART!\n")
-        if(verbose): print(t_maze)
+        if(verbose): print(easy_maze)
         
         for step in range(self.args.max_steps):
             self.steps += 1
             if(not done):
                 with torch.no_grad():
-                    o = t_maze.obs().unsqueeze(0)
+                    o = easy_maze.obs().unsqueeze(0)
                     a, _, h = self.actor(o, prev_a, h)
                     action = torch.flatten(a).tolist()
-                    r, spot_name, done = t_maze.action(action[0], action[1], verbose)
-                    no = t_maze.obs().unsqueeze(0)
+                    r, spot_name, done = easy_maze.action(action[0], action[1], verbose)
+                    no = easy_maze.obs().unsqueeze(0)
                     if(push): self.memory.push(o, a, r, no, done, done)
                     prev_a = a
                 
