@@ -87,7 +87,12 @@ def plots(plot_dicts, min_max_dict):
         spot_names = np.array([spot_names for spot_names in plot_dict["spot_names"]])
         agents = spot_names.shape[0]
         xs = [x * plot_dict["args"][0].keep_data for x in list(range(spot_names.shape[1]))   ]
-        kinds = ["NONE", "BAD", "GOOD"]
+        if(plot_dict["args"][0].hard_maze): 
+            kinds = ["NONE"]
+            if("t" in plot_dict["args"][0].maze_list or "1" in plot_dict["args"][0].maze_list): kinds += ["L", "R"]
+            if("2" in plot_dict["args"][0].maze_list): kinds += ["LL", "LR", "RL", "RR"]
+            if("3" in plot_dict["args"][0].maze_list): kinds += ["LLL", "LLR", "LRL", "LRR", "RLL", "RLR", "RRL", "RRR"]
+        else: kinds = ["NONE", "BAD", "GOOD"]
         
         for j, kind in enumerate(kinds):
             counts = np.count_nonzero(spot_names == kind, 0)
