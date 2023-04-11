@@ -84,7 +84,7 @@ class Hard_Maze:
         col = self.maze.other_collisions()
         if(col): reward -= self.args.wall_punishment
         if(not end):  end = self.steps >= self.args.max_steps
-        exit = which[0] != "NONE"
+        exit = which != "NONE"
         if(end and not exit): reward = self.args.step_lim_punishment
 
         return(reward, which, end)

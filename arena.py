@@ -145,12 +145,12 @@ class Arena():
     
     def end_collisions(self):
         col = False
-        which = ("NONE", -1)
+        which = "NONE"
         reward = ((1, 0),)
         for end_name, (end, end_reward) in self.ends.items():
             if self.pos_in_box(end):
                 col = True
-                which = (end_name, end_reward)
+                which = end_name
                 reward = end_reward
         weights = [w for w, r in reward]
         rewards = [r for w, r in reward]
