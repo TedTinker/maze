@@ -25,6 +25,7 @@ from math import exp, pi
 if(os.getcwd().split("/")[-1] != "maze"): os.chdir("maze")
 
 import torch
+from torch import nn 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
@@ -163,6 +164,11 @@ def init_weights(m):
         torch.nn.init.xavier_normal_(m.weight)
         m.bias.data.fill_(0.01)
     except: pass
+    
+class ConstrainedConv2d(nn.Conv2d):
+    def forward(self, input):
+        return nn.functional.conv2d(input, self.weight.clamp(min=-1.0, max=1.0), self.bias, self.stride,
+                                    self.padding, self.dilation, self.groups)
 
 
     

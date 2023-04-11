@@ -5,8 +5,18 @@ from torch import nn
 from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 
-from utils import default_args, init_weights
-    
+from utils import default_args, init_weights, ConstrainedConv2d
+spe_size = 1 ; action_size = 2
+
+
+
+def rnn_cnn(do_this, to_this):
+    episodes = to_this.shape[0] ; steps = to_this.shape[1]
+    this = to_this.view((episodes * steps, to_this.shape[2], to_this.shape[3], to_this.shape[4]))
+    this = do_this(this)
+    this = this.view((episodes, steps, this.shape[1], this.shape[2], this.shape[3]))
+    return(this)
+
         
 
 class State_Forward(nn.Module):
@@ -15,11 +25,28 @@ class State_Forward(nn.Module):
         super(State_Forward, self).__init__()
         
         self.args = args
+        rgbd_size = (1, 4, args.image_size, args.image_size)
+        example = torch.zeros(rgbd_size)
         
         self.gru = nn.GRU(
             input_size =  args.hidden_size,
             hidden_size = args.hidden_size,
             batch_first = True)
+        
+        self.rgbd_in = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.LeakyReLU(),
+            nn.MaxPool2d(
+                kernel_size = (3,3), 
+                stride = (2,2),
+                padding = (1,1)))
+        example = self.rgbd_in(example).flatten(1)
+        rgbd_size = example.shape[1]
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
@@ -31,35 +58,74 @@ class State_Forward(nn.Module):
             nn.Linear(args.hidden_size, args.state_size))
         
         self.zq_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + rgbd_size + spe_size + action_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         self.zq_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + rgbd_size + spe_size + action_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         
-        self.obs_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+        self.rgbd_up = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, rgbd_size),
+            nn.LeakyReLU())
+        self.rgbd_mu = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size), 
+            nn.Upsample(
+                scale_factor = 2, 
+                mode = "bilinear"),
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (1,1)),
             nn.Tanh())
-        self.obs_rho = nn.Sequential(
+        self.rgbd_rho = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.Tanh(),
+            nn.Upsample(
+                scale_factor = 2, 
+                mode = "bilinear"),
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (1,1)))
+        
+        self.spe_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size))
+            nn.Linear(args.hidden_size, spe_size), 
+            nn.Tanh())
+        self.spe_rho = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, spe_size))
         
         self.gru.apply(init_weights)
+        self.rgbd_in.apply(init_weights)
         self.zp_mu.apply(init_weights)
         self.zp_rho.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_rho.apply(init_weights)
-        self.obs_mu.apply(init_weights)
-        self.obs_rho.apply(init_weights)
+        self.rgbd_up.apply(init_weights)
+        self.rgbd_mu.apply(init_weights)
+        self.rgbd_rho.apply(init_weights)
+        self.spe_mu.apply(init_weights)
+        self.spe_rho.apply(init_weights)
         self.to(args.device)
         
     def zp(self, prev_action, h = None):
@@ -69,8 +135,9 @@ class State_Forward(nn.Module):
         zp_std = torch.clamp(zp_std, min = self.args.std_min, max = self.args.std_max)
         return((zp_mu, zp_std))
         
-    def zq(self, obs, prev_action, h = None):
-        x = torch.cat((h, obs, prev_action), dim=-1)
+    def zq(self, rgbd, spe, prev_action, h = None):
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
+        x = torch.cat((h, rgbd, spe, prev_action), dim=-1)
         zq_mu = self.zq_mu(x)
         zq_std = torch.log1p(torch.exp(self.zq_rho(x)))
         zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
@@ -78,21 +145,31 @@ class State_Forward(nn.Module):
         zq = zq_mu + e * zq_std
         return(zq, (zq_mu, zq_std))
         
-    def forward(self, obs, prev_action, action, h = None):
-        if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
+    def forward(self, rgbd, spe, prev_action, action, h = None):
+        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
+        if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
         if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
-        if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
+        if(h == None): h = torch.zeros((spe.shape[0], 1, self.args.hidden_size)).to(spe.device)
         zp_dist = self.zp(prev_action, h)
-        zq, zq_dist = self.zq(obs, prev_action, h)
+        zq, zq_dist = self.zq(rgbd, spe, prev_action, h)
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(zq, h)
         x = torch.cat((h, action.unsqueeze(1)), dim=-1)
-        obs_mu = self.obs_mu(x)
-        obs_std = torch.log1p(torch.exp(self.obs_rho(x)))
-        obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        pred_obs = obs_mu + e * obs_std
-        return(pred_obs, (obs_mu, obs_std), zp_dist, zq_dist, h)
+        
+        rgbd_x = self.rgbd_up(x).view((spe.shape[0], spe.shape[1], 4, 4, 4))
+        rgbd_mu = rnn_cnn(self.rgbd_mu, rgbd_x)
+        rgbd_std = torch.log1p(torch.exp(rnn_cnn(self.rgbd_rho, rgbd_x)))
+        rgbd_std = torch.clamp(rgbd_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(rgbd_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        pred_rgbd = rgbd_mu + e * rgbd_std
+        
+        spe_mu = self.spe_mu(x)
+        spe_std = torch.log1p(torch.exp(self.spe_rho(x)))
+        spe_std = torch.clamp(spe_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(spe_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        pred_spe = spe_mu + e * spe_std
+        
+        return(pred_rgbd, (rgbd_mu, rgbd_std), pred_spe, (spe_mu, spe_std), zp_dist, zq_dist, h)
 
 
 
@@ -102,40 +179,107 @@ class Forward(nn.Module):
         super(Forward, self).__init__()
         
         self.args = args
+        rgbd_size = (1, 4, args.image_size, args.image_size)
+        example = torch.zeros(rgbd_size)
+        
+        self.rgbd_in = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.LeakyReLU(),
+            nn.MaxPool2d(
+                kernel_size = (3,3), 
+                stride = (2,2),
+                padding = (1,1)))
+        example = self.rgbd_in(example).flatten(1)
+        rgbd_size = example.shape[1]
         
         self.gru = nn.GRU(
-            input_size =  obs_size + action_size,
+            input_size =  rgbd_size + spe_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
-        self.obs_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+
+        self.rgbd_up = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, rgbd_size),
+            nn.LeakyReLU())
+        self.rgbd_mu = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size), 
+            nn.Upsample(
+                scale_factor = 2, 
+                mode = "bilinear"),
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (1,1)),
             nn.Tanh())
-        self.obs_rho = nn.Sequential(
+        self.rgbd_rho = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.Tanh(),
+            nn.Upsample(
+                scale_factor = 2, 
+                mode = "bilinear"),
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (1,1)))
+        
+        self.spe_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size))
+            nn.Linear(args.hidden_size, spe_size), 
+            nn.Tanh())
+        self.spe_rho = nn.Sequential(
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Tanh(),
+            nn.Linear(args.hidden_size, spe_size))
         
+        self.rgbd_in.apply(init_weights)
         self.gru.apply(init_weights)
-        self.obs_mu.apply(init_weights)
-        self.obs_rho.apply(init_weights)
+        self.rgbd_up.apply(init_weights)
+        self.rgbd_mu.apply(init_weights)
+        self.rgbd_rho.apply(init_weights)
+        self.spe_mu.apply(init_weights)
+        self.spe_rho.apply(init_weights)
         self.to(args.device)
         
-    def forward(self, obs, prev_action, action, h = None):
-        x = torch.cat((obs, prev_action), dim=-1)
+    def forward(self, rgbd, spe, prev_action, action, h = None):
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
+        x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)
         x = torch.cat((h, action), dim=-1)
-        obs_mu = self.obs_mu(x)
-        obs_std = torch.log1p(torch.exp(self.obs_rho(x)))
-        obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        pred_obs = obs_mu + e * obs_std
-        return(pred_obs, (obs_mu, obs_std))
+
+        rgbd_x = self.rgbd_up(x).view((spe.shape[0], spe.shape[1], 4, 4, 4))
+        rgbd_mu = rnn_cnn(self.rgbd_mu, rgbd_x)
+        rgbd_std = torch.log1p(torch.exp(rnn_cnn(self.rgbd_rho, rgbd_x)))
+        rgbd_std = torch.clamp(rgbd_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(rgbd_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        pred_rgbd = rgbd_mu + e * rgbd_std
+        
+        spe_mu = self.spe_mu(x)
+        spe_std = torch.log1p(torch.exp(self.spe_rho(x)))
+        spe_std = torch.clamp(spe_std, min = self.args.std_min, max = self.args.std_max)
+        e = Normal(0, 1).sample(spe_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        pred_spe = spe_mu + e * spe_std
+
+        return(pred_rgbd, (rgbd_mu, rgbd_std), pred_spe, (spe_mu, spe_std))
         
 
 
@@ -145,9 +289,26 @@ class Actor(nn.Module):
         super(Actor, self).__init__()
         
         self.args = args
+        rgbd_size = (1, 4, args.image_size, args.image_size)
+        example = torch.zeros(rgbd_size)
+        
+        self.rgbd_in = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.LeakyReLU(),
+            nn.MaxPool2d(
+                kernel_size = (3,3), 
+                stride = (2,2),
+                padding = (1,1)))
+        example = self.rgbd_in(example).flatten(1)
+        rgbd_size = example.shape[1]
         
         self.gru = nn.GRU(
-            input_size =  obs_size + action_size,
+            input_size =  rgbd_size + spe_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         self.mu = nn.Sequential(
@@ -155,13 +316,15 @@ class Actor(nn.Module):
         self.rho = nn.Sequential(
             nn.Linear(args.hidden_size, action_size))
 
+        self.rgbd_in.apply(init_weights)
         self.gru.apply(init_weights)
         self.mu.apply(init_weights)
         self.rho.apply(init_weights)
         self.to(args.device)
 
-    def forward(self, obs, prev_action, h = None):
-        x = torch.cat((obs, prev_action), dim=-1)
+    def forward(self, rgbd, spe, prev_action, h = None):
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
+        x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)
         mu = self.mu(h)
         std = torch.log1p(torch.exp(self.rho(h)))
@@ -182,9 +345,26 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
         
         self.args = args
+        rgbd_size = (1, 4, args.image_size, args.image_size)
+        example = torch.zeros(rgbd_size)
+        
+        self.rgbd_in = nn.Sequential(
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 4,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.LeakyReLU(),
+            nn.MaxPool2d(
+                kernel_size = (3,3), 
+                stride = (2,2),
+                padding = (1,1)))
+        example = self.rgbd_in(example).flatten(1)
+        rgbd_size = example.shape[1]
         
         self.gru = nn.GRU(
-            input_size =  obs_size + action_size,
+            input_size =  rgbd_size + spe_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         self.lin = nn.Sequential(
@@ -192,12 +372,14 @@ class Critic(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, 1))
 
+        self.rgbd_in.apply(init_weights)
         self.gru.apply(init_weights)
         self.lin.apply(init_weights)
         self.to(args.device)
 
-    def forward(self, obs, prev_action, action, h = None):
-        x = torch.cat((obs, prev_action), dim=-1)
+    def forward(self, rgbd, spe, prev_action, action, h = None):
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
+        x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)
         x = torch.cat((h, action), dim=-1)
         x = self.lin(x)
@@ -211,12 +393,14 @@ if __name__ == "__main__":
     args.device = "cpu"
     args.dkl_rate = 1
     
+    
+    
     forward = State_Forward(args)
     
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((3, obs_size), (3, action_size), (3, action_size))))
+    print(torch_summary(forward, ((3, args.image_size, args.image_size, 4), (3, spe_size), (3, action_size), (3, action_size))))
     
     
     
@@ -225,7 +409,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((3, obs_size), (3, action_size), (3, action_size))))
+    print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, action_size))))
     
 
 
@@ -234,7 +418,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(actor)
     print()
-    print(torch_summary(actor, ((3, 1, obs_size), (3, 1, action_size))))
+    print(torch_summary(actor, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size))))
     
     
     
@@ -243,6 +427,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((3, 1, obs_size), (3, 1, action_size), (3, 1, action_size))))
+    print(torch_summary(critic, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, action_size))))
 
 # %%
