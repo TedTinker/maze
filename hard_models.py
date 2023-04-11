@@ -145,11 +145,11 @@ class State_Forward(nn.Module):
         return(zq, (zq_mu, zq_std))
         
     def forward(self, rgbd, spe, prev_action, action, h = None):
-        rgbd = (rgbd * 2) - 1
-        spe = (spe - args.min_speed) / (args.max_speed - args.min_speed)
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
         if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
+        rgbd = (rgbd * 2) - 1
+        spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         if(h == None): h = torch.zeros((spe.shape[0], 1, self.args.hidden_size)).to(spe.device)
         zp_dist = self.zp(prev_action, h)
         zq, zq_dist = self.zq(rgbd, spe, prev_action, h)
@@ -159,8 +159,10 @@ class State_Forward(nn.Module):
         
         rgbd_x = self.rgbd_up(x).view((spe.shape[0], spe.shape[1], 4, 4, 4))
         rgbd_mu = (rnn_cnn(self.rgbd_mu, rgbd_x) + 1) / 2
+        rgbd_mu = rgbd_mu.permute(0, 1, 3, 4, 2)
         rgbd_std = torch.log1p(torch.exp(rnn_cnn(self.rgbd_rho, rgbd_x)))
         rgbd_std = torch.clamp(rgbd_std, min = self.args.std_min, max = self.args.std_max)
+        rgbd_std = rgbd_std.permute(0, 1, 3, 4, 2)
         e = Normal(0, 1).sample(rgbd_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_rgbd = rgbd_mu + e * rgbd_std
         
@@ -260,8 +262,11 @@ class Forward(nn.Module):
         self.to(args.device)
         
     def forward(self, rgbd, spe, prev_action, action, h = None):
+        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
+        if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
+        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
-        spe = (spe - args.min_speed) / (args.max_speed - args.min_speed)
+        spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
         x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)
@@ -269,8 +274,10 @@ class Forward(nn.Module):
 
         rgbd_x = self.rgbd_up(x).view((spe.shape[0], spe.shape[1], 4, 4, 4))
         rgbd_mu = (rnn_cnn(self.rgbd_mu, rgbd_x) + 1) / 2
+        rgbd_mu = rgbd_mu.permute(0, 1, 3, 4, 2)
         rgbd_std = torch.log1p(torch.exp(rnn_cnn(self.rgbd_rho, rgbd_x)))
         rgbd_std = torch.clamp(rgbd_std, min = self.args.std_min, max = self.args.std_max)
+        rgbd_std = rgbd_std.permute(0, 1, 3, 4, 2)
         e = Normal(0, 1).sample(rgbd_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_rgbd = rgbd_mu + e * rgbd_std
         
@@ -324,8 +331,11 @@ class Actor(nn.Module):
         self.to(args.device)
 
     def forward(self, rgbd, spe, prev_action, h = None):
+        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
+        if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
+        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
-        spe = (spe - args.min_speed) / (args.max_speed - args.min_speed)
+        spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
         x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)
@@ -381,8 +391,11 @@ class Critic(nn.Module):
         self.to(args.device)
 
     def forward(self, rgbd, spe, prev_action, action, h = None):
+        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
+        if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
+        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
-        spe = (spe - args.min_speed) / (args.max_speed - args.min_speed)
+        spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
         x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)

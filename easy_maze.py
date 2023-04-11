@@ -1,5 +1,5 @@
 #%%
-from random import choice
+from random import choices
 import torch
 
 from utils import default_args, args
@@ -63,7 +63,9 @@ class Easy_Maze:
                 self.agent_pos = new_pos ; reward = 0 ; spot_name = spot.name
                 if(spot.exit_reward != None):
                     done = True ; exit = True
-                    reward = choice(spot.exit_reward)
+                    weights = [w for w, r in spot.exit_reward]
+                    rewards = [r for w, r in spot.exit_reward]
+                    reward = choices(rewards, weights = weights, k = 1)[0]
         
         if(wall): reward += self.args.wall_punishment
         if(self.steps == self.args.max_steps and exit == False):

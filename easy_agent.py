@@ -117,7 +117,7 @@ class Agent:
                 
             if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
                 #print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))
-                plot_data = self.hard_epoch(batch_size = self.args.batch_size) if self.args.hard_maze else self.epoch(batch_size = self.args.batch_size)
+                plot_data = self.epoch(batch_size = self.args.batch_size)
                 if(plot_data == False): print("Not getting an epoch!")
                 else:
                     l, e, ic, ie, naive, free = plot_data

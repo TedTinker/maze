@@ -112,7 +112,7 @@ if(__name__ == "__main__"):
         partition = """
 #SBATCH --partition=short
 #SBATCH --cpus-per-task=1
-#SBATCH --time 20:00
+#SBATCH --time 2:00:00
 """
 
     if(args.comp == "saion"):

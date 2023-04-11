@@ -58,7 +58,7 @@ class RecurrentReplayBuffer:
       
         # placeholders
 
-        self.o = np.zeros((self.args.capacity, self.max_episode_len + 1, self.o_dim), dtype='float32')
+        self.o = np.zeros((self.args.capacity, self.max_episode_len + 1) + self.o_dim, dtype='float32')
         self.s = np.zeros((self.args.capacity, self.max_episode_len + 1, 1), dtype='float32')
         self.a = np.zeros((self.args.capacity, self.max_episode_len, self.a_dim), dtype='float32')
         self.r = np.zeros((self.args.capacity, self.max_episode_len, 1), dtype='float32')

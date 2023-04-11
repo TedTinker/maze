@@ -86,7 +86,6 @@ class Hard_Maze:
         if(not end):  end = self.steps >= self.args.max_steps
         exit = which[0] != "NONE"
         if(end and not exit): reward = self.args.step_lim_punishment
-        if(end): p.disconnect(self.maze.physicsClient)
 
         return(reward, which, end)
     

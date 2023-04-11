@@ -46,8 +46,8 @@ parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--step_lim_punishment',type=int,   default = -1)
 parser.add_argument('--wall_punishment',    type=int,   default = -1)
 parser.add_argument('--non_one',            type=int,   default = -1)
-parser.add_argument('--default_reward',     type=tuple_type, default = (1,))
-parser.add_argument('--better_reward',      type=tuple_type, default = (10,))
+parser.add_argument('--default_reward',     type=tuple_type, default = ((1, 1),))  # ((weight, reward), (weight, reward))
+parser.add_argument('--better_reward',      type=tuple_type, default = ((1, 10),))
 parser.add_argument('--randomness',         type=bool,  default = 0)
 
 # Hard Maze

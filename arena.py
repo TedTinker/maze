@@ -1,5 +1,5 @@
 #%%
-from random import choice
+from random import choices
 import pandas as pd
 import numpy as np
 import pybullet as p
@@ -145,17 +145,16 @@ class Arena():
     
     def end_collisions(self):
         col = False
-        which = ("FAIL", -1)
-        reward = 0
+        which = ("NONE", -1)
+        reward = ((1, 0),)
         for end_name, (end, end_reward) in self.ends.items():
             if self.pos_in_box(end):
                 col = True
                 which = (end_name, end_reward)
                 reward = end_reward
-        if(type(reward) != tuple): pass
-        else:
-            weights = [w for w, r in reward]
-            reward = choice([i for i in range(len(reward))], weights = weights)[0]
+        weights = [w for w, r in reward]
+        rewards = [r for w, r in reward]
+        reward = choices(rewards, weights = weights, k = 1)[0]
         return(col, which, reward)
     
     def other_collisions(self):
@@ -164,5 +163,8 @@ class Arena():
             if 0 < len(p.getContactPoints(self.body_num, cube, physicsClientId = self.physicsClient)):
                 col = True
         return(col)
+    
+    def stop(self):
+        p.disconnect(self.physicsClient)
 
 # %%
