@@ -56,6 +56,8 @@ slurm_dict = {
     
     "ef_log_prob" : "--alpha None --curiosity free --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
     
+    
+    
     "d_state" : "--state_forward True",
     
     "e_state"    : "--state_forward True --alpha None",
@@ -68,6 +70,22 @@ slurm_dict = {
     "ef_state"  : "--state_forward True --alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5",
     
     "ef_log_prob_state" : "--state_forward True --alpha None --curiosity free --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
+    
+    
+    
+    "d_hard"    : "--hard_maze True --maze_list \"('t',)\"", 
+    "e_hard"    : "--hard_maze True --maze_list \"('t',)\" --alpha None",
+
+    "n_hard"    : "--hard_maze True --maze_list \"('t',)\" --curiosity naive",
+    "en_hard"   : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity naive",
+    "en_rand_hard"   : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity naive --randomness 10",
+    
+    "en_log_prob_hard" : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity naive --beta_zq 0 --accuracy log_prob --naive_eta .07",
+    
+    "ef_hard"  : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5",
+    "ef_rand_hard"  : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5 --randomness 10",
+    
+    "ef_log_prob_hard" : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity free --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
     
     }
 

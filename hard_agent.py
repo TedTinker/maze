@@ -102,7 +102,7 @@ class Agent:
     
     
     def episode(self, push = True, verbose = False):
-        done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
+        done = False ; h = None ; prev_a = torch.zeros((1, 1, 2))
         maze = Hard_Maze(self.maze_name, args = self.args)
         if(verbose): print("\n\n\n\n\nSTART!\n")
         

@@ -30,8 +30,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
 
-def tuple_type(arg_string):
-    return(ast.literal_eval(arg_string))
+def tuple_type(arg_string): return(ast.literal_eval(arg_string))
 
 # Meta 
 parser.add_argument("--arg_title",          type=str,   default = "default") 
@@ -41,7 +40,7 @@ parser.add_argument("--previous_agents",    type=int,   default = 0)
 parser.add_argument('--device',             type=str,   default = "cpu")
 
 # Maze 
-parser.add_argument('--hard_maze',          type=tuple_type,   default = False)
+parser.add_argument('--hard_maze',          type=bool,  default = False)
 parser.add_argument('--maze_list',          type=tuple_type,   default = ("easy",))
 parser.add_argument('--max_steps',          type=int,   default = 10)
 parser.add_argument('--step_lim_punishment',type=int,   default = -1)
