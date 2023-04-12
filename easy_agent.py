@@ -78,7 +78,7 @@ class Agent:
         
     def training(self, q):
         
-        #self.pos_episodes()
+        self.pos_episodes()
         while(True):
             self.training_episode()
             percent_done = str(self.epochs / sum(self.args.epochs))
@@ -86,7 +86,7 @@ class Agent:
             if(self.epochs >= sum(self.args.epochs)): break
             #if(self.epochs % self.args.epochs_per_pos_list): self.pos_episodes()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
-        #self.pos_episodes()
+        self.pos_episodes()
         
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in self.min_max_dict.keys():
