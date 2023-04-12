@@ -84,7 +84,7 @@ class Agent:
             percent_done = str(self.epochs / sum(self.args.epochs))
             q.put((self.agent_num, percent_done))
             if(self.epochs >= sum(self.args.epochs)): break
-            #if(self.epochs % self.args.epochs_per_pos_list): self.pos_episodes()
+            if(self.epochs % self.args.epochs_per_pos_list == 0): self.pos_episodes()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         self.pos_episodes()
         
@@ -117,7 +117,6 @@ class Agent:
     
     
     def pos_episodes(self):
-        print(self.agent_num, self.epochs)
         pos_lists = []
         for episode in range(self.args.episodes_in_pos_list):
             done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
