@@ -301,7 +301,7 @@ for folder in folders:
             else:  d[key].append(saved_d[key])
         
     for key in min_max_dict.keys():
-        if(not key in ["args", "arg_title", "arg_name", "spot_names"]):
+        if(not key in ["args", "arg_title", "arg_name", "pos_lists", "spot_names"]):
             minimum = None ; maximum = None
             for min_max in min_max_dict[key]:
                 if(minimum == None):        minimum = min_max[0]
@@ -338,7 +338,7 @@ for name in order:
         
 min_max_dict = {}
 for key in plot_dicts[0].keys():
-    if(not key in ["arg_title", "arg_name", "spot_names"]):
+    if(not key in ["args", "arg_title", "arg_name", "pos_lists", "spot_names"]):
         minimum = None ; maximum = None
         for mm_dict in min_max_dicts:
             if(mm_dict[key] != (None, None)):

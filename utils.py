@@ -93,7 +93,10 @@ parser.add_argument('--accuracy',           type=str,   default = "mse")
 parser.add_argument("--curiosity",          type=str,   default = "none")     # Which kind of curiosity
 
 # Saving data
-parser.add_argument('--keep_data',          type=int,   default = 25)
+parser.add_argument('--keep_data',           type=int,   default = 25)
+parser.add_argument('--epochs_per_pos_list', type=int,   default = 100)
+parser.add_argument('--episodes_in_pos_list',type=int,   default = 10)
+
 
 
 

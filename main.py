@@ -19,8 +19,8 @@ else:               from easy_agent import Agent
 def train(q, i):
     seed = i + args.previous_agents
     np.random.seed(seed) ; random.seed(seed) ; torch.manual_seed(seed) ; torch.cuda.manual_seed(seed)
-    agent = Agent(args)
-    agent.training(q, i)
+    agent = Agent(i, args)
+    agent.training(q)
     with open(folder + "/plot_dict_{}.pickle".format(   str(i).zfill(3)), "wb") as handle:
         pickle.dump(agent.plot_dict, handle)
     with open(folder + "/min_max_dict_{}.pickle".format(str(i).zfill(3)), "wb") as handle:
