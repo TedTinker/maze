@@ -304,9 +304,9 @@ for folder in folders:
         if(not key in ["args", "arg_title", "arg_name", "pos_lists", "spot_names"]):
             minimum = None ; maximum = None
             for min_max in min_max_dict[key]:
-                if(minimum == None):        minimum = min_max[0]
+                if(  minimum == None):      minimum = min_max[0]
                 elif(minimum > min_max[0]): minimum = min_max[0]
-                if(maximum == None):        maximum = min_max[1]
+                if(  maximum == None):      maximum = min_max[1]
                 elif(maximum < min_max[1]): maximum = min_max[1]
             min_max_dict[key] = (minimum, maximum)
 
@@ -355,12 +355,18 @@ print("\nDone plotting data! Duration: {}.\n".format(duration()), flush = True)
 
 
 # Let's try making a video of positions and stuff!
+plot_position = (0, 0)
 for arg_name in complete_order:
-    for plot_dict in plot_dicts:
-        if(plot_dict["arg_name"] == arg_name): break
+    if(  arg_name == "break"):       plot_position = (0,                    plot_position[1] + 1)
+    elif(arg_name == "empty_space"): plot_position = (plot_position[0] + 1, plot_position[1])
+    else:
+        for plot_dict in plot_dicts:
+            if(plot_dict["arg_name"] == arg_name): break
+        
+        print()
+        print(arg_name, plot_position)
+        print(plot_dict["pos_lists"])
     
-    print()
-    print(arg_name)
-    print(plot_dict["pos_lists"])
+    plot_position = (plot_position[0] + 1, plot_position[1])
 
 print("\nDuration: {}. Done!".format(duration()), flush = True)

@@ -65,7 +65,7 @@ class Agent:
             "args" : self.args,
             "arg_title" : self.args.arg_title,
             "arg_name" : self.args.arg_name,
-            "pos_lists" : [],
+            "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "complexity" : [], "zp" : [],
             "alpha" : [], "actor" : [], 
@@ -126,7 +126,7 @@ class Agent:
                 if(not done): _, _, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
                 pos_list.append(self.maze.agent_pos)
             pos_lists.append(pos_list)
-        self.plot_dict["pos_lists"].append({self.epochs : pos_lists})
+        self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
     
     
     
