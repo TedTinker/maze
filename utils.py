@@ -94,8 +94,8 @@ parser.add_argument("--curiosity",          type=str,   default = "none")     # 
 
 # Saving data
 parser.add_argument('--keep_data',           type=int,   default = 25)
-parser.add_argument('--epochs_per_pos_list', type=int,   default = 100)
-parser.add_argument('--episodes_in_pos_list',type=int,   default = 10)
+parser.add_argument('--epochs_per_pos_list', type=int,   default = 250)
+parser.add_argument('--episodes_in_pos_list',type=int,   default = 3)
 
 
 
