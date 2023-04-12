@@ -24,6 +24,7 @@ class Agent:
         
         self.args = args
         self.episodes = 0 ; self.epochs = 0 ; self.steps = 0
+        self.maze = Easy_Maze(args)
         
         self.target_entropy = args.target_entropy # -dim(A)
         self.alpha = 1
@@ -94,27 +95,32 @@ class Agent:
                     if(  maximum == None):  maximum = max(l) 
                     elif(maximum < max(l)): maximum = max(l)
                 self.min_max_dict[key] = (minimum, maximum)
+       
+       
+                
+    def step_in_episode(self, prev_a, h, push, verbose):
+        with torch.no_grad():
+            o = self.maze.obs().unsqueeze(0)
+            a, _, h = self.actor(o, prev_a, h)
+            action = torch.flatten(a).tolist()
+            r, spot_name, done = self.maze.action(action[0], action[1], verbose)
+            no = self.maze.obs().unsqueeze(0)
+            if(push): self.memory.push(o, a, r, no, done, done)
+        return(a, h, r, spot_name, done)
     
     
     
     def episode(self, push = True, verbose = False):
         done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size)) ; cumulative_r = 0
-        maze = Easy_Maze(self.args)
+        self.maze.begin()
         if(verbose): print("\n\n\n\n\nSTART!\n")
-        if(verbose): print(maze)
+        if(verbose): print(self.maze)
         
         for step in range(self.args.max_steps):
             self.steps += 1
             if(not done):
-                with torch.no_grad():
-                    o = maze.obs().unsqueeze(0)
-                    a, _, h = self.actor(o, prev_a, h)
-                    action = torch.flatten(a).tolist()
-                    r, spot_name, done = maze.action(action[0], action[1], verbose)
-                    no = maze.obs().unsqueeze(0)
-                    if(push): self.memory.push(o, a, r, no, done, done)
-                    prev_a = a
-                    cumulative_r += r
+                prev_a, h, r, spot_name, done = self.step_in_episode(prev_a, h, push, verbose)
+                cumulative_r += r
                 
             if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
                 #print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))

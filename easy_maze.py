@@ -18,11 +18,14 @@ class Easy_Maze:
     
     def __init__(self, args = default_args):
         self.args = args
-        self.steps = 0
         self.maze = [
             Spot((0, 0)), Spot((0, 1), random_spot = self.args.randomness != 0), 
             Spot((-1, 1), self.args.default_reward, "BAD"), Spot((1, 1)), Spot((1, 2)), 
             Spot((2, 2)), Spot((3, 2)), Spot((3, 1), self.args.better_reward, "GOOD")]
+        self.begin()
+        
+    def begin(self):
+        self.steps = 0 
         self.agent_pos = (0, 0)
         
     def obs(self):
