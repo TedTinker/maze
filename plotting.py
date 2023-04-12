@@ -362,10 +362,13 @@ for arg_name in complete_order:
     else:
         for plot_dict in plot_dicts:
             if(plot_dict["arg_name"] == arg_name): break
+            
+        pos_dict = {}
+        for d in plot_dict["pos_lists"]: pos_dict.update(d)
         
         print()
         print(arg_name, plot_position)
-        print(plot_dict["pos_lists"])
+        print(pos_dict)
     
     plot_position = (plot_position[0] + 1, plot_position[1])
 

@@ -17,8 +17,7 @@ else:               from easy_agent import Agent
 
 
 def train(q, i):
-    seed = i + args.previous_agents
-    np.random.seed(seed) ; random.seed(seed) ; torch.manual_seed(seed) ; torch.cuda.manual_seed(seed)
+    np.random.seed(i) ; random.seed(i) ; torch.manual_seed(i) ; torch.cuda.manual_seed(i)
     agent = Agent(i, args)
     agent.training(q)
     with open(folder + "/plot_dict_{}.pickle".format(   str(i).zfill(3)), "wb") as handle:
@@ -30,13 +29,13 @@ def train(q, i):
 queue = Queue()
 
 processes = []
-for worker_id in range(args.agents):
+for worker_id in range(args.previous_agents, args.agents + args.previous_agents):
     process = Process(target=train, args=(queue, worker_id))
     processes.append(process)
     process.start()
 
-progress_dict = {i : "0" for i in range(args.agents)}
-prev_progress_dict = {i : None for i in range(args.agents)}
+progress_dict = {i : "0" for i in range(args.previous_agents, args.agents + args.previous_agents)}
+prev_progress_dict = {i : None for i in range(args.previous_agents, args.agents + args.previous_agents)}
 
 while any(process.is_alive() for process in processes) or not queue.empty():
     while not queue.empty():
