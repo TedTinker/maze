@@ -17,7 +17,7 @@ def get_quantiles(plot_dict, name, adjust_xs = True):
     #for agent_record in plot_dict[name]: print(len(agent_record))
     lists = np.array(plot_dict[name], dtype=float)    
     lists = lists[:,xs]
-    quantile_dict = {"xs" : [x * plot_dict["args"][0].keep_data for x in xs] if adjust_xs else xs}
+    quantile_dict = {"xs" : [x * plot_dict["args"].keep_data for x in xs] if adjust_xs else xs}
     quantile_dict["min"] = np.min(lists, 0)
     quantile_dict["q10"] = np.quantile(lists, .1, 0)
     quantile_dict["q20"] = np.quantile(lists, .2, 0)
@@ -88,11 +88,11 @@ def plots(plot_dicts, min_max_dict):
         spot_names = np.array([spot_names for spot_names in plot_dict["spot_names"]])
         agents = spot_names.shape[0]
         xs = [x for x in range(spot_names.shape[1])]
-        if(plot_dict["args"][0].hard_maze): 
+        if(plot_dict["args"].hard_maze): 
             kinds = ["NONE"]
-            if("t" in plot_dict["args"][0].maze_list or "1" in plot_dict["args"][0].maze_list): kinds += ["L", "R"]
-            if("2" in plot_dict["args"][0].maze_list): kinds += ["LL", "LR", "RL", "RR"]
-            if("3" in plot_dict["args"][0].maze_list): kinds += ["LLL", "LLR", "LRL", "LRR", "RLL", "RLR", "RRL", "RRR"]
+            if("t" in plot_dict["args"].maze_list or "1" in plot_dict["args"].maze_list): kinds += ["L", "R"]
+            if("2" in plot_dict["args"].maze_list): kinds += ["LL", "LR", "RL", "RR"]
+            if("3" in plot_dict["args"].maze_list): kinds += ["LLL", "LLR", "LRL", "LRR", "RLL", "RLR", "RRL", "RRR"]
         else: kinds = ["NONE", "BAD", "GOOD"]
         
         for j, kind in enumerate(kinds):
@@ -298,7 +298,7 @@ for folder in folders:
             saved_d = pickle.load(handle) ; os.remove(folder + "/" + file)
         for key in saved_d.keys(): 
             if(not key in d): d[key] = []
-            if(key in ["arg_title", "arg_name"]): d[key] = saved_d[key]
+            if(key in ["args", "arg_title", "arg_name"]): d[key] = saved_d[key]
             else:  d[key].append(saved_d[key])
             
     pos_dict = {}
@@ -361,7 +361,7 @@ print("\nDone plotting data! Duration: {}.\n".format(duration()), flush = True)
 
 plotting_pos = True 
 for plot_dict in plot_dicts: 
-    if(plot_dict["args"][0].hard_maze): plotting_pos = False
+    if(plot_dict["args"].hard_maze): plotting_pos = False
     
 if(plotting_pos):
     rows = 0 ; columns = 0 ; current_count = 0 
@@ -392,10 +392,9 @@ if(plotting_pos):
                     to_plot = {}
                     for a in agents:
                         for ep in range(episodes):
-                            print()
-                            print("Epoch {}, step {}, agent {}, episode {}, args {}, position {}.".format(e, s, a, ep, arg_name, plot_position))
-                            print(plot_dict["pos_lists"]["{}_{}".format(a, e)][ep][s])
                             coordinate = plot_dict["pos_lists"]["{}_{}".format(a, e)][ep][s]
+                            print()
+                            print("Epoch {}, step {}, agent {}, episode {}, args {}, plot position {}. Coord: {}.".format(e, s, a, ep, arg_name, plot_position, coordinate))
                             if(not coordinate in to_plot): to_plot[coordinate] = 0
                             to_plot[coordinate] += 1
                             
@@ -409,6 +408,6 @@ if(plotting_pos):
                 
                 plot_position = (plot_position[0], plot_position[1] + 1)
                 
-            plt.savefig("{}_{}.png".format(e, s), bbox_inches = "tight")
+        plt.savefig("{}_{}.png".format(e, s), bbox_inches = "tight")
 
 print("\nDuration: {}. Done!".format(duration()), flush = True)
