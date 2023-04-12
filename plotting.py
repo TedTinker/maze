@@ -10,13 +10,13 @@ from utils import duration, args
 
 
 
-def get_quantiles(plot_dict, name):
+def get_quantiles(plot_dict, name, adjust_xs = True):
     xs = [i for i, x in enumerate(plot_dict[name][0]) if x != None]
     #print("\n\n", name)
     #for agent_record in plot_dict[name]: print(len(agent_record))
     lists = np.array(plot_dict[name], dtype=float)    
     lists = lists[:,xs]
-    quantile_dict = {"xs" : [x * plot_dict["args"][0].keep_data for x in xs]}
+    quantile_dict = {"xs" : [x * plot_dict["args"][0].keep_data for x in xs] if adjust_xs else xs}
     quantile_dict["min"] = np.min(lists, 0)
     quantile_dict["q10"] = np.quantile(lists, .1, 0)
     quantile_dict["q20"] = np.quantile(lists, .2, 0)
@@ -62,9 +62,9 @@ def plots(plot_dicts, min_max_dict):
     for i, plot_dict in enumerate(plot_dicts):
     
         # Cumulative rewards
-        rew_dict = get_quantiles(plot_dict, "rewards")
-        max_rewards = [10*x/plot_dict["args"][0].keep_data for x in range(rew_dict["xs"][-1])]
-        min_rewards = [-1*x/plot_dict["args"][0].keep_data for x in range(rew_dict["xs"][-1])]
+        rew_dict = get_quantiles(plot_dict, "rewards", adjust_xs = False)
+        max_rewards = [10*x for x in range(rew_dict["xs"][-1])]
+        min_rewards = [-1*x for x in range(rew_dict["xs"][-1])]
         
         ax = axs[0,i] if len(plot_dicts) > 1 else axs[0]
         awesome_plot(ax, rew_dict, "turquoise", "Reward")
@@ -76,7 +76,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, rew_dict, "turquoise", "Reward", min_max_dict["rewards"])
         ax.axhline(y = 0, color = "black", linestyle = '--', alpha = .2)
         ax.plot(max_rewards, color = "black", label = "Max Reward")
-        ax.plot(min_rewards, color = "black", label = "Max Reward")
+        ax.plot(min_rewards, color = "black", label = "Min Reward")
         ax.set_ylabel("Reward")
         ax.set_title(plot_dict["arg_title"] + "\nCumulative Rewards, shared min/max")
     
@@ -86,7 +86,7 @@ def plots(plot_dicts, min_max_dict):
         ax = axs[2,i] if len(plot_dicts) > 1 else axs[2]
         spot_names = np.array([spot_names for spot_names in plot_dict["spot_names"]])
         agents = spot_names.shape[0]
-        xs = [x * plot_dict["args"][0].keep_data for x in list(range(spot_names.shape[1]))   ]
+        xs = [x for x in range(spot_names.shape[1])]
         if(plot_dict["args"][0].hard_maze): 
             kinds = ["NONE"]
             if("t" in plot_dict["args"][0].maze_list or "1" in plot_dict["args"][0].maze_list): kinds += ["L", "R"]

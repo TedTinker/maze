@@ -1,5 +1,5 @@
 #%%
-from random import choices
+from random import choice, choices
 import torch
 
 from utils import default_args, args
@@ -86,8 +86,8 @@ class Easy_Maze:
             for x in [-1, 0, 1, 2, 3]:
                 portrayal = " "
                 for spot in self.maze:
-                    if(spot.pos == (x, y)): portrayal = "O"
-                if(self.agent_pos == (x, y)): portrayal = "X"
+                    if(spot.pos == (x, y)): portrayal = "\u2591"
+                if(self.agent_pos == (x, y)): portrayal = "@"
                 to_print += portrayal 
             if(y != 0): to_print += "\n"
         return(to_print)

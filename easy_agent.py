@@ -98,7 +98,7 @@ class Agent:
     
     
     def episode(self, push = True, verbose = False):
-        done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
+        done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size)) ; cumulative_r = 0
         maze = Easy_Maze(self.args)
         if(verbose): print("\n\n\n\n\nSTART!\n")
         if(verbose): print(maze)
@@ -114,6 +114,7 @@ class Agent:
                     no = maze.obs().unsqueeze(0)
                     if(push): self.memory.push(o, a, r, no, done, done)
                     prev_a = a
+                    cumulative_r += r
                 
             if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
                 #print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))
@@ -122,8 +123,6 @@ class Agent:
                 else:
                     l, e, ic, ie, naive, free = plot_data
                     if(self.epochs == 1 or self.epochs >= sum(self.args.epochs) or self.epochs % self.args.keep_data == 0):
-                        self.plot_dict["rewards"].append(r)
-                        self.plot_dict["spot_names"].append(spot_name)
                         self.plot_dict["accuracy"].append(l[0][0])
                         self.plot_dict["complexity"].append(l[0][1])
                         self.plot_dict["zp"].append(l[0][2])
@@ -136,6 +135,8 @@ class Agent:
                         self.plot_dict["intrinsic_entropy"].append(ie)
                         self.plot_dict["naive"].append(naive)
                         self.plot_dict["free"].append(free)    
+        self.plot_dict["rewards"].append(r)
+        self.plot_dict["spot_names"].append(spot_name)
         self.episodes += 1
     
     
