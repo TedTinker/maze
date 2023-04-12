@@ -1,5 +1,6 @@
 import os, pickle
 from time import sleep
+#import imageio
 import matplotlib.pyplot as plt 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Without this, pyplot crashes the kernal
 
@@ -299,6 +300,10 @@ for folder in folders:
             if(not key in d): d[key] = []
             if(key in ["arg_title", "arg_name"]): d[key] = saved_d[key]
             else:  d[key].append(saved_d[key])
+            
+    pos_dict = {}
+    for d in plot_dict["pos_lists"]: pos_dict.update(d)
+    plot_dict["pos_lists"] = pos_dict
         
     for key in min_max_dict.keys():
         if(not key in ["args", "arg_title", "arg_name", "pos_lists", "spot_names"]):
@@ -354,22 +359,26 @@ print("\nDone plotting data! Duration: {}.\n".format(duration()), flush = True)
 
 
 
-# Let's try making a video of positions and stuff!
-plot_position = (0, 0)
-for arg_name in complete_order:
-    if(  arg_name == "break"):       plot_position = (0,                    plot_position[1] + 1)
-    elif(arg_name == "empty_space"): plot_position = (plot_position[0] + 1, plot_position[1])
-    else:
-        for plot_dict in plot_dicts:
-            if(plot_dict["arg_name"] == arg_name): break
+epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs.sort()
+steps = len(plot_dicts[0]["pos_lists"]["0_0"][0])
+agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
+episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
+for e in epochs:
+    for s in range(steps):
+        plot_position = (0, 0)
+        for arg_name in complete_order:
+            if(  arg_name == "break"):       plot_position = (0,                    plot_position[1] + 1)
+            elif(arg_name == "empty_space"): plot_position = (plot_position[0] + 1, plot_position[1])
+            else:
+                for plot_dict in plot_dicts:
+                    if(plot_dict["arg_name"] == arg_name): break
+
+                for a in agents:
+                    for ep in range(episodes):
+                        print()
+                        print("Epoch {}, step {}, agent {}, episode {}, args {}, position {}.".format(e, s, a, ep, arg_name, plot_position))
+                        print(plot_dict["pos_lists"]["{}_{}".format(a, e)][ep][s])
             
-        pos_dict = {}
-        for d in plot_dict["pos_lists"]: pos_dict.update(d)
-        
-        print()
-        print(arg_name, plot_position)
-        print(pos_dict)
-    
-    plot_position = (plot_position[0] + 1, plot_position[1])
+            plot_position = (plot_position[0] + 1, plot_position[1])
 
 print("\nDuration: {}. Done!".format(duration()), flush = True)
