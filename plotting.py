@@ -317,11 +317,12 @@ for folder in folders:
     
 print("\nDone collecting dictionaries! Duration: {}.\n".format(duration()), flush = True)
 
+
+
 plot_dicts = [] ; min_max_dicts = []
     
-order = args.arg_name[3:-3]
-order = order.split("+")
-order = [o for o in order if o != "break"]
+complete_order = args.arg_name[3:-3].split("+")
+order = [o for o in complete_order if not o in ["empty_space", "break"]]
 
 for name in order:
     got_plot_dicts = False ; got_min_max_dicts = False
@@ -349,4 +350,17 @@ for key in plot_dicts[0].keys():
         min_max_dict[key] = (minimum, maximum)
         
 plots(plot_dicts, min_max_dict)
+print("\nDone plotting data! Duration: {}.\n".format(duration()), flush = True)
+
+
+
+# Let's try making a video of positions and stuff!
+for arg_name in complete_order:
+    for plot_dict in plot_dicts:
+        if(plot_dict["arg_name"] == arg_name): break
+    
+    print()
+    print(arg_name)
+    print(plot_dict["pos_lists"])
+
 print("\nDuration: {}. Done!".format(duration()), flush = True)
