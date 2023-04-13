@@ -89,7 +89,7 @@ class Easy_Maze:
             for x in [-1, 0, 1, 2, 3]:
                 portrayal = " "
                 for spot in self.maze:
-                    if(spot.pos == (x, y)): portrayal = "\u2591"
+                    if(spot.pos == (x, y)): portrayal = "\u25A1"
                 if(self.agent_pos == (x, y)): portrayal = "@"
                 to_print += portrayal 
             if(y != 0): to_print += "\n"
