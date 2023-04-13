@@ -270,7 +270,7 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        print("{}: {}.".format(plot_dict["arg_name"], duration()), flush = True)
+        print("{}:\t{}.".format(plot_dict["arg_name"], duration()), flush = True)
 
     
     

@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import imageio
 from io import BytesIO
 
+from utils import duration
+
 
 
 def easy_plotting_pos(complete_order, plot_dicts):
@@ -25,7 +27,10 @@ def easy_plotting_pos(complete_order, plot_dicts):
             plot_position = (0, 0)
             for arg_name in complete_order:
                 if(  arg_name == "break"):       plot_position = (plot_position[0] + 1, 0)
-                elif(arg_name == "empty_space"): plot_position = (plot_position[0],     plot_position[1] + 1)
+                elif(arg_name == "empty_space"): 
+                    ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
+                    ax.axis("off")
+                    plot_position = (plot_position[0],     plot_position[1] + 1)
                 else:
                     for plot_dict in plot_dicts:
                         if(plot_dict["arg_name"] == arg_name): break
@@ -50,7 +55,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     ax.set_ylim([-.5, 2.5])
                     ax.set_xlim([-1.5, 3.5])
                     ax.set_title("{}".format(plot_dict["arg_name"]))
-                    ax.axis('off')
+                    ax.axis("off")
                 
                     plot_position = (plot_position[0], plot_position[1] + 1)
                 
@@ -62,7 +67,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             buf.close()
             plt.close()
             
-        print("Done with epoch {}.".format(e), flush = True)
+        print("Done with epoch {}:\t{}.".format(e, duration()), flush = True)
             
     imageio.mimwrite("video.mp4", images, fps = 3)
             
