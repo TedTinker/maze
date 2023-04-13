@@ -27,7 +27,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     for plot_dict in plot_dicts:
                         if(plot_dict["arg_name"] == arg_name): break
 
-                    ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[0]]
+                    ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
                     to_plot = {}
                     for a in agents:
                         for ep in range(episodes):
@@ -42,6 +42,8 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     coords, proportions = zip(*to_plot.items())
                     x_coords, y_coords = zip(*coords)
 
+                    ax.set_ylim([0, 2])
+                    ax.set_xlim([-1, 3])
                     ax.scatter(x_coords, y_coords, s=proportions)
                     ax.set_title("{} (Epoch {}, Step {})".format(plot_dict["arg_name"], e, s))
                 
