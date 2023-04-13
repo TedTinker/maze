@@ -18,11 +18,10 @@ def easy_plotting_pos(complete_order, plot_dicts):
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
     episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
     
-    print(flush = True)
     for e in epochs:
         for s in range(steps):
-            fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows + .5))
-            fig.suptitle("Epoch {} Step {}".format(e, s))
+            fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
+            fig.suptitle("Epoch {} Step {}".format(e, s), y=2)
             plot_position = (0, 0)
             for arg_name in complete_order:
                 if(  arg_name == "break"):       plot_position = (plot_position[0] + 1, 0)
@@ -46,11 +45,12 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     coords, proportions = zip(*to_plot.items())
                     x_coords, y_coords = zip(*coords)
 
-                    ax.set_ylim([-.5, 2.5])
-                    ax.set_xlim([-1.5, 3.5])
                     if(len(proportions) == 1): ax.scatter(x_coords, y_coords, marker = "s", s = 400, c = "black")
                     else:                      ax.scatter(x_coords, y_coords, marker = "s", s = 400, c = proportions, cmap = plt.cm.get_cmap("gray_r"))
+                    ax.set_ylim([-.5, 2.5])
+                    ax.set_xlim([-1.5, 3.5])
                     ax.set_title("{}".format(plot_dict["arg_name"]))
+                    ax.axis('off')
                 
                 plot_position = (plot_position[0], plot_position[1] + 1)
                 
