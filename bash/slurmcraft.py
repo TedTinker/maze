@@ -99,7 +99,8 @@ for key, item in slurm_dict.items():
 slurm_dict = new_slurm_dict
 
 def all_like_this(this): 
-    if(this[-1] != "_"): result = [this]
+    if(this in ["break", "empty_space"]): result = [this]
+    elif(this[-1] != "_"):                result = [this]
     else: result = [key for key in slurm_dict.keys() if key.startswith(this)]
     return(json.dumps(result))
             
@@ -125,8 +126,10 @@ if(__name__ == "__main__"):
 
             
     for name in args.arg_list:
-        with open("main_{}.slurm".format(name), "w") as f:
-            f.write(
+        if(name in ["break", "empty_space"]): pass 
+        else:
+            with open("main_{}.slurm".format(name), "w") as f:
+                f.write(
 """
 #!/bin/bash -l
 {}
