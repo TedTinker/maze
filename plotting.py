@@ -291,7 +291,7 @@ for folder in folders:
     plot_dict = {} ; min_max_dict = {}
 
     files = os.listdir(folder) ; files.sort()
-    print("{} files in {} folder.".format(len(files), folder), flush = True)
+    print("{} files in folder {}.".format(len(files), folder), flush = True)
     for file in files:
         if(file.split("_")[0] == "plot"): d = plot_dict
         if(file.split("_")[0] == "min"):  d = min_max_dict
