@@ -30,13 +30,11 @@ def easy_plotting_pos(complete_order, plot_dicts):
 
                     ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
                     for spot in [(0, 0), (0, 1), (-1, 1), (1, 1), (1, 2), (2, 2), (3, 2), (3, 1)]:
-                        ax.text(spot[0], spot[1], "\u25A1", fontsize = 30)
+                        ax.text(spot[0], spot[1], "\u25A1", fontsize = 30, ha = "center", va = "center")
                     to_plot = {}
                     for a in agents:
                         for ep in range(episodes):
                             coordinate = plot_dict["pos_lists"]["{}_{}".format(a, e)][ep][s]
-                            print()
-                            print("Epoch {}, step {}, agent {}, episode {}, args {}, plot position {}. Coord: {}.".format(e, s, a, ep, arg_name, plot_position, coordinate))
                             if(not coordinate in to_plot): to_plot[coordinate] = 0
                             to_plot[coordinate] += 1
                             
@@ -45,9 +43,8 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     coords, proportions = zip(*to_plot.items())
                     x_coords, y_coords = zip(*coords)
 
-                    print(proportions)
-                    ax.set_ylim([0, 2])
-                    ax.set_xlim([-1, 3])
+                    ax.set_ylim([-.5, 2.5])
+                    ax.set_xlim([-1.5, 3.5])
                     ax.scatter(x_coords, y_coords, c = proportions, cmap = plt.cm.get_cmap("gray_r"))
                     ax.set_title("{}".format(plot_dict["arg_name"]))
                 
