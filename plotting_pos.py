@@ -18,7 +18,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
     
     for e in epochs:
         for s in range(steps):
-            fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 3))
+            fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 3 + .5))
             fig.suptitle("Epoch {}, Step {}".format(e, s))
             plot_position = (0, 0)
             for arg_name in complete_order:
@@ -45,7 +45,8 @@ def easy_plotting_pos(complete_order, plot_dicts):
 
                     ax.set_ylim([-.5, 2.5])
                     ax.set_xlim([-1.5, 3.5])
-                    ax.scatter(x_coords, y_coords, c = proportions, cmap = plt.cm.get_cmap("gray_r"))
+                    if(len(proportions) == 1): ax.scatter(x_coords, y_coords, marker = "s", s = 500, c = "black")
+                    else:                      ax.scatter(x_coords, y_coords, marker = "s", s = 500, c = proportions, cmap = plt.cm.get_cmap("gray_r"))
                     ax.set_title("{}".format(plot_dict["arg_name"]))
                 
                 plot_position = (plot_position[0], plot_position[1] + 1)
