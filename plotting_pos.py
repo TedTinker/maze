@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 import imageio
 from io import BytesIO
 
@@ -19,6 +20,14 @@ def easy_plotting_pos(complete_order, plot_dicts):
     steps = len(plot_dicts[0]["pos_lists"]["0_0"][0])
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
     episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
+    
+    cmap = plt.cm.get_cmap("gray_r")
+    norm = Normalize(vmin=0, vmax=1)
+    handles = []
+    for c in [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]:
+        handle = plt.scatter(0, 0, marker = "s", s = 250, facecolor = cmap(norm(c)))
+        handles.append(handle)
+    plt.close()
     
     for e in epochs:
         for s in range(steps):
@@ -49,9 +58,9 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     to_plot = {k: v / total_points for k, v in to_plot.items()}
                     coords, proportions = zip(*to_plot.items())
                     x_coords, y_coords = zip(*coords)
-
-                    if(len(proportions) == 1): ax.scatter(x_coords, y_coords, marker = "s", s = 250, c = "black")
-                    else:                      ax.scatter(x_coords, y_coords, marker = "s", s = 250, c = proportions, cmap = plt.cm.get_cmap("gray_r"))
+                    
+                    if(len(proportions) == 1): ax.scatter(x_coords, y_coords, marker = "s", s = 250, cmap = cmap, c = "black")
+                    else:                      ax.scatter(x_coords, y_coords, marker = "s", s = 250, cmap = cmap, c = proportions, norm = norm)
                     ax.set_ylim([-.5, 2.5])
                     ax.set_xlim([-1.5, 3.5])
                     ax.set_title("{}".format(plot_dict["arg_name"]))
@@ -59,6 +68,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
                 
                     plot_position = (plot_position[0], plot_position[1] + 1)
                 
+            fig.legend(loc = "upper left", handles = handles, labels= ["{}%".format(p) for p in [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]])
             buf = BytesIO()
             plt.savefig(buf, format = "png", bbox_inches = "tight")
             buf.seek(0)
