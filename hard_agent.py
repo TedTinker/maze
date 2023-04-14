@@ -27,6 +27,8 @@ class Agent:
         self.agent_num = i
         self.args = args
         self.episodes = 0 ; self.epochs = 0 ; self.steps = 0
+        self.maze_name = self.args.maze_list[0]
+        self.maze = Hard_Maze(self.maze_name, args = self.args)
         
         self.target_entropy = args.target_entropy # -dim(A)
         self.alpha = 1
@@ -79,17 +81,23 @@ class Agent:
         
     def training(self, q):
         
-        self.maze_name = self.args.maze_list[0]
         self.pos_episodes()
         while(True):
             cumulative_epochs = 0
+            prev_maze_name = self.maze_name
             for j, epochs in enumerate(self.args.epochs): 
                 cumulative_epochs += epochs
                 if(self.epochs < cumulative_epochs): self.maze_name = self.args.maze_list[j] ; break
+            if(prev_maze_name != self.maze_name): 
+                self.pos_episodes()
+                self.maze.maze.stop()
+                self.maze = Hard_Maze(self.maze_name, args = self.args)
+                self.pos_episodes()
             self.training_episode()
             percent_done = str(self.epochs / sum(self.args.epochs))
             q.put((self.agent_num, percent_done))
             if(self.epochs >= sum(self.args.epochs)): break
+            if(self.epochs % self.args.epochs_per_pos_list == 0): self.pos_episodes()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         self.pos_episodes()
         
@@ -127,20 +135,19 @@ class Agent:
         pos_lists = []
         for episode in range(self.args.episodes_in_pos_list):
             done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
-            self.maze = Hard_Maze(self.maze_name, args = self.args)
+            self.maze.begin()
             pos_list = [self.maze.maze.get_pos_yaw_spe()[0]]
             for step in range(self.args.max_steps):
                 if(not done): _, _, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
                 pos_list.append(self.maze.maze.get_pos_yaw_spe()[0])
             pos_lists.append(pos_list)
-            self.maze.maze.stop()
         self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
     
     
     
     def training_episode(self, push = True, verbose = False):
         done = False ; h = None ; prev_a = torch.zeros((1, 1, 2)) ; cumulative_r = 0
-        self.maze = Hard_Maze(self.maze_name, args = self.args)
+        self.maze.begin()
         if(verbose): print("\n\n\n\n\nSTART!\n")
         
         for step in range(self.args.max_steps):
@@ -171,7 +178,6 @@ class Agent:
         self.plot_dict["rewards"].append(r)
         self.plot_dict["spot_names"].append(spot_name)
         self.episodes += 1
-        self.maze.maze.stop()
     
     
     

@@ -15,8 +15,12 @@ class Hard_Maze:
     
     def __init__(self, arena_name, GUI = False, args = default_args):
         self.args = args
-        self.steps = 0
         self.maze = Arena(arena_name, GUI, args)
+        self.begin()
+        
+    def begin(self):
+        self.steps = 0 
+        self.maze.begin()
         self.agent_pos, self.agent_yaw, self.agent_spe = self.maze.get_pos_yaw_spe()
         
     def obs(self):

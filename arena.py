@@ -76,7 +76,7 @@ class Arena():
     def __init__(self, arena_name, GUI = False, args = default_args):
         #enable_opengl()
         self.args = args
-        start = arena_dict[arena_name + ".png"].start
+        self.start = arena_dict[arena_name + ".png"].start
         self.exits = arena_dict[arena_name + ".png"].exits
         arena_map = cv2.imread("arenas/" + arena_name + ".png")
         w, h, _ = arena_map.shape
@@ -113,8 +113,8 @@ class Arena():
         spe = self.args.min_speed
         color = [1,0,0,1]
         file = "ted_duck.urdf"
-        pos = (start[0], start[1], .5)
-        orn = p.getQuaternionFromEuler([inherent_roll,inherent_pitch,yaw])
+        pos = (self.start[0], self.start[1], .5)
+        orn = p.getQuaternionFromEuler([inherent_roll, inherent_pitch, yaw])
         self.body_num = p.loadURDF(file, pos, orn,
                            globalScaling = self.args.body_size, 
                            physicsClientId = self.physicsClient)
@@ -122,6 +122,18 @@ class Arena():
         x, y = cos(yaw)*spe, sin(yaw)*spe
         self.resetBaseVelocity(x, y)
         p.changeVisualShape(self.body_num, -1, rgbaColor = color, physicsClientId = self.physicsClient)
+        
+    def begin(self):
+        inherent_roll = pi/2
+        inherent_pitch = 0
+        yaw = 0
+        spe = self.args.min_speed
+        pos = (self.start[0], self.start[1], .5)
+        orn = p.getQuaternionFromEuler([inherent_roll, inherent_pitch, yaw])
+        x, y = cos(yaw)*spe, sin(yaw)*spe
+        self.resetBaseVelocity(x, y)
+        self.resetBasePositionAndOrientation(pos, orn)
+        
         
     def get_pos_yaw_spe(self):
         pos, ors = p.getBasePositionAndOrientation(self.body_num, physicsClientId = self.physicsClient)
