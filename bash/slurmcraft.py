@@ -51,7 +51,7 @@ slurm_dict = {
     
     "en_log_prob" : "--alpha None --curiosity naive --beta_zq 0 --accuracy log_prob --naive_eta .07",
     
-    "ef"  : "--alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5",
+    "ef_"  : "--alpha None --curiosity free --beta_zq 0 --target_entropy 0 -.01 -.1 -1 -2 --free_eta_obs 7.5",
     "ef_rand"  : "--alpha None --curiosity free --beta_zq 0 --free_eta_obs 7.5 --randomness 10",
     
     "ef_log_prob" : "--alpha None --curiosity free --beta_zq 0 --accuracy log_prob --free_eta_obs 7.5",
@@ -101,7 +101,7 @@ slurm_dict = new_slurm_dict
 def all_like_this(this): 
     if(this in ["break", "empty_space"]): result = [this]
     elif(this[-1] != "_"):                result = [this]
-    else: result = [key for key in slurm_dict.keys() if key.startswith(this)]
+    else: result = [key for key in slurm_dict.keys() if key.startswith(this) and key[len(this):].isdigit()]
     return(json.dumps(result))
             
 
