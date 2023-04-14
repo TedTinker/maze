@@ -128,10 +128,10 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 h, w, _ = arena_map.shape
                 extent = [-.5, w-.5, -h+.5, .5]
                 ax.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
-                for a in agents:
+                for c, a in enumerate(agents):
                     for ep in range(episodes):
                         path = plot_dict["pos_lists"]["{}_{}".format(a, e)][ep][1:]
-                        xs = [p[0] for p in path] ; ys = [p[1] for p in path]
+                        xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
                         ax.plot(xs, ys, color=cmap(norm(c)))
                         
                 ax.set_title("{}".format(plot_dict["arg_name"]))
@@ -139,7 +139,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
             
                 plot_position = (plot_position[0], plot_position[1] + 1)
                         
-        #fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(a) for a in agents])
+        fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(a) for a in agents])
         buf = BytesIO()
         plt.savefig(buf, format = "png", bbox_inches = "tight")
         buf.seek(0)
