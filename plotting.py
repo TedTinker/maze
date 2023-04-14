@@ -356,7 +356,7 @@ for key in plot_dicts[0].keys():
         min_max_dict[key] = (minimum, maximum)
         
 plots(plot_dicts, min_max_dict)
-print("\nDone plotting data! Duration: {}.\n".format(duration()), flush = True)
+print("\nDone plotting data! Duration: {}.".format(duration()), flush = True)
 
 
 
@@ -366,7 +366,7 @@ for plot_dict in plot_dicts:
     if(plot_dict["args"].hard_maze): easy = False
     else:                            hard = False
     
-if(easy): print("\nPlotting positions in easy maze.")    ; easy_plotting_pos(complete_order, plot_dicts)
-if(hard): print("\nPlotting positions in hard maze(s).") ; hard_plotting_pos(complete_order, plot_dicts)    
+if(easy): print("\nPlotting positions in easy maze.\n")    ; easy_plotting_pos(complete_order, plot_dicts)
+if(hard): print("\nPlotting positions in hard maze(s).\n") ; hard_plotting_pos(complete_order, plot_dicts)    
 
 print("\nDuration: {}. Done!".format(duration()), flush = True)

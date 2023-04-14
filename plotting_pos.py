@@ -104,13 +104,13 @@ def hard_plotting_pos(complete_order, plot_dicts):
     norm = Normalize(vmin = 0, vmax = len(agents))
     handles = []
     for c in agents:
-        handle = plt.plot([c, c+1], [0, 0], color=cmap(norm(c)))
+        handle = plt.scatter(c, 0, marker = "s", s = 10, color=cmap(norm(c)))
         handles.append(handle)
     plt.close()
     
     for e, maze_name in zip(epochs, maze_names):
-        fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 3))
-        fig.suptitle("Epoch {}".format(e), y = 1.1)
+        fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
+        fig.suptitle("Epoch {}".format(e), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
             if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
@@ -139,7 +139,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
             
                 plot_position = (plot_position[0], plot_position[1] + 1)
                         
-        fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(a) for a in agents])
+        #fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(a) for a in agents])
         buf = BytesIO()
         plt.savefig(buf, format = "png", bbox_inches = "tight")
         buf.seek(0)
@@ -150,4 +150,4 @@ def hard_plotting_pos(complete_order, plot_dicts):
             
         print("Done with epoch {}:\t{}.".format(e, duration()), flush = True)
                 
-    imageio.mimwrite("saved/video.mp4", images, fps = 3)
+    imageio.mimwrite("saved/video.mp4", images, fps = 1/3)
