@@ -24,7 +24,7 @@ arena_dict = {
     "t.png" : Arena_Dict(
         (3, 2),
         [Exit(  "L",    (2,0), args.default_reward),
-        Exit(   "R",    (2,7), args.better_reward)]),
+        Exit(   "R",    (2,4), args.better_reward)]),
     "1.png" : Arena_Dict(
         (2,2), 
         [Exit(  "L",    (1,0), args.default_reward),

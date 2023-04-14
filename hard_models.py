@@ -79,7 +79,8 @@ class State_Forward(nn.Module):
             nn.Tanh(),
             nn.Upsample(
                 scale_factor = 2, 
-                mode = "bilinear"),
+                mode = "bilinear",
+                align_corners = True),
             ConstrainedConv2d(
                 in_channels = 4,
                 out_channels = 4,
@@ -95,7 +96,8 @@ class State_Forward(nn.Module):
             nn.Tanh(),
             nn.Upsample(
                 scale_factor = 2, 
-                mode = "bilinear"),
+                mode = "bilinear", 
+                align_corners = True),
             ConstrainedConv2d(
                 in_channels = 4,
                 out_channels = 4,
@@ -217,7 +219,8 @@ class Forward(nn.Module):
             nn.Tanh(),
             nn.Upsample(
                 scale_factor = 2, 
-                mode = "bilinear"),
+                mode = "bilinear", 
+                align_corners = True),
             ConstrainedConv2d(
                 in_channels = 4,
                 out_channels = 4,
@@ -233,7 +236,8 @@ class Forward(nn.Module):
             nn.Tanh(),
             nn.Upsample(
                 scale_factor = 2, 
-                mode = "bilinear"),
+                mode = "bilinear", 
+                align_corners = True),
             ConstrainedConv2d(
                 in_channels = 4,
                 out_channels = 4,

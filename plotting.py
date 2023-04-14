@@ -366,7 +366,7 @@ for plot_dict in plot_dicts:
     if(plot_dict["args"].hard_maze): easy = False
     else:                            hard = False
     
-if(easy): easy_plotting_pos(complete_order, plot_dicts)
-if(hard): hard_plotting_pos(complete_order, plot_dicts)    
+if(easy): print("\nPlotting positions in easy maze.")    ; easy_plotting_pos(complete_order, plot_dicts)
+if(hard): print("\nPlotting positions in hard maze(s).") ; hard_plotting_pos(complete_order, plot_dicts)    
 
 print("\nDuration: {}. Done!".format(duration()), flush = True)

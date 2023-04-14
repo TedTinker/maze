@@ -136,7 +136,7 @@ class Agent:
         for episode in range(self.args.episodes_in_pos_list):
             done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
             self.maze.begin()
-            pos_list = [self.maze.maze.get_pos_yaw_spe()[0]]
+            pos_list = [self.maze_name, self.maze.maze.get_pos_yaw_spe()[0]]
             for step in range(self.args.max_steps):
                 if(not done): _, _, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
                 pos_list.append(self.maze.maze.get_pos_yaw_spe()[0])

@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import imageio
 from io import BytesIO
+import os
+import numpy as np
 
 from utils import duration
 
@@ -22,7 +24,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
     episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
     
     cmap = plt.cm.get_cmap("gray_r")
-    norm = Normalize(vmin=0, vmax=1)
+    norm = Normalize(vmin = 0, vmax = 1)
     handles = []
     for c in [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]:
         handle = plt.scatter(0, 0, marker = "s", s = 250, facecolor = cmap(norm(c)))
@@ -35,7 +37,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             fig.suptitle("Epoch {} Step {}".format(e, s), y = 1.1)
             plot_position = (0, 0)
             for arg_name in complete_order:
-                if(  arg_name == "break"):       plot_position = (plot_position[0] + 1, 0)
+                if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
                 elif(arg_name == "empty_space"): 
                     ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
                     ax.axis("off")
@@ -84,4 +86,75 @@ def easy_plotting_pos(complete_order, plot_dicts):
             
         
 def hard_plotting_pos(complete_order, plot_dicts):
-    pass
+    print(complete_order)
+    os.chdir("..")
+    images = []
+    rows = 0 ; columns = 0 ; current_count = 0 
+    for arg_name in complete_order: 
+        if(arg_name == "break"): rows += 1 ; columns = max(columns, current_count) ; current_count = 0
+        else: current_count += 1
+    columns = max(columns, current_count)
+    if(complete_order[-1] != "break"): rows += 1
+    
+    epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs.sort()
+    steps = len(plot_dicts[0]["pos_lists"]["0_0"][0]) - 1
+    agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
+    episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
+    maze_names = [plot_dicts[0]["pos_lists"]["{}_{}".format(0, e)][0][0] for e in epochs]
+    
+    print("epochs: {}. steps: {}. episodes: {}. maze_names: {}.".format(len(epochs), steps, episodes, len(maze_names)))
+    
+    cmap = plt.cm.get_cmap("hsv", len(agents))
+    norm = Normalize(vmin = 0, vmax = len(agents))
+    handles = []
+    for c in agents:
+        handle = plt.plot([c, c+1], [0, 0], color=cmap(norm(c)))
+        handles.append(handle)
+    plt.close()
+    
+    for e, maze_name in zip(epochs, maze_names):
+        fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 3))
+        fig.suptitle("Epoch {}".format(e), y = 1.1)
+        plot_position = (0, 0)
+        for arg_name in complete_order:
+            if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
+            elif(arg_name == "empty_space"): 
+                ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
+                ax.axis("off")
+                plot_position = (plot_position[0],     plot_position[1] + 1)
+            else:
+                for plot_dict in plot_dicts:
+                    if(plot_dict["arg_name"] == arg_name): break
+
+                ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
+                arena_map = plt.imread("arenas/{}.png".format(maze_name))
+                arena_map = np.flip(arena_map, 0)    
+                h, w, _ = arena_map.shape
+                fig, ax = plt.subplots(figsize=(10, 10))
+                ax.xaxis.set_visible(False)
+                ax.yaxis.set_visible(False)
+                extent = [-.5, w-.5, -h+.5, .5]
+                ax.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
+                for a in agents:
+                    for ep in range(episodes):
+                        path = plot_dict["pos_lists"]["{}_{}".format(a, e)][ep]
+                        print(e, a, ep, arg_name, path)
+                        #plt.plot(steps, color=cmap(norm(c)))
+                        
+                ax.set_title("{}".format(plot_dict["arg_name"]))
+                ax.axis("off")
+            
+                plot_position = (plot_position[0], plot_position[1] + 1)
+                        
+            fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(a) for a in agents])
+            buf = BytesIO()
+            plt.savefig(buf, format = "png", bbox_inches = "tight")
+            buf.seek(0)
+            im = imageio.imread(buf)
+            images.append(im)
+            buf.close()
+            plt.close()
+            
+        print("Done with epoch {}:\t{}.".format(e, duration()), flush = True)
+                
+    imageio.mimwrite("saved/video.mp4", images, fps = 3)
