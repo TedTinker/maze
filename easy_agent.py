@@ -342,12 +342,9 @@ class Agent:
             intrinsic_entropy = None
             actor_loss = None
         
-        if(accuracy_loss != None): 
-            accuracy_loss = accuracy_loss.item()
-        if(complexity_loss != None): 
-            complexity_loss = complexity_loss.item()
-        if(zp_loss != None): 
-            zp_loss = zp_loss.item()
+        if(accuracy_loss != None):   accuracy_loss = accuracy_loss.item()
+        if(complexity_loss != None): complexity_loss = complexity_loss.item()
+        if(zp_loss != None): zp_loss = zp_loss.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): 
