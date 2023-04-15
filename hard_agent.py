@@ -40,8 +40,11 @@ class Agent:
         
         if args.state_forward:
             self.forward = State_Forward(self.args)
-            without_zp = list(self.forward.gru.parameters()) + list(self.forward.zq_mu.parameters()) + list(self.forward.zq_rho.parameters()) + list(self.forward.rgbd_mu.parameters()) + list(self.forward.rgbd_rho.parameters())
-            just_zp = list(self.forward.zp_mu.parameters()) + list(self.forward.zp_rho.parameters())
+            without_zp = [] 
+            just_zp = []
+            for name, param in self.forward.named_parameters():
+                if name.startswith("zp"): just_zp.append(param)
+                else:                     without_zp.append(param)
             self.forward_opt = optim.Adam(without_zp, lr=self.args.forward_lr, weight_decay=0)   
             self.zp_opt = optim.Adam(just_zp, lr=self.args.forward_lr, weight_decay=0)   
         else:
