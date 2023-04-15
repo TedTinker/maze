@@ -73,19 +73,19 @@ slurm_dict = {
     
     
     
-    "d_hard"    : "--hard_maze True --maze_list \"('t',)\"", 
-    "e_hard"    : "--hard_maze True --maze_list \"('t',)\" --alpha None",
+    "d_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\"", 
+    "e_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None",
 
-    "n_hard"    : "--hard_maze True --maze_list \"('t',)\" --curiosity naive",
-    "en_hard"   : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity naive",
-    "en_rand_hard"   : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity naive --randomness 10",
+    "n_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --curiosity naive",
+    "en_hard"   : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive",
+    "en_rand_hard"   : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --randomness 10",
     
-    "en_log_prob_hard" : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
+    "en_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
     
-    "ef_hard"  : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity free --free_eta_obs 7.5",
-    "ef_rand_hard"  : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity free --free_eta_obs 7.5 --randomness 10",
+    "ef_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --free_eta_obs 7.5",
+    "ef_rand_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --free_eta_obs 7.5 --randomness 10",
     
-    "ef_log_prob_hard" : "--hard_maze True --maze_list \"('t',)\" --alpha None --curiosity free --accuracy log_prob --free_eta_obs 7.5",
+    "ef_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --accuracy log_prob --free_eta_obs 7.5",
     
     }
 

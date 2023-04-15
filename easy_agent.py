@@ -120,7 +120,7 @@ class Agent:
     
     
     def pos_episodes(self):
-        if(self.args.agents_per_pos_list != "all" and self.agent_num >= self.args.agents_per_pos_list): return
+        if(self.args.agents_per_pos_list != -1 and self.agent_num >= self.args.agents_per_pos_list): return
         pos_lists = []
         for episode in range(self.args.episodes_in_pos_list):
             done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))

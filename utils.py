@@ -96,7 +96,7 @@ parser.add_argument("--curiosity",          type=str,   default = "none")     # 
 parser.add_argument('--keep_data',           type=int,   default = 25)
 parser.add_argument('--epochs_per_pos_list', type=int,   default = 250)
 parser.add_argument('--episodes_in_pos_list',type=int,   default = 3)
-parser.add_argument('--agents_per_pos_list', type=int,   default = 10)
+parser.add_argument('--agents_per_pos_list', type=int,   default = -1)
 
 
 
@@ -124,13 +124,14 @@ for arg in vars(default_args):
 
 
 
+args_not_in_title = ["arg_title", "id", "agents", "previous_agents", "hard_maze", "maze_list", "keep_data", "epochs_per_pos_list", "episodes_in_pos_list", "agents_per_pos_list"]
 def get_args_title(default_args, args):
     if(args.arg_name[:3] == "___"): return("plotting")
     name = "" ; first = True
     arg_list = list(vars(default_args).keys())
     arg_list.insert(0, arg_list.pop(arg_list.index("arg_name")))
     for arg in arg_list:
-        if(arg in ["arg_title", "id", "agents", "previous_agents"]): pass 
+        if(arg in args_not_in_title): pass 
         else: 
             default, this_time = getattr(default_args, arg), getattr(args, arg)
             if(this_time == default): pass
