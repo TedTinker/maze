@@ -258,11 +258,11 @@ class Agent:
         naive_curiosity = self.args.naive_eta * accuracy
         
         if(self.args.state_forward): 
-            state_dkl_changes = dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1)
+            state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         else:
             _, (obs_mus_a, obs_stds_a) = self.forward(obs, prev_actions, actions)  
             state_dkl_changes = 0
-        obs_dkl_changes = dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1)
+        obs_dkl_changes = torch.clamp(dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
             
         free_curiosity = self.args.free_eta_obs   * obs_dkl_changes   * masks + \
                          self.args.free_eta_state * state_dkl_changes * masks
