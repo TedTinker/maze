@@ -143,6 +143,7 @@ def get_args_title(default_args, args):
                 name += "{}: {}".format(arg, this_time)
     if(name == ""): name = "default" 
     else:           name += ")"
+    if(name.endswith(" ()")): name = name[:-3]
     return(name)
 
 args.arg_title = get_args_title(default_args, args)
