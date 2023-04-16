@@ -206,7 +206,7 @@ class Agent:
             if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
             if(self.args.accuracy == "log_prob"): accuracy = 0.5 * (torch.log(2 * np.pi * obs_stds_b**2) + ((next_obs - obs_mus_b) ** 2) / (obs_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1)
             obs_complexity = self.args.beta_obs * dkl(obs_mus_b, obs_stds_b, torch.zeros(obs_mus_b.shape), self.args.sigma_obs * torch.ones(obs_stds_b.shape))
-            zq_complexity  = self.args.beta_zq  * dkl(zq_mus,  zq_stds,  torch.zeros(zq_mus.shape),  self.args.sigma_zq  * torch.ones(zq_stds.shape))
+            zq_complexity  = self.args.beta_zq  * dkl(zq_mus,    zq_stds,    torch.zeros(zq_mus.shape),    self.args.sigma_zq  * torch.ones(zq_stds.shape))
                     
             accuracy = accuracy * masks
             accuracy_loss = accuracy.mean()

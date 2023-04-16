@@ -65,9 +65,13 @@ slurm_dict = {
     "n_state"    : "--state_forward True --curiosity naive",
     "en_state"   : "--state_forward True --alpha None --curiosity naive",
     
+    "en_state_rand"   : "--state_forward True --alpha None --curiosity naive --randomness 10",
+    
     "en_log_prob_state" : "--state_forward True --alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
     
     "ef_state"  : "--state_forward True --alpha None --curiosity free",
+    
+    "ef_state_rand"  : "--state_forward True --alpha None --curiosity free --randomness 10",
     
     "ef_log_prob_state" : "--state_forward True --alpha None --curiosity free --accuracy log_prob",
     
