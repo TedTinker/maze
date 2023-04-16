@@ -359,14 +359,23 @@ plots(plot_dicts, min_max_dict)
 print("\nDone plotting data! Duration: {}.".format(duration()), flush = True)
 
 
+complete_easy_order = [] ; easy_plot_dicts = []
+complete_hard_order = [] ; hard_plot_dicts = []
 
-easy = True 
-hard = True 
-for plot_dict in plot_dicts: 
-    if(plot_dict["args"].hard_maze): easy = False
-    else:                            hard = False
+easy = False 
+hard = False 
+for arg_name in complete_order: 
+    if(arg_name in ["break", "empty_space"]): 
+        complete_easy_order.append(arg_name)
+        complete_hard_order.append(arg_name)
+    else:
+        for plot_dict in plot_dicts:
+            if(plot_dict["args"].arg_name == arg_name):    
+                if(plot_dict["args"].hard_maze): complete_hard_order.append(arg_name) ; hard_plot_dicts.append(plot_dict) ; hard = True
+                else:                            complete_easy_order.append(arg_name) ; easy_plot_dicts.append(plot_dict) ; easy = True
+                
     
-if(easy): print("\nPlotting positions in easy maze.\n")    ; easy_plotting_pos(complete_order, plot_dicts)
-if(hard): print("\nPlotting positions in hard maze(s).\n") ; hard_plotting_pos(complete_order, plot_dicts)    
+if(easy): print("\nPlotting positions in easy maze.\n")    ; easy_plotting_pos(complete_easy_order, easy_plot_dicts)
+if(hard): print("\nPlotting positions in hard maze(s).\n") ; hard_plotting_pos(complete_hard_order, hard_plot_dicts)    
 
 print("\nDuration: {}. Done!".format(duration()), flush = True)

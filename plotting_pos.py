@@ -70,7 +70,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
                 
                     plot_position = (plot_position[0], plot_position[1] + 1)
                 
-            fig.legend(loc = "upper left", handles = handles, labels= ["{}%".format(p) for p in [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]])
+            fig.legend(loc = "upper left", handles = handles, labels= ["{}%".format(p) for p in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]])
             buf = BytesIO()
             plt.savefig(buf, format = "png", bbox_inches = "tight")
             buf.seek(0)
@@ -81,7 +81,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             
         print("Done with epoch {}:\t{}.".format(e, duration()), flush = True)
             
-    imageio.mimwrite("video.mp4", images, fps = 3)
+    imageio.mimwrite("easy_video.mp4", images, fps = 3)
             
             
         
@@ -99,7 +99,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
     episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
     maze_names = [plot_dicts[0]["pos_lists"]["{}_{}".format(0, e)][0][0] for e in epochs]
-        
+            
     cmap = plt.cm.get_cmap("hsv", len(agents))
     norm = Normalize(vmin = 0, vmax = len(agents))
     handles = []
@@ -150,4 +150,4 @@ def hard_plotting_pos(complete_order, plot_dicts):
             
         print("Done with epoch {}:\t{}.".format(e, duration()), flush = True)
                 
-    imageio.mimwrite("saved/video.mp4", images, fps = 1/3)
+    imageio.mimwrite("saved/hard_video.mp4", images, fps = 1/3)
