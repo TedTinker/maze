@@ -25,7 +25,8 @@ class State_Forward(nn.Module):
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.state_size))
+            nn.Linear(args.hidden_size, args.state_size), 
+            nn.Tanh())
         self.zp_rho = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
@@ -34,7 +35,8 @@ class State_Forward(nn.Module):
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.state_size))
+            nn.Linear(args.hidden_size, args.state_size), 
+            nn.Tanh())
         self.zq_rho = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
             nn.Tanh(),
