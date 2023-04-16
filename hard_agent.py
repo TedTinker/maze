@@ -281,13 +281,13 @@ class Agent:
         naive_curiosity = self.args.naive_eta * accuracy.sum(-1).unsqueeze(-1)
         
         if(self.args.state_forward): 
-            state_dkl_changes = dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1)
+            state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         else: 
             _, (rgbd_mus_a, rgbd_stds_a), _, (spe_mus_a, spe_stds_a) = self.forward(rgbd, spe, prev_actions, actions)  
             state_dkl_changes = 0
-        rgbd_dkl_changes = dkl(rgbd_mus_a, rgbd_stds_a, rgbd_mus_b, rgbd_stds_b).flatten(2).sum(-1).unsqueeze(-1)
-        spe_dkl_changes = dkl(spe_mus_a, spe_stds_a, spe_mus_b, spe_stds_b).sum(-1).unsqueeze(-1)
-            
+        rgbd_dkl_changes = torch.clamp(dkl(rgbd_mus_a, rgbd_stds_a, rgbd_mus_b, rgbd_stds_b).flatten(2).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
+        spe_dkl_changes  = torch.clamp(dkl(spe_mus_a, spe_stds_a, spe_mus_b, spe_stds_b).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
+                    
         free_curiosity = self.args.free_eta_obs   * rgbd_dkl_changes  * masks + \
                          self.args.free_eta_obs   * spe_dkl_changes   * masks + \
                          self.args.free_eta_state * state_dkl_changes * masks
