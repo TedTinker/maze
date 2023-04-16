@@ -70,7 +70,7 @@ class Agent:
             "arg_name" : self.args.arg_name,
             "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
-            "accuracy" : [], "complexity" : [], "zp" : [],
+            "accuracy" : [], "obs_complexity" : [], "zq_complexity" : [], "zp" : [],
             "alpha" : [], "actor" : [], 
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
@@ -154,12 +154,13 @@ class Agent:
                     l, e, ic, ie, naive, free = plot_data
                     if(self.epochs == 1 or self.epochs >= sum(self.args.epochs) or self.epochs % self.args.keep_data == 0):
                         self.plot_dict["accuracy"].append(l[0][0])
-                        self.plot_dict["complexity"].append(l[0][1])
-                        self.plot_dict["zp"].append(l[0][2])
-                        self.plot_dict["alpha"].append(l[0][3])
-                        self.plot_dict["actor"].append(l[0][4])
-                        self.plot_dict["critic_1"].append(l[0][5])
-                        self.plot_dict["critic_2"].append(l[0][6])
+                        self.plot_dict["obs_complexity"].append(l[0][1])
+                        self.plot_dict["zq_complexity"].append(l[0][2])
+                        self.plot_dict["zp"].append(l[0][3])
+                        self.plot_dict["alpha"].append(l[0][4])
+                        self.plot_dict["actor"].append(l[0][5])
+                        self.plot_dict["critic_1"].append(l[0][6])
+                        self.plot_dict["critic_2"].append(l[0][7])
                         self.plot_dict["extrinsic"].append(e)
                         self.plot_dict["intrinsic_curiosity"].append(ic)
                         self.plot_dict["intrinsic_entropy"].append(ie)
@@ -211,9 +212,10 @@ class Agent:
             accuracy_loss = accuracy.mean()
             obs_complexity = obs_complexity * masks
             zq_complexity  = zq_complexity  * masks
-            complexity_loss = obs_complexity.mean() + zq_complexity.mean()
-            forward_loss = accuracy_loss + complexity_loss
-            if(self.args.beta_obs == 0 and self.args.beta_zq == 0): complexity_loss = None
+            obs_complexity_loss = obs_complexity.mean() 
+            zq_complexity_loss  = zq_complexity.mean()
+            forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
+            if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
             
             self.forward_opt.zero_grad()
             forward_loss.backward()
@@ -242,9 +244,10 @@ class Agent:
             accuracy = accuracy * masks
             accuracy_loss = accuracy.mean()
             obs_complexity = obs_complexity * masks
-            complexity_loss = obs_complexity.mean()
-            forward_loss = accuracy_loss + complexity_loss
-            if(self.args.beta_obs == 0): complexity_loss = None
+            obs_complexity_loss = obs_complexity.mean()
+            zq_complexity_loss  = None
+            forward_loss = accuracy_loss + obs_complexity_loss
+            if(self.args.beta_obs == 0): obs_complexity_loss = None ; zq_complexity_loss = None
             
             self.forward_opt.zero_grad()
             forward_loss.backward()
@@ -347,7 +350,8 @@ class Agent:
             actor_loss = None
         
         if(accuracy_loss != None):   accuracy_loss = accuracy_loss.item()
-        if(complexity_loss != None): complexity_loss = complexity_loss.item()
+        if(obs_complexity_loss != None): obs_complexity_loss = obs_complexity_loss.item()
+        if(zq_complexity_loss != None):  zq_complexity_loss = zq_complexity_loss.item()
         if(zp_loss != None): zp_loss = zp_loss.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
@@ -357,7 +361,7 @@ class Agent:
         if(critic2_loss != None): 
             critic2_loss = critic2_loss.item()
             critic2_loss = log(critic2_loss) if critic2_loss > 0 else critic2_loss
-        losses = np.array([[accuracy_loss, complexity_loss, zp_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
+        losses = np.array([[accuracy_loss, obs_complexity_loss, zq_complexity_loss, zp_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         naive_curiosity = naive_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()

@@ -73,7 +73,7 @@ class Agent:
             "arg_name" : self.args.arg_name,
             "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
-            "accuracy" : [], "complexity" : [], "zp" : [],
+            "accuracy" : [], "obs_complexity" : [], "zq_complexity" : [], "zp" : [],
             "alpha" : [], "actor" : [], 
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
@@ -168,12 +168,13 @@ class Agent:
                     l, e, ic, ie, naive, free = plot_data
                     if(self.epochs == 1 or self.epochs >= sum(self.args.epochs) or self.epochs % self.args.keep_data == 0):
                         self.plot_dict["accuracy"].append(l[0][0])
-                        self.plot_dict["complexity"].append(l[0][1])
-                        self.plot_dict["zp"].append(l[0][2])
-                        self.plot_dict["alpha"].append(l[0][3])
-                        self.plot_dict["actor"].append(l[0][4])
-                        self.plot_dict["critic_1"].append(l[0][5])
-                        self.plot_dict["critic_2"].append(l[0][6])
+                        self.plot_dict["obs_complexity"].append(l[0][1])
+                        self.plot_dict["zq_complexity"].append(l[0][2])
+                        self.plot_dict["zp"].append(l[0][3])
+                        self.plot_dict["alpha"].append(l[0][4])
+                        self.plot_dict["actor"].append(l[0][5])
+                        self.plot_dict["critic_1"].append(l[0][6])
+                        self.plot_dict["critic_2"].append(l[0][7])
                         self.plot_dict["extrinsic"].append(e)
                         self.plot_dict["intrinsic_curiosity"].append(ic)
                         self.plot_dict["intrinsic_entropy"].append(ie)
@@ -221,18 +222,25 @@ class Agent:
             pred_rgbd = torch.cat(pred_rgbd, dim = 1) ; rgbd_mus_b = torch.cat(rgbd_mus_b, dim = 1) ; rgbd_stds_b = torch.cat(rgbd_stds_b, dim = 1)
             pred_spe = torch.cat(pred_spe, dim = 1) ; spe_mus_b = torch.cat(spe_mus_b, dim = 1) ; spe_stds_b = torch.cat(spe_stds_b, dim = 1)
             zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
-            if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1)
-            if(self.args.accuracy == "log_prob"): accuracy = 0.5 * (torch.log(2 * np.pi * rgbd_stds_b**2) + ((next_rgbd - rgbd_mus_b) ** 2) / (rgbd_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1) 
-            rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape))
+            if(self.args.accuracy == "mse"):      
+                accuracy  = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1).flatten(2)
+                accuracy += F.mse_loss(pred_spe, next_spe, reduction = "none").sum(-1).unsqueeze(-1)
+            if(self.args.accuracy == "log_prob"): 
+                accuracy  = 0.5 * (torch.log(2 * np.pi * rgbd_stds_b**2) + ((next_rgbd - rgbd_mus_b) ** 2) / (rgbd_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1).flatten(2).flatten(2)
+                accuracy += 0.5 * (torch.log(2 * np.pi * spe_stds_b**2)  + ((next_spe  - spe_mus_b)  ** 2) / (spe_stds_b**2  + 1e-6)).sum(-1).unsqueeze(-1) 
+            rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape)).flatten(2)
+            spe_complexity = self.args.beta_obs * dkl(spe_mus_b, spe_stds_b, torch.zeros(spe_mus_b.shape), self.args.sigma_obs * torch.ones(spe_stds_b.shape))
             zq_complexity  = self.args.beta_zq  * dkl(zq_mus,  zq_stds,  torch.zeros(zq_mus.shape),  self.args.sigma_zq  * torch.ones(zq_stds.shape))
                     
-            accuracy = accuracy.flatten(2)
+            accuracy = accuracy
             accuracy_loss = accuracy.mean()
-            rgbd_complexity = rgbd_complexity.flatten(2) * masks
-            zq_complexity  = zq_complexity  * masks
-            complexity_loss = rgbd_complexity.mean() + zq_complexity.mean()
-            forward_loss = accuracy_loss + complexity_loss
-            if(self.args.beta_obs == 0 and self.args.beta_zq == 0): complexity_loss = None
+            rgbd_complexity = rgbd_complexity * masks
+            spe_complexity = spe_complexity * masks
+            zq_complexity  = zq_complexity * masks
+            obs_complexity_loss = (rgbd_complexity + spe_complexity).mean()
+            zq_complexity_loss = zq_complexity.mean()
+            forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
+            if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
             
             self.forward_opt.zero_grad()
             forward_loss.backward()
@@ -258,16 +266,23 @@ class Agent:
             self.zp_opt.step()
         else:
             pred_rgbd, (rgbd_mus_b, rgbd_stds_b), pred_spe, (spe_mus_b, spe_stds_b) = self.forward(rgbd, spe, prev_actions, actions)   
-            if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1) 
-            if(self.args.accuracy == "log_prob"): accuracy = 0.5 * (torch.log(2 * np.pi * rgbd_stds_b**2) + ((next_rgbd - rgbd_mus_b) ** 2) / (rgbd_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1) 
-            rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape)) 
+            if(self.args.accuracy == "mse"):      
+                accuracy  = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1).flatten(2)
+                accuracy += F.mse_loss(pred_spe, next_spe, reduction = "none").sum(-1).unsqueeze(-1)
+            if(self.args.accuracy == "log_prob"): 
+                accuracy  = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1).flatten(2)
+                accuracy += F.mse_loss(pred_spe, next_spe, reduction = "none").sum(-1).unsqueeze(-1)
+            rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape)).flatten(2)
+            spe_complexity = self.args.beta_obs * dkl(spe_mus_b, spe_stds_b, torch.zeros(spe_mus_b.shape), self.args.sigma_obs * torch.ones(spe_stds_b.shape))
                     
-            accuracy = accuracy.flatten(2) * masks
+            accuracy = accuracy * masks
             accuracy_loss = accuracy.mean()
-            rgbd_complexity = rgbd_complexity.flatten(2) * masks
-            complexity_loss = rgbd_complexity.mean()
-            forward_loss = accuracy_loss + complexity_loss
-            if(self.args.beta_obs == 0): complexity_loss = None
+            rgbd_complexity = rgbd_complexity * masks
+            spe_complexity = spe_complexity * masks
+            obs_complexity_loss = (rgbd_complexity + spe_complexity).mean()
+            zq_complexity_loss = None
+            forward_loss = accuracy_loss + obs_complexity_loss
+            if(self.args.beta_obs == 0): obs_complexity_loss = None ; zq_complexity_loss = None
             
             self.forward_opt.zero_grad()
             forward_loss.backward()
@@ -371,10 +386,9 @@ class Agent:
             intrinsic_entropy = None
             actor_loss = None
         
-        if(accuracy_loss != None): 
-            accuracy_loss = accuracy_loss.item()
-        if(complexity_loss != None): 
-            complexity_loss = complexity_loss.item()
+        if(accuracy_loss != None):   accuracy_loss = accuracy_loss.item()
+        if(obs_complexity_loss != None): obs_complexity_loss = obs_complexity_loss.item()
+        if(zq_complexity_loss != None):  zq_complexity_loss = zq_complexity_loss.item()
         if(zp_loss != None): 
             zp_loss = zp_loss.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
@@ -385,7 +399,7 @@ class Agent:
         if(critic2_loss != None): 
             critic2_loss = critic2_loss.item()
             critic2_loss = log(critic2_loss) if critic2_loss > 0 else critic2_loss
-        losses = np.array([[accuracy_loss, complexity_loss, zp_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
+        losses = np.array([[accuracy_loss, obs_complexity_loss, zq_complexity_loss, zp_loss, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         naive_curiosity = naive_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()
