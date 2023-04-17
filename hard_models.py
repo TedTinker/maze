@@ -154,6 +154,7 @@ class Forward(nn.Module):
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
         if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
+        if(len(action.shape) == 2): action = action.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         if(h == None): h = torch.zeros((spe.shape[0], 1, self.args.hidden_size)).to(spe.device)
@@ -161,7 +162,7 @@ class Forward(nn.Module):
         zq, zq_mu, zq_std = self.zq(rgbd, spe, prev_action, h)
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(zq, h)
-        x = torch.cat((h, action.unsqueeze(1)), dim=-1)
+        x = torch.cat((h, action), dim=-1)
         
         rgbd_x = self.rgbd_up(x).view((spe.shape[0], spe.shape[1], 4, 4, 4))
         rgbd_mu = (rnn_cnn(self.rgbd_mu, rgbd_x) + 1) / 2

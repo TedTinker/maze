@@ -80,6 +80,7 @@ class Agent:
         
     def training(self, q):
         
+        self.pred_episodes()
         self.pos_episodes()
         while(True):
             cumulative_epochs = 0
@@ -88,16 +89,20 @@ class Agent:
                 cumulative_epochs += epochs
                 if(self.epochs < cumulative_epochs): self.maze_name = self.args.maze_list[j] ; break
             if(prev_maze_name != self.maze_name): 
+                self.pred_episodes()
                 self.pos_episodes()
                 self.maze.maze.stop()
                 self.maze = Hard_Maze(self.maze_name, args = self.args)
+                self.pred_episodes()
                 self.pos_episodes()
             self.training_episode()
             percent_done = str(self.epochs / sum(self.args.epochs))
             q.put((self.agent_num, percent_done))
             if(self.epochs >= sum(self.args.epochs)): break
+            if(self.epochs % self.args.epochs_per_pred_list == 0): self.pred_episodes()
             if(self.epochs % self.args.epochs_per_pos_list == 0): self.pos_episodes()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
+        self.pred_episodes()
         self.pos_episodes()
         
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
@@ -127,6 +132,26 @@ class Agent:
             no = no.unsqueeze(0) ; ns = ns.unsqueeze(0)
             if(push): self.memory.push(o, s, a, r, no, ns, done, done)
         return(a, h, r, spot_name, done)
+    
+    
+    
+    def pred_episodes(self):
+        if(self.args.agents_per_pred_list != -1 and self.agent_num >= self.args.agents_per_pred_list): return
+        pred_dicts = []
+        for episode in range(self.args.episodes_in_pred_list):
+            pred_dicts.append({episode : [(self.maze.obs(),)]})
+            done = False ; h = None ; forward_h = None ; prev_a = torch.zeros((1, 1, action_size))
+            self.maze.begin()
+            for step in range(self.args.max_steps):
+                if(not done): 
+                    o, s = self.maze.obs()
+                    o = o.unsqueeze(0) ; s = s.unsqueeze(0)
+                    a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
+                    (_, pred_o_mu, pred_o_std), (_, pred_s_mu, pred_s_std), _, _, forward_h = self.forward(o, s, prev_a, a, forward_h)
+                    next_o, next_s = self.maze.obs()
+                    pred_dicts[-1][episode].append(((next_o, next_s), (pred_o_mu, pred_o_std), (pred_s_mu, pred_s_std)))
+                    prev_a = a
+        self.plot_dict["pred_dicts"]["{}_{}".format(self.agent_num, self.epochs)] = pred_dicts
     
     
     

@@ -77,6 +77,7 @@ class Agent:
         
     def training(self, q):
         
+        self.pred_episodes()
         self.pos_episodes()
         while(True):
             self.training_episode()
@@ -86,6 +87,7 @@ class Agent:
             if(self.epochs % self.args.epochs_per_pred_list == 0): self.pred_episodes()
             if(self.epochs % self.args.epochs_per_pos_list == 0):  self.pos_episodes()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
+        self.pred_episodes()
         self.pos_episodes()
         
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
