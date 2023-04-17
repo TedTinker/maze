@@ -380,6 +380,8 @@ for arg_name in complete_order:
                 if(plot_dict["args"].hard_maze): complete_hard_order.append(arg_name) ; hard_plot_dicts.append(plot_dict) ; hard = True
                 else:                            complete_easy_order.append(arg_name) ; easy_plot_dicts.append(plot_dict) ; easy = True
                 
+while len(complete_easy_order) > 0 and complete_easy_order[0] == "break": complete_easy_order.pop(0)
+while len(complete_hard_order) > 0 and complete_hard_order[0] == "break": complete_hard_order.pop(0)                
     
 if(easy): print("\nPlotting positions in easy maze.\n")    ; easy_plotting_pos(complete_easy_order, easy_plot_dicts)
 if(hard): print("\nPlotting positions in hard maze(s).\n") ; hard_plotting_pos(complete_hard_order, hard_plot_dicts)    
