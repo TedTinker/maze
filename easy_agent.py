@@ -14,7 +14,7 @@ from math import exp
 from utils import default_args, dkl
 from easy_maze import Easy_Maze, action_size
 from easy_buffer import RecurrentReplayBuffer
-from easy_models import State_Forward, Forward, Actor, Critic
+from easy_models import Forward, Actor, Critic
 
 
 
@@ -35,18 +35,14 @@ class Agent:
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        if args.state_forward:
-            self.forward = State_Forward(self.args)
-            without_zp = [] 
-            just_zp = []
-            for name, param in self.forward.named_parameters():
-                if name.startswith("zp"): just_zp.append(param)
-                else:                     without_zp.append(param)
-            self.forward_opt = optim.Adam(without_zp, lr=self.args.forward_lr, weight_decay=0)   
-            self.zp_opt = optim.Adam(just_zp, lr=self.args.forward_lr, weight_decay=0)   
-        else:
-            self.forward = Forward(self.args)
-            self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
+        self.forward = Forward(self.args)
+        without_zp = [] 
+        just_zp = []
+        for name, param in self.forward.named_parameters():
+            if name.startswith("zp"): just_zp.append(param)
+            else:                     without_zp.append(param)
+        self.forward_opt = optim.Adam(without_zp, lr=self.args.forward_lr, weight_decay=0)   
+        self.zp_opt = optim.Adam(just_zp, lr=self.args.forward_lr, weight_decay=0)     
                            
         self.actor = Actor(args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
@@ -194,77 +190,53 @@ class Agent:
         
 
         # Train forward
-        if(self.args.state_forward):
-            pred_obs = [] ; obs_mus_b = [] ; obs_stds_b = [] ; zq_mus = [] ; zq_stds = [] ; h = None
-            for step in range(steps):
-                p_obs, (obs_mu, obs_std), _, (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
-                pred_obs.append(p_obs) ; obs_mus_b.append(obs_mu) ; obs_stds_b.append(obs_std)
-                zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
-            pred_obs = torch.cat(pred_obs, dim = 1)
-            obs_mus_b = torch.cat(obs_mus_b, dim = 1) ; obs_stds_b = torch.cat(obs_stds_b, dim = 1)
-            zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
-            if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-            if(self.args.accuracy == "log_prob"): accuracy = 0.5 * (torch.log(2 * np.pi * obs_stds_b**2) + ((next_obs - obs_mus_b) ** 2) / (obs_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1)
-            obs_complexity = self.args.beta_obs * dkl(obs_mus_b, obs_stds_b, torch.zeros(obs_mus_b.shape), self.args.sigma_obs * torch.ones(obs_stds_b.shape))
-            zq_complexity  = self.args.beta_zq  * dkl(zq_mus,    zq_stds,    torch.zeros(zq_mus.shape),    self.args.sigma_zq  * torch.ones(zq_stds.shape))
-                    
-            accuracy = accuracy * masks
-            accuracy_loss = accuracy.mean()
-            obs_complexity = obs_complexity * masks
-            zq_complexity  = zq_complexity  * masks
-            obs_complexity_loss = obs_complexity.mean() 
-            zq_complexity_loss  = zq_complexity.mean()
-            forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
-            if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
-            
-            self.forward_opt.zero_grad()
-            forward_loss.backward()
-            self.forward_opt.step()
-            
-            obs_mus_a = [] ; obs_stds_a = [] ; zp_mus = [] ; zp_stds = [] ; zq_mus = [] ; zq_stds = [] ; h = None
-            for step in range(steps):
-                _, (obs_mu, obs_std), (zp_mu, zp_std), (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
-                obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std)
-                zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
-                zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
-            obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
-            zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
-            zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
-            zp_loss = dkl(zp_mus,  zp_stds, zq_mus,  zq_stds).mean()
-            
-            self.zp_opt.zero_grad()
-            zp_loss.backward()
-            self.zp_opt.step()
-        else:
-            pred_obs, (obs_mus_b, obs_stds_b) = self.forward(obs, prev_actions, actions)   
-            if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-            if(self.args.accuracy == "log_prob"): accuracy = 0.5 * (torch.log(2 * np.pi * obs_stds_b**2) + ((next_obs - obs_mus_b) ** 2) / (obs_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1)
-            obs_complexity = self.args.beta_obs * dkl(obs_mus_b, obs_stds_b, torch.zeros(obs_mus_b.shape), self.args.sigma_obs * torch.ones(obs_stds_b.shape))
-                    
-            accuracy = accuracy * masks
-            accuracy_loss = accuracy.mean()
-            obs_complexity = obs_complexity * masks
-            obs_complexity_loss = obs_complexity.mean()
-            zq_complexity_loss  = None
-            forward_loss = accuracy_loss + obs_complexity_loss
-            if(self.args.beta_obs == 0): obs_complexity_loss = None ; zq_complexity_loss = None
-            
-            self.forward_opt.zero_grad()
-            forward_loss.backward()
-            self.forward_opt.step()
-            
-            zp_loss = None
+        pred_obs = [] ; obs_mus_b = [] ; obs_stds_b = [] ; zq_mus = [] ; zq_stds = [] ; h = None
+        for step in range(steps):
+            p_obs, (obs_mu, obs_std), _, (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+            pred_obs.append(p_obs) ; obs_mus_b.append(obs_mu) ; obs_stds_b.append(obs_std)
+            zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
+        pred_obs = torch.cat(pred_obs, dim = 1)
+        obs_mus_b = torch.cat(obs_mus_b, dim = 1) ; obs_stds_b = torch.cat(obs_stds_b, dim = 1)
+        zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
+        if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
+        if(self.args.accuracy == "log_prob"): accuracy = 0.5 * (torch.log(2 * np.pi * obs_stds_b**2) + ((next_obs - obs_mus_b) ** 2) / (obs_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1)
+        obs_complexity = self.args.beta_obs * dkl(obs_mus_b, obs_stds_b, torch.zeros(obs_mus_b.shape), self.args.sigma_obs * torch.ones(obs_stds_b.shape))
+        zq_complexity  = self.args.beta_zq  * dkl(zq_mus,    zq_stds,    torch.zeros(zq_mus.shape),    self.args.sigma_zq  * torch.ones(zq_stds.shape))
+                
+        accuracy = accuracy * masks
+        accuracy_loss = accuracy.mean()
+        obs_complexity = obs_complexity * masks
+        zq_complexity  = zq_complexity  * masks
+        obs_complexity_loss = obs_complexity.mean() 
+        zq_complexity_loss  = zq_complexity.mean()
+        forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
+        if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
+        
+        self.forward_opt.zero_grad()
+        forward_loss.backward()
+        self.forward_opt.step()
+        
+        obs_mus_a = [] ; obs_stds_a = [] ; zp_mus = [] ; zp_stds = [] ; zq_mus = [] ; zq_stds = [] ; h = None
+        for step in range(steps):
+            _, (obs_mu, obs_std), (zp_mu, zp_std), (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+            obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std)
+            zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
+            zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
+        obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
+        zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
+        zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
+        zp_loss = dkl(zp_mus,  zp_stds, zq_mus,  zq_stds).mean()
+        
+        self.zp_opt.zero_grad()
+        zp_loss.backward()
+        self.zp_opt.step()
         
                         
         
         # Get curiosity  
         naive_curiosity = self.args.naive_eta * accuracy
         
-        if(self.args.state_forward): 
-            state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
-        else:
-            _, (obs_mus_a, obs_stds_a) = self.forward(obs, prev_actions, actions)  
-            state_dkl_changes = 0
+        state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         obs_dkl_changes = torch.clamp(dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
             
         free_curiosity = self.args.free_eta_obs   * obs_dkl_changes   * masks + \

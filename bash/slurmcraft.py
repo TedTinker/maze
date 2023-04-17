@@ -58,25 +58,6 @@ slurm_dict = {
     
     
     
-    "d_state" : "--state_forward True",
-    
-    "e_state"    : "--state_forward True --alpha None",
-
-    "n_state"    : "--state_forward True --curiosity naive",
-    "en_state"   : "--state_forward True --alpha None --curiosity naive",
-    
-    "en_state_rand"   : "--state_forward True --alpha None --curiosity naive --randomness 10",
-    
-    "en_log_prob_state" : "--state_forward True --alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
-    
-    "ef_state"  : "--state_forward True --alpha None --curiosity free",
-    
-    "ef_state_rand"  : "--state_forward True --alpha None --curiosity free --randomness 10",
-    
-    "ef_log_prob_state" : "--state_forward True --alpha None --curiosity free --accuracy log_prob",
-    
-    
-    
     "d_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\"", 
     "e_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None",
 
@@ -87,9 +68,7 @@ slurm_dict = {
     "en_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
     
     "ef_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free",
-    
-    "ef_hard_state"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --state_forward True --alpha None --curiosity free",
-    
+        
     "ef_rand_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --randomness 10",
     
     "ef_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --accuracy log_prob",

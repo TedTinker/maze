@@ -10,10 +10,10 @@ from easy_maze import obs_size, action_size
     
         
 
-class State_Forward(nn.Module):
+class Forward(nn.Module):
     
     def __init__(self, args = default_args):
-        super(State_Forward, self).__init__()
+        super(Forward, self).__init__()
         
         self.args = args
         
@@ -96,49 +96,6 @@ class State_Forward(nn.Module):
         e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_obs = obs_mu + e * obs_std
         return(pred_obs, (obs_mu, obs_std), zp_dist, zq_dist, h)
-
-
-
-class Forward(nn.Module):
-    
-    def __init__(self, args = default_args):
-        super(Forward, self).__init__()
-        
-        self.args = args
-        
-        self.gru = nn.GRU(
-            input_size =  obs_size + action_size,
-            hidden_size = args.hidden_size,
-            batch_first = True)
-        self.obs_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size), 
-            nn.Tanh())
-        self.obs_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size))
-        
-        self.gru.apply(init_weights)
-        self.obs_mu.apply(init_weights)
-        self.obs_rho.apply(init_weights)
-        self.to(args.device)
-        
-    def forward(self, obs, prev_action, action, h = None):
-        x = torch.cat((obs, prev_action), dim=-1)
-        h, _ = self.gru(x, h)
-        x = torch.cat((h, action), dim=-1)
-        obs_mu = self.obs_mu(x)
-        obs_std = torch.log1p(torch.exp(self.obs_rho(x)))
-        obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        pred_obs = obs_mu + e * obs_std
-        return(pred_obs, (obs_mu, obs_std))
         
 
 
@@ -213,13 +170,6 @@ if __name__ == "__main__":
     args = default_args
     args.device = "cpu"
     args.dkl_rate = 1
-    
-    forward = State_Forward(args)
-    
-    print("\n\n")
-    print(forward)
-    print()
-    print(torch_summary(forward, ((3, obs_size), (3, action_size), (3, action_size))))
     
     
     
