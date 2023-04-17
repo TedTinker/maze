@@ -136,7 +136,7 @@ singularity exec maze.sif python maze/main.py --arg_name {} {} --agents $agents_
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec maze.sif python maze/finish_dicts.py --arg_name {}
+singularity exec maze.sif python maze/finish_dicts.py --arg_name {} --arg_title finishing_dictionaries
 """.format(partition, combined)[1:])
         
     with open("plotting.slurm", "w") as f:
@@ -147,7 +147,7 @@ singularity exec maze.sif python maze/finish_dicts.py --arg_name {}
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec maze.sif python maze/plotting.py --arg_name {}
+singularity exec maze.sif python maze/plotting.py --arg_name {} --arg_title plotting
 """.format(partition, combined)[1:])
         
     with open("plotting_pred.slurm", "w") as f:
@@ -158,7 +158,7 @@ singularity exec maze.sif python maze/plotting.py --arg_name {}
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec maze.sif python maze/plotting_pred.py --arg_name {}
+singularity exec maze.sif python maze/plotting_pred.py --arg_name {} --arg_title plotting_predictions
 """.format(partition, combined)[1:])
         
     with open("plotting_pos.slurm", "w") as f:
@@ -169,7 +169,7 @@ singularity exec maze.sif python maze/plotting_pred.py --arg_name {}
 #SBATCH --mem=2G
 
 module load singularity
-singularity exec maze.sif python maze/plotting_pos.py --arg_name {}
+singularity exec maze.sif python maze/plotting_pos.py --arg_name {} --arg_title plotting_positions
 """.format(partition, combined)[1:])
 # %%
 

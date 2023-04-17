@@ -51,13 +51,13 @@ do
                 agents_per_job=$(( ${max_agents} ))
             fi
             jid=$(sbatch --export=agents_per_job=${agents_per_job},previous_agents=${previous_agents} maze/bash/main_${arg}.slurm | awk '{print $4}')
-            echo "$arg ($i): $jid"
+            echo "$jid : $arg ($i)"
             jid_list+=($jid)
             previous_agents=$(( previous_agents + agents_per_job ))
         done
     else
         jid=$(sbatch --export=agents_per_job=${agents},previous_agents=0 maze/bash/main_${arg}.slurm | awk '{print $4}')
-        echo "$arg: $jid"
+        echo "$jid : $arg"
         jid_list+=($jid)
     fi
 done
@@ -65,14 +65,14 @@ done
 job_ids=$(echo ${jid_list[@]} | tr ' ' ':')  
 dict_jid=$(sbatch --dependency=afterok:${job_ids} maze/bash/finish_dicts.slurm | awk '{print $4}')
 echo
-echo "finishing dictionaries: $dict_jid"
+echo "$dict_jid : finishing dictionaries"
 
 jid=$(sbatch --dependency=afterok:$dict_jid maze/bash/plotting.slurm | awk '{print $4}')
-echo "plotting: $jid"
+echo "$jid : plotting"
 
 jid=$(sbatch --dependency=afterok:$dict_jid maze/bash/plotting_pred.slurm | awk '{print $4}')
-echo "plotting predictions: $jid"
+echo "$jid : plotting predictions"
 
 jid=$(sbatch --dependency=afterok:$dict_jid maze/bash/plotting_pos.slurm | awk '{print $4}')
-echo "plotting positions: $jid"
+echo "$jid : plotting positions"
 echo

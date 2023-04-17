@@ -135,7 +135,7 @@ for arg in vars(default_args):
 
 args_not_in_title = ["arg_title", "id", "agents", "previous_agents", "hard_maze", "maze_list", "keep_data", "epochs_per_pos_list", "episodes_in_pos_list", "agents_per_pos_list"]
 def get_args_title(default_args, args):
-    if(args.arg_name[:3] == "___"): return("plotting")
+    if(args.arg_name[:3] == "___"): return
     name = "" ; first = True
     arg_list = list(vars(default_args).keys())
     arg_list.insert(0, arg_list.pop(arg_list.index("arg_name")))
@@ -158,7 +158,7 @@ def get_args_title(default_args, args):
 args.arg_title = get_args_title(default_args, args)
 
 folder = "saved/" + args.arg_name
-if(args.arg_name[:3] != "___" and not args.arg_name in ["default", "plotting"]):
+if(args.arg_name[:3] != "___" and not args.arg_title in ["default", "finishing_dictionaries", "plotting", "plotting_predictions", "plotting_positions"]):
     try: os.mkdir(folder)
     except: pass
 if(default_args.alpha == "None"): default_args.alpha = None
