@@ -8,6 +8,7 @@ import numpy as np
 from math import log
 
 from utils import duration, args
+from plotting_pred import easy_plotting_pred, hard_plotting_pred
 from plotting_pos import easy_plotting_pos, hard_plotting_pos
 
 
@@ -394,8 +395,11 @@ for arg_name in complete_order:
                 
 while len(complete_easy_order) > 0 and complete_easy_order[0] == "break": complete_easy_order.pop(0)
 while len(complete_hard_order) > 0 and complete_hard_order[0] == "break": complete_hard_order.pop(0)                
+
+if(easy): print("\nPlotting predictions in easy maze.\n")    ; easy_plotting_pred(complete_easy_order, easy_plot_dicts)
+if(hard): print("\nPlotting predictions in hard maze(s).\n") ; hard_plotting_pred(complete_hard_order, hard_plot_dicts)    
     
 if(easy): print("\nPlotting positions in easy maze.\n")    ; easy_plotting_pos(complete_easy_order, easy_plot_dicts)
-if(hard): print("\nPlotting positions in hard maze(s).\n") ; hard_plotting_pos(complete_hard_order, hard_plot_dicts)    
+if(hard): print("\nPlotting positions in hard maze(s).\n") ; hard_plotting_pos(complete_hard_order, hard_plot_dicts)   
 
 print("\nDuration: {}. Done!".format(duration()), flush = True)
