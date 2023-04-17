@@ -64,7 +64,7 @@ class Agent:
             "args" : self.args,
             "arg_title" : self.args.arg_title,
             "arg_name" : self.args.arg_name,
-            "pos_lists" : {},
+            "pred_lists" : {}, "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "obs_complexity" : [], "zq_complexity" : [], "zp" : [],
             "alpha" : [], "actor" : [], 
