@@ -67,7 +67,7 @@ class Agent:
             "args" : self.args,
             "arg_title" : self.args.arg_title,
             "arg_name" : self.args.arg_name,
-            "pred_lists" : {}, "pos_lists" : {},
+            "pred_dicts" : {}, "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "obs_complexity" : [], "zq_complexity" : [], "zp" : [],
             "alpha" : [], "actor" : [], 
@@ -102,7 +102,7 @@ class Agent:
         
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in self.min_max_dict.keys():
-            if(not key in ["args", "arg_title", "arg_name", "spot_names"]):
+            if(not key in ["args", "arg_title", "arg_name", "pred_dicts", "pos_lists", "spot_names"]):
                 minimum = None ; maximum = None 
                 l = self.plot_dict[key]
                 l = deepcopy(l)
@@ -138,7 +138,7 @@ class Agent:
             self.maze.begin()
             pos_list = [self.maze_name, self.maze.maze.get_pos_yaw_spe()[0]]
             for step in range(self.args.max_steps):
-                if(not done): _, _, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
+                if(not done): prev_a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
                 pos_list.append(self.maze.maze.get_pos_yaw_spe()[0])
             pos_lists.append(pos_list)
         self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
