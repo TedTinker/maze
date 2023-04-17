@@ -60,18 +60,21 @@ parser.add_argument('--max_yaw_change',     type=float, default = pi/2)
 
 # Module 
 parser.add_argument('--hidden_size',        type=int,   default = 32)   
-parser.add_argument('--std_min',            type=int,   default = exp(-20))
-parser.add_argument('--std_max',            type=int,   default = exp(2))
 parser.add_argument('--state_size',         type=int,   default = 32)
-parser.add_argument("--beta_obs",           type=float, default = 2)
-parser.add_argument("--beta_zq",            type=float, default = 2)      
-parser.add_argument("--sigma_obs",          type=float, default = 1)     
-parser.add_argument("--sigma_zq",           type=float, default = 1)      
 parser.add_argument('--forward_lr',         type=float, default = .01)
 parser.add_argument('--alpha_lr',           type=float, default = .01) 
 parser.add_argument('--actor_lr',           type=float, default = .01)
 parser.add_argument('--critic_lr',          type=float, default = .01)
 parser.add_argument('--action_prior',       type=str,   default = "normal")
+parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
+
+# Complexity 
+parser.add_argument('--std_min',            type=int,   default = exp(-20))
+parser.add_argument('--std_max',            type=int,   default = exp(2))
+parser.add_argument("--beta_obs",           type=float, default = 2)
+parser.add_argument("--beta_zq",            type=float, default = 2)      
+parser.add_argument("--sigma_obs",          type=float, default = 1)     
+parser.add_argument("--sigma_zq",           type=float, default = 1)      
 
 # Memory buffer
 parser.add_argument('--capacity',           type=int,   default = 100)
@@ -82,15 +85,18 @@ parser.add_argument('--steps_per_epoch',    type=int,   default = 10)
 parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
 parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors
+parser.add_argument('--accuracy',           type=str,   default = "mse")
+
+# Entropy
 parser.add_argument("--alpha",              type=str,   default = 0)        # Soft-Actor-Critic entropy aim
 parser.add_argument("--target_entropy",     type=float, default = -2)       # Soft-Actor-Critic entropy aim
+
+# Curiosity
+parser.add_argument("--curiosity",          type=str,   default = "none")     # Which kind of curiosity
 parser.add_argument("--dkl_max",            type=float, default = 1)        # Scale curiosity
 parser.add_argument("--naive_eta",          type=float, default = .25)        # Scale curiosity
 parser.add_argument("--free_eta_obs",       type=float, default = 2.5)        # Scale curiosity
 parser.add_argument("--free_eta_state",     type=float, default = 0)        # Scale curiosity
-parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
-parser.add_argument('--accuracy',           type=str,   default = "mse")
-parser.add_argument("--curiosity",          type=str,   default = "none")     # Which kind of curiosity
 
 # Saving data
 parser.add_argument('--keep_data',           type=int,   default = 25)
