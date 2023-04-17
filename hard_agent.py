@@ -210,7 +210,7 @@ class Agent:
         pred_spe = [] ; spe_mus_b = [] ; spe_stds_b = []
         zq_mus = [] ; zq_stds = [] ; h = None
         for step in range(steps):
-            p_rgbd, (rgbd_mu, rgbd_std), p_spe, (spe_mu, spe_std), _, (zq_mu, zq_std), h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
+            (p_rgbd, rgbd_mu, rgbd_std), (p_spe, spe_mu, spe_std), _, (_, zq_mu, zq_std), h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
             pred_rgbd.append(p_rgbd) ; rgbd_mus_b.append(rgbd_mu) ; rgbd_stds_b.append(rgbd_std)
             pred_spe.append(p_spe) ; spe_mus_b.append(spe_mu) ; spe_stds_b.append(spe_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
@@ -245,7 +245,7 @@ class Agent:
         spe_mus_a = [] ; spe_stds_a = []
         zp_mus = [] ; zp_stds = [] ; zq_mus = [] ; zq_stds = [] ; h = None
         for step in range(steps):
-            _, (rgbd_mu, rgbd_std), _, (spe_mu, spe_std), (zp_mu, zp_std), (zq_mu, zq_std), h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
+            (_, rgbd_mu, rgbd_std), (_, spe_mu, spe_std), (_, zp_mu, zp_std), (_, zq_mu, zq_std), h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
             rgbd_mus_a.append(rgbd_mu) ; rgbd_stds_a.append(rgbd_std)
             spe_mus_a.append(spe_mu) ; spe_stds_a.append(spe_std)
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)

@@ -192,7 +192,7 @@ class Agent:
         # Train forward
         pred_obs = [] ; obs_mus_b = [] ; obs_stds_b = [] ; zq_mus = [] ; zq_stds = [] ; h = None
         for step in range(steps):
-            p_obs, (obs_mu, obs_std), _, (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+            (p_obs, obs_mu, obs_std), _, (_, zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
             pred_obs.append(p_obs) ; obs_mus_b.append(obs_mu) ; obs_stds_b.append(obs_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
         pred_obs = torch.cat(pred_obs, dim = 1)
@@ -218,7 +218,7 @@ class Agent:
         
         obs_mus_a = [] ; obs_stds_a = [] ; zp_mus = [] ; zp_stds = [] ; zq_mus = [] ; zq_stds = [] ; h = None
         for step in range(steps):
-            _, (obs_mu, obs_std), (zp_mu, zp_std), (zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
+            (_, obs_mu, obs_std), (_, zp_mu, zp_std), (_, zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
             obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std)
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)

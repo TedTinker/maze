@@ -136,7 +136,9 @@ class Forward(nn.Module):
         zp_mu = self.zp_mu(x)
         zp_std = torch.log1p(torch.exp(self.zp_rho(x)))
         zp_std = torch.clamp(zp_std, min = self.args.std_min, max = self.args.std_max)
-        return((zp_mu, zp_std))
+        e = Normal(0, 1).sample(zp_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+        zp = zp_mu + e * zp_std
+        return(zp, zp_mu, zp_std)
         
     def zq(self, rgbd, spe, prev_action, h = None):
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
@@ -146,7 +148,7 @@ class Forward(nn.Module):
         zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         zq = zq_mu + e * zq_std
-        return(zq, (zq_mu, zq_std))
+        return(zq, zq_mu, zq_std)
         
     def forward(self, rgbd, spe, prev_action, action, h = None):
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
@@ -155,8 +157,8 @@ class Forward(nn.Module):
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         if(h == None): h = torch.zeros((spe.shape[0], 1, self.args.hidden_size)).to(spe.device)
-        zp_dist = self.zp(prev_action, h)
-        zq, zq_dist = self.zq(rgbd, spe, prev_action, h)
+        zp, zp_mu, zp_std = self.zp(prev_action, h)
+        zq, zq_mu, zq_std = self.zq(rgbd, spe, prev_action, h)
         h = h if h == None else h.permute(1, 0, 2)
         h, _ = self.gru(zq, h)
         x = torch.cat((h, action.unsqueeze(1)), dim=-1)
@@ -175,7 +177,7 @@ class Forward(nn.Module):
         spe_std = torch.clamp(spe_std, min = self.args.std_min, max = self.args.std_max)
         e = Normal(0, 1).sample(spe_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         pred_spe = spe_mu + e * spe_std
-        return(pred_rgbd, (rgbd_mu, rgbd_std), pred_spe, (spe_mu, spe_std), zp_dist, zq_dist, h)
+        return((pred_rgbd, rgbd_mu, rgbd_std), (pred_spe, spe_mu, spe_std), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h)
         
 
 
