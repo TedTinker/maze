@@ -127,7 +127,18 @@ singularity exec maze.sif python maze/main.py --arg_name {} {} --agents $agents_
 """.format(partition, max_cpus, name, slurm_dict[name])[1:])
             
 
-            
+
+    with open("finish_dicts.slurm", "w") as f:
+        f.write(
+"""
+#!/bin/bash -l
+{}
+#SBATCH --mem=2G
+
+module load singularity
+singularity exec maze.sif python maze/finish_dicts.py --arg_name {}
+""".format(partition, combined)[1:])
+        
     with open("plotting.slurm", "w") as f:
         f.write(
 """
@@ -137,6 +148,28 @@ singularity exec maze.sif python maze/main.py --arg_name {} {} --agents $agents_
 
 module load singularity
 singularity exec maze.sif python maze/plotting.py --arg_name {}
+""".format(partition, combined)[1:])
+        
+    with open("plotting_pred.slurm", "w") as f:
+        f.write(
+"""
+#!/bin/bash -l
+{}
+#SBATCH --mem=2G
+
+module load singularity
+singularity exec maze.sif python maze/plotting_pred.py --arg_name {}
+""".format(partition, combined)[1:])
+        
+    with open("plotting_pos.slurm", "w") as f:
+        f.write(
+"""
+#!/bin/bash -l
+{}
+#SBATCH --mem=2G
+
+module load singularity
+singularity exec maze.sif python maze/plotting_pos.py --arg_name {}
 """.format(partition, combined)[1:])
 # %%
 
