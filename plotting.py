@@ -1,12 +1,13 @@
-import os, pickle
-from time import sleep
+import os
 import matplotlib.pyplot as plt 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Without this, pyplot crashes the kernal
 
 import numpy as np
 from math import log
 
-from utils import duration, args
+from utils import args, duration, load_dicts
+
+print("name:\n{}".format(args.arg_name), flush = True)
 
 
 
@@ -297,36 +298,6 @@ def plots(plot_dicts, min_max_dict):
     
     
 
-os.chdir("saved")
-plot_dicts = [] ; min_max_dicts = []
-    
-complete_order = args.arg_name[3:-3].split("+")
-order = [o for o in complete_order if not o in ["empty_space", "break"]]
-
-for name in order:
-    got_plot_dicts = False ; got_min_max_dicts = False
-    while(not got_plot_dicts):
-        try:
-            with open(name + "/" + "plot_dict.pickle", "rb") as handle: 
-                plot_dicts.append(pickle.load(handle)) ; got_plot_dicts = True
-        except: print("Stuck trying to get {}'s plot_dicts...".format(name), flush = True) ; sleep(1)
-    while(not got_min_max_dicts):
-        try:
-            with open(name + "/" + "min_max_dict.pickle", "rb") as handle: 
-                min_max_dicts.append(pickle.load(handle)) ; got_min_max_dicts = True 
-        except: print("Stuck trying to get {}'s min_max_dicts...".format(name), flush = True) ; sleep(1)
-        
-min_max_dict = {}
-for key in plot_dicts[0].keys():
-    if(not key in ["args", "arg_title", "arg_name", "pred_dicts", "pos_lists", "spot_names"]):
-        minimum = None ; maximum = None
-        for mm_dict in min_max_dicts:
-            if(mm_dict[key] != (None, None)):
-                if(minimum == None):             minimum = mm_dict[key][0]
-                elif(minimum > mm_dict[key][0]): minimum = mm_dict[key][0]
-                if(maximum == None):             maximum = mm_dict[key][1]
-                elif(maximum < mm_dict[key][1]): maximum = mm_dict[key][1]
-        min_max_dict[key] = (minimum, maximum)
-        
+plot_dicts, min_max_dict, _, _ = load_dicts(args)
 plots(plot_dicts, min_max_dict)
 print("\nDuration: {}. Done!".format(duration()), flush = True)
