@@ -47,12 +47,12 @@ slurm_dict = {
 
     "n"    : "--curiosity naive",
     "en"   : "--alpha None --curiosity naive",
-    "en_rand"   : "--alpha None --curiosity naive --randomness 3",
+    "en_rand"   : "--alpha None --curiosity naive --randomness 10",
     
     "en_log_prob" : "--alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
     
     "ef"  : "--alpha None --curiosity free",
-    "ef_rand"  : "--alpha None --curiosity free --randomness 3",
+    "ef_rand"  : "--alpha None --curiosity free --randomness 10",
     
     "ef_log_prob" : "--alpha None --curiosity free --accuracy log_prob",
     

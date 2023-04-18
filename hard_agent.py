@@ -233,26 +233,29 @@ class Agent:
         # Train forward
         pred_rgbd = [] ; rgbd_mus_b = [] ; rgbd_stds_b = []
         pred_spe = [] ; spe_mus_b = [] ; spe_stds_b = []
+        zp_mus = [] ; zp_stds = []
         zq_mus = [] ; zq_stds = [] ; h = None
         for step in range(steps):
-            (p_rgbd, rgbd_mu, rgbd_std), (p_spe, spe_mu, spe_std), _, (_, zq_mu, zq_std), h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
+            (p_rgbd, rgbd_mu, rgbd_std), (p_spe, spe_mu, spe_std), (zp, zp_mu, zp_std), (_, zq_mu, zq_std), h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
             pred_rgbd.append(p_rgbd) ; rgbd_mus_b.append(rgbd_mu) ; rgbd_stds_b.append(rgbd_std)
             pred_spe.append(p_spe) ; spe_mus_b.append(spe_mu) ; spe_stds_b.append(spe_std)
+            zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
         pred_rgbd = torch.cat(pred_rgbd, dim = 1) ; rgbd_mus_b = torch.cat(rgbd_mus_b, dim = 1) ; rgbd_stds_b = torch.cat(rgbd_stds_b, dim = 1)
         pred_spe = torch.cat(pred_spe, dim = 1) ; spe_mus_b = torch.cat(spe_mus_b, dim = 1) ; spe_stds_b = torch.cat(spe_stds_b, dim = 1)
+        zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
         if(self.args.accuracy == "mse"):      
             accuracy  = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1).flatten(2)
             accuracy += F.mse_loss(pred_spe, next_spe, reduction = "none").sum(-1).unsqueeze(-1)
         if(self.args.accuracy == "log_prob"): 
-            accuracy  = 0.5 * (torch.log(2 * np.pi * rgbd_stds_b**2) + ((next_rgbd - rgbd_mus_b) ** 2) / (rgbd_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1).flatten(2).flatten(2)
+            accuracy  = 0.5 * (torch.log(2 * np.pi * rgbd_stds_b**2) + ((next_rgbd - rgbd_mus_b) ** 2) / (rgbd_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1).flatten(2)
             accuracy += 0.5 * (torch.log(2 * np.pi * spe_stds_b**2)  + ((next_spe  - spe_mus_b)  ** 2) / (spe_stds_b**2  + 1e-6)).sum(-1).unsqueeze(-1) 
         rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape)).flatten(2)
         spe_complexity = self.args.beta_obs * dkl(spe_mus_b, spe_stds_b, torch.zeros(spe_mus_b.shape), self.args.sigma_obs * torch.ones(spe_stds_b.shape))
         zq_complexity  = self.args.beta_zq  * dkl(zq_mus,  zq_stds,  torch.zeros(zq_mus.shape),  self.args.sigma_zq  * torch.ones(zq_stds.shape))
                 
-        accuracy = accuracy
+        accuracy = accuracy * masks
         accuracy_loss = accuracy.mean()
         rgbd_complexity = rgbd_complexity * masks
         spe_complexity = spe_complexity * masks
@@ -262,33 +265,29 @@ class Agent:
         forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
         if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
         
-        self.forward_opt.zero_grad()
-        forward_loss.backward()
-        self.forward_opt.step()
-        
-        rgbd_mus_a = [] ; rgbd_stds_a = []
-        spe_mus_a = [] ; spe_stds_a = []
-        zp_mus = [] ; zp_stds = [] ; zq_mus = [] ; zq_stds = [] ; h = None
-        for step in range(steps):
-            (_, rgbd_mu, rgbd_std), (_, spe_mu, spe_std), (_, zp_mu, zp_std), (_, zq_mu, zq_std), h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
-            rgbd_mus_a.append(rgbd_mu) ; rgbd_stds_a.append(rgbd_std)
-            spe_mus_a.append(spe_mu) ; spe_stds_a.append(spe_std)
-            zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
-            zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
-        rgbd_mus_a = torch.cat(rgbd_mus_a, dim = 1) ; rgbd_stds_a = torch.cat(rgbd_stds_a, dim = 1)
-        spe_mus_a = torch.cat(spe_mus_a, dim = 1) ; spe_stds_a = torch.cat(spe_stds_a, dim = 1)
-        zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
-        zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
         zp_loss = dkl(zp_mus,  zp_stds, zq_mus,  zq_stds).mean()
         
+        total_loss = forward_loss + zp_loss
+        
+        self.forward_opt.zero_grad()
         self.zp_opt.zero_grad()
-        zp_loss.backward()
+        total_loss.backward()
+        self.forward_opt.step()
         self.zp_opt.step()
         
                         
         
         # Get curiosity  
         naive_curiosity = self.args.naive_eta * accuracy.sum(-1).unsqueeze(-1)
+        
+        rgbd_mus_a = [] ; rgbd_stds_a = []
+        spe_mus_a = [] ; spe_stds_a = [] ; h = None
+        for step in range(steps):
+            (_, rgbd_mu, rgbd_std), (_, spe_mu, spe_std), _, _, h = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], actions[:, step], h)   
+            rgbd_mus_a.append(rgbd_mu) ; rgbd_stds_a.append(rgbd_std)
+            spe_mus_a.append(spe_mu) ; spe_stds_a.append(spe_std)
+        rgbd_mus_a = torch.cat(rgbd_mus_a, dim = 1) ; rgbd_stds_a = torch.cat(rgbd_stds_a, dim = 1)
+        spe_mus_a = torch.cat(spe_mus_a, dim = 1) ; spe_stds_a = torch.cat(spe_stds_a, dim = 1)
         
         state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         rgbd_dkl_changes = torch.clamp(dkl(rgbd_mus_a, rgbd_stds_a, rgbd_mus_b, rgbd_stds_b).flatten(2).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
