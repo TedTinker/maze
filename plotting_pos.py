@@ -33,10 +33,10 @@ def easy_plotting_pos(complete_order, plot_dicts):
         handles.append(handle)
     plt.close()
     
-    for e in epochs:
-        for s in range(steps):
+    for epoch in epochs:
+        for step in range(steps):
             fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
-            fig.suptitle("Epoch {} Step {}".format(e, s), y = 1.1)
+            fig.suptitle("Epoch {} Step {}".format(epoch, step), y = 1.1)
             plot_position = (0, 0)
             for arg_name in complete_order:
                 if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
@@ -52,9 +52,9 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     for spot in [(0, 0), (0, 1), (-1, 1), (1, 1), (1, 2), (2, 2), (3, 2), (3, 1)]:
                         ax.text(spot[0], spot[1], "\u25A1", fontsize = 30, ha = "center", va = "center")
                     to_plot = {}
-                    for a in agents:
-                        for ep in range(episodes):
-                            coordinate = plot_dict["pos_lists"]["{}_{}".format(a, e)][ep][s]
+                    for agent in agents:
+                        for episode in range(episodes):
+                            coordinate = plot_dict["pos_lists"]["{}_{}".format(agent, epoch)][episode][step]
                             if(not coordinate in to_plot): to_plot[coordinate] = 0
                             to_plot[coordinate] += 1
                             
@@ -81,7 +81,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             buf.close()
             plt.close()
             
-        print("Done with epoch {}:\t{}.".format(e, duration()), flush = True)
+        print("Done with epoch {}:\t{}.".format(epoch, duration()), flush = True)
             
     imageio.mimwrite("easy_video.mp4", images, fps = 3)
             
@@ -110,9 +110,9 @@ def hard_plotting_pos(complete_order, plot_dicts):
         handles.append(handle)
     plt.close()
     
-    for e, maze_name in zip(epochs, maze_names):
+    for epoch, maze_name in zip(epochs, maze_names):
         fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
-        fig.suptitle("Epoch {}".format(e), y = 1.05)
+        fig.suptitle("Epoch {}".format(epoch), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
             if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
@@ -130,9 +130,9 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 h, w, _ = arena_map.shape
                 extent = [-.5, w-.5, -h+.5, .5]
                 ax.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
-                for c, a in enumerate(agents):
-                    for ep in range(episodes):
-                        path = plot_dict["pos_lists"]["{}_{}".format(a, e)][ep][1:]
+                for c, agent in enumerate(agents):
+                    for episode in range(episodes):
+                        path = plot_dict["pos_lists"]["{}_{}".format(agent, epoch)][episode][1:]
                         xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
                         ax.plot(xs, ys, color=cmap(norm(c)))
                         
@@ -141,7 +141,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
             
                 plot_position = (plot_position[0], plot_position[1] + 1)
                         
-        fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(a) for a in agents])
+        fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(agent) for agent in agents])
         buf = BytesIO()
         plt.savefig(buf, format = "png", bbox_inches = "tight")
         buf.seek(0)
@@ -150,7 +150,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         buf.close()
         plt.close()
             
-        print("Done with epoch {}:\t{}.".format(e, duration()), flush = True)
+        print("Done with epoch {}:\t{}.".format(epoch, duration()), flush = True)
                 
     imageio.mimwrite("saved/hard_video.mp4", images, fps = 1/3)
     

@@ -136,23 +136,24 @@ class Agent:
     
     
     def pred_episodes(self):
-        if(self.args.agents_per_pred_list != -1 and self.agent_num >= self.args.agents_per_pred_list): return
-        pred_lists = []
-        for episode in range(self.args.episodes_in_pred_list):
-            done = False ; h = None ; forward_h = None ; prev_a = torch.zeros((1, 1, action_size))
-            self.maze.begin()
-            pred_list = [(self.maze.obs(),)]
-            for step in range(self.args.max_steps):
-                if(not done): 
-                    o, s = self.maze.obs()
-                    o = o.unsqueeze(0) ; s = s.unsqueeze(0)
-                    a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
-                    (_, pred_o_mu, pred_o_std), (_, pred_s_mu, pred_s_std), _, _, forward_h = self.forward(o, s, prev_a, a, forward_h)
-                    next_o, next_s = self.maze.obs()
-                    pred_list.append(((next_o, next_s), (pred_o_mu, pred_o_std), (pred_s_mu, pred_s_std)))
-                    prev_a = a
-            pred_lists.append(pred_list)
-        self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
+        with torch.no_grad():
+            if(self.args.agents_per_pred_list != -1 and self.agent_num >= self.args.agents_per_pred_list): return
+            pred_lists = []
+            for episode in range(self.args.episodes_in_pred_list):
+                done = False ; h = None ; forward_h = None ; prev_a = torch.zeros((1, 1, action_size))
+                self.maze.begin()
+                pred_list = [(self.maze.obs(), (None, None), (None, None))]
+                for step in range(self.args.max_steps):
+                    if(not done): 
+                        o, s = self.maze.obs()
+                        o = o.unsqueeze(0) ; s = s.unsqueeze(0)
+                        a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
+                        (_, pred_o_mu, pred_o_std), (_, pred_s_mu, pred_s_std), _, _, forward_h = self.forward(o, s, prev_a, a, forward_h)
+                        next_o, next_s = self.maze.obs()
+                        pred_list.append(((next_o, next_s), (pred_o_mu, pred_o_std), (pred_s_mu, pred_s_std)))
+                        prev_a = a
+                pred_lists.append(pred_list)
+            self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
     
     
     
