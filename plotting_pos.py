@@ -19,7 +19,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
         else: current_count += 1
     columns = max(columns, current_count)
     if(complete_order[-1] != "break"): rows += 1
-    
+        
     epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs.sort()
     steps = len(plot_dicts[0]["pos_lists"]["0_0"][0])
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()

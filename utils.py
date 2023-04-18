@@ -102,12 +102,12 @@ parser.add_argument("--free_eta_state",     type=float, default = 0)        # Sc
 # Saving data
 parser.add_argument('--keep_data',           type=int,   default = 25)
 parser.add_argument('--epochs_per_pred_list',type=int,   default = 250)
+parser.add_argument('--agents_per_pred_list',type=int,   default = 3)
 parser.add_argument('--episodes_in_pred_list',type=int,   default = 1)
-parser.add_argument('--agents_per_pred_list', type=int,   default = 3)
 
 parser.add_argument('--epochs_per_pos_list', type=int,   default = 250)
-parser.add_argument('--episodes_in_pos_list',type=int,   default = 3)
 parser.add_argument('--agents_per_pos_list', type=int,   default = -1)
+parser.add_argument('--episodes_in_pos_list',type=int,   default = 3)
 
 
 
@@ -134,7 +134,7 @@ for arg in vars(default_args):
 
 
 
-args_not_in_title = ["arg_title", "id", "agents", "previous_agents", "hard_maze", "maze_list", "keep_data", "epochs_per_pos_list", "episodes_in_pos_list", "agents_per_pos_list"]
+args_not_in_title = ["arg_title", "id", "agents", "previous_agents", "hard_maze", "maze_list", "keep_data", "epochs_per_pred_list", "episodes_in_pred_list", "agents_per_pred_list", "epochs_per_pos_list", "episodes_in_pos_list", "agents_per_pos_list"]
 def get_args_title(default_args, args):
     if(args.arg_title[:3] == "___"): return(args.arg_title)
     name = "" ; first = True
@@ -231,7 +231,7 @@ def load_dicts(args):
             
     min_max_dict = {}
     for key in plot_dicts[0].keys():
-        if(not key in ["args", "arg_title", "arg_name", "pred_dicts", "pos_lists", "spot_names"]):
+        if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "spot_names"]):
             minimum = None ; maximum = None
             for mm_dict in min_max_dicts:
                 if(mm_dict[key] != (None, None)):

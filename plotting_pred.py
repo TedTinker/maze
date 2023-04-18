@@ -12,7 +12,18 @@ print("name:\n{}".format(args.arg_name), flush = True)
 
 
 def easy_plotting_pred(complete_order, plot_dicts):
-    print("Easy not implemented yet")
+    rows = 0 ; columns = 0 ; current_count = 0 
+    for arg_name in complete_order: 
+        if(arg_name == "break"): rows += 1 ; columns = max(columns, current_count) ; current_count = 0
+        else: current_count += 1
+    columns = max(columns, current_count)
+    if(complete_order[-1] != "break"): rows += 1
+        
+    epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pred_lists"].keys()])) ; epochs.sort()
+    agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()
+    episodes = len(plot_dicts[0]["pred_lists"]["0_0"])
+    
+    print(epochs, agents, episodes)
             
             
         
