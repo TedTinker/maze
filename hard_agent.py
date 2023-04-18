@@ -150,7 +150,7 @@ class Agent:
                         a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
                         (_, pred_o_mu, pred_o_std), (_, pred_s_mu, pred_s_std), _, _, forward_h = self.forward(o, s, prev_a, a, forward_h)
                         next_o, next_s = self.maze.obs()
-                        pred_list.append(((next_o, next_s), (pred_o_mu, pred_o_std), (pred_s_mu, pred_s_std)))
+                        pred_list.append(((next_o, next_s), (pred_o_mu.squeeze(0).squeeze(0), pred_o_std.view(8, 8, 4).squeeze(0).squeeze(0)), (pred_s_mu, pred_s_std)))
                         prev_a = a
                 pred_lists.append(pred_list)
             self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists

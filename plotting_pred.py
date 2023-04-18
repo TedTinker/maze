@@ -1,10 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-import imageio
-from io import BytesIO
-import os
-import numpy as np
 
+import torch
 from torch.distributions import Normal
 
 from utils import args, duration, load_dicts
@@ -51,7 +48,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                     else:
                                         e = Normal(0, 1).sample(std.shape) ; pred = mu + e * std
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
-                                        ax.set_title("{}".format("Step {}".format(row) if column == 0 else "Prediction Sample {}".format(column)))
+                                        ax.set_title("Prediction Sample {}".format(column))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
@@ -74,12 +71,23 @@ def hard_plotting_pred(complete_order, plot_dicts):
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
                         rows = len(pred_list) ; columns = 1 + plot_dict["args"].samples_per_pred
-                        fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
+                        fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
                         for row, ((rgbd, spe), (rgbd_mu, rgbd_std), (spe_mu, spe_std)) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
+                                if(row == 0 and column > 0): pass
+                                else:                
+                                    if(column == 0): 
+                                        ax.imshow(rgbd[:,:,0:3])
+                                        ax.set_title("Step {}:\nSpeed {}".format(row, round(spe.item())))
+                                    else:
+                                        e = Normal(0, 1).sample(rgbd_std.shape) ; pred_rgbd = rgbd_mu + e * rgbd_std
+                                        e = Normal(0, 1).sample(spe_std.shape)  ; pred_spe  = spe_mu  + e * spe_std
+                                        pred_rgbd = torch.clamp(pred_rgbd, min = 0, max = 1)
+                                        ax.imshow(pred_rgbd[:,:,0:3])
+                                        ax.set_title("Prediction Sample {}:\nSpeed {}".format(column, round(pred_spe.item())))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
