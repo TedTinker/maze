@@ -38,7 +38,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                         pred_list = pred_lists[episode]
                         rows = len(pred_list) ; columns = 1 + plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
-                        title = "{}, Agent {}: Epoch {}, Episode {}".format(arg_name, agent, epoch, episode)
+                        title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
                         for row, (obs, mu, std) in enumerate(pred_list):
                             for column in range(columns):
@@ -52,7 +52,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                         e = Normal(0, 1).sample(std.shape) ; pred = mu + e * std
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='black', cmap = cmap, c = pred, norm = norm)
                                         ax.set_title("{}".format("Step {}".format(row) if column == 0 else "Prediction Sample {}".format(column)))
-                        plt.savefig(title + ".png", format = "png", bbox_inches = "tight")
+                        plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                                 
                                                 
