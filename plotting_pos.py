@@ -81,7 +81,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             buf.close()
             plt.close()
             
-        print("Done with epoch {}:\t{}.".format(epoch, duration()), flush = True)
+        print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
             
     imageio.mimwrite("easy_video.mp4", images, fps = 3)
             
@@ -150,7 +150,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         buf.close()
         plt.close()
             
-        print("Done with epoch {}:\t{}.".format(epoch, duration()), flush = True)
+        print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
                 
     imageio.mimwrite("saved/hard_video.mp4", images, fps = 1/3)
     

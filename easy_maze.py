@@ -39,7 +39,7 @@ class Easy_Maze:
             if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1  
             if(spot.pos == self.agent_pos): random_spot = spot.random_spot
         pos += [right, left, up, down]
-        pos += [choice([-1,1]) if random_spot else 0 for _ in range(self.args.randomness)]
+        for _ in range(self.args.randomness): pos += [choice([-1,1]) if random_spot else 0]
         return(torch.tensor(pos).unsqueeze(0).float())
     
     def obs_str(self):

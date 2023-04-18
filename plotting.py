@@ -7,7 +7,7 @@ from math import log
 
 from utils import args, duration, load_dicts
 
-print("name:\n{}".format(args.arg_name), flush = True)
+print("name:\n{}\n".format(args.arg_name), flush = True)
 
 
 
@@ -287,7 +287,7 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        print("{}:\t{}.".format(plot_dict["arg_name"], duration()), flush = True)
+        print("{}:\t{}.".format(duration(), plot_dict["arg_name"]), flush = True)
 
     
     
