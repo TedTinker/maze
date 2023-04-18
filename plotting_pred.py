@@ -24,6 +24,14 @@ def easy_plotting_pred(complete_order, plot_dicts):
     episodes = len(plot_dicts[0]["pred_lists"]["0_0"])
     
     print(epochs, agents, episodes)
+    
+    for e in epochs:
+        for a in agents:
+            for arg_name in complete_order:
+                for plot_dict in plot_dicts:
+                    if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}".format(a, e)] ; break 
+                for ep in range(episodes):
+                    print(pred_lists[ep])
             
             
         
