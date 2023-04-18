@@ -58,13 +58,34 @@ def easy_plotting_pred(complete_order, plot_dicts):
         print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
                                 
                                                 
-
-            
         
 def hard_plotting_pred(complete_order, plot_dicts):
-    print("Hard not implemented yet")
+    epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pred_lists"].keys()])) ; epochs.sort()
+    agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()
+    episodes = len(plot_dicts[0]["pred_lists"]["0_0"])
+        
+    for epoch in epochs:
+        for agent in agents:
+            for arg_name in complete_order:
+                if(arg_name in ["break", "empty_space"]): pass 
+                else:
+                    for plot_dict in plot_dicts:
+                        if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}".format(agent, epoch)] ; break 
+                    for episode in range(episodes):
+                        pred_list = pred_lists[episode]
+                        rows = len(pred_list) ; columns = 1 + plot_dict["args"].samples_per_pred
+                        fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
+                        title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
+                        fig.suptitle(title, y = 1.1)
+                        for row, ((rgbd, spe), (rgbd_mu, rgbd_std), (spe_mu, spe_std)) in enumerate(pred_list):
+                            for column in range(columns):
+                                ax = axs[row, column] ; ax.axis("off")
+                        plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
+                        plt.close()
+                        
+        print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
     
-    
+
 
 plot_dicts, min_max_dict, (easy, complete_easy_order, easy_plot_dicts), (hard, complete_hard_order, hard_plot_dicts) = load_dicts(args)    
 if(easy): print("\nPlotting predictions in easy maze.\n")    ; easy_plotting_pred(complete_easy_order, easy_plot_dicts)

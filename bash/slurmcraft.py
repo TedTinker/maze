@@ -47,12 +47,12 @@ slurm_dict = {
 
     "n"    : "--curiosity naive",
     "en"   : "--alpha None --curiosity naive",
-    "en_rand"   : "--alpha None --curiosity naive --randomness 10",
+    "en_rand"   : "--alpha None --curiosity naive --randomness 3",
     
     "en_log_prob" : "--alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
     
     "ef"  : "--alpha None --curiosity free",
-    "ef_rand"  : "--alpha None --curiosity free --randomness 10",
+    "ef_rand"  : "--alpha None --curiosity free --randomness 3",
     
     "ef_log_prob" : "--alpha None --curiosity free --accuracy log_prob",
     
@@ -63,13 +63,13 @@ slurm_dict = {
 
     "n_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --curiosity naive",
     "en_hard"   : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive",
-    "en_rand_hard"   : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --randomness 10",
+    "en_rand_hard"   : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --randomness 3",
     
     "en_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
     
     "ef_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free",
         
-    "ef_rand_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --randomness 10",
+    "ef_rand_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --randomness 3",
     
     "ef_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --accuracy log_prob",
     
