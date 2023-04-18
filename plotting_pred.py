@@ -46,11 +46,11 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                 if(row == 0 and column > 0): pass
                                 else:                
                                     if(column == 0): 
-                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, cmap = cmap, c = obs, norm = norm)
+                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='black', cmap = cmap, c = obs, norm = norm)
                                         ax.set_title("Step {}".format(row))
                                     else:
                                         e = Normal(0, 1).sample(std.shape) ; pred = mu + e * std
-                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, cmap = cmap, c = pred, norm = norm)
+                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='black', cmap = cmap, c = pred, norm = norm)
                                         ax.set_title("{}".format("Step {}".format(row) if column == 0 else "Prediction Sample {}".format(column)))
                         plt.savefig(title + ".png", format = "png", bbox_inches = "tight")
                         plt.close()
