@@ -241,6 +241,7 @@ class Agent:
         forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
         if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
         
+        state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         state_accuracy = F.mse_loss(zp_mus, zq_mus, reduction = "none").sum(-1).unsqueeze(-1) + F.mse_loss(zp_stds, zq_stds, reduction = "none").sum(-1).unsqueeze(-1)
         zp_loss = dkl(zp_mus, zp_stds, zq_mus, zq_stds).mean()
         
@@ -261,7 +262,6 @@ class Agent:
             obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std)
         obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
         
-        state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         obs_dkl_changes = torch.clamp(dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).mean(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         
         naive_curiosity = self.args.naive_eta_obs   * accuracy       * masks + \

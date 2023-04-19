@@ -249,10 +249,10 @@ class Agent:
         zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
         if(self.args.accuracy == "mse"):      
-            accuracy  = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1).flatten(2)
+            accuracy  = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").flatten(2).sum(-1).unsqueeze(-1)
             accuracy += F.mse_loss(pred_spe, next_spe, reduction = "none").sum(-1).unsqueeze(-1)
         if(self.args.accuracy == "log_prob"): 
-            distribution = Normal(rgbd_mus_b, rgbd_stds_b) ; accuracy = -distribution.log_prob(next_rgbd).sum(-1).unsqueeze(-1).flatten(2)
+            distribution = Normal(rgbd_mus_b, rgbd_stds_b) ; accuracy = -distribution.log_prob(next_rgbd).flatten(2).sum(-1).unsqueeze(-1)
             distribution = Normal(spe_mus_b, spe_stds_b) ; accuracy += -distribution.log_prob(next_spe).sum(-1).unsqueeze(-1)
         rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape)).flatten(2)
         spe_complexity = self.args.beta_obs * dkl(spe_mus_b, spe_stds_b, torch.zeros(spe_mus_b.shape), self.args.sigma_obs * torch.ones(spe_stds_b.shape))
@@ -268,6 +268,8 @@ class Agent:
         forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
         if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
         
+        state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
+        state_accuracy = F.mse_loss(zp_mus, zq_mus, reduction = "none").sum(-1).unsqueeze(-1) + F.mse_loss(zp_stds, zq_stds, reduction = "none").sum(-1).unsqueeze(-1)
         zp_loss = dkl(zp_mus,  zp_stds, zq_mus,  zq_stds).mean()
         
         total_loss = forward_loss + zp_loss
@@ -280,9 +282,7 @@ class Agent:
         
                         
         
-        # Get curiosity  
-        naive_curiosity = self.args.naive_eta * accuracy.sum(-1).unsqueeze(-1)
-        
+        # Get curiosity          
         rgbd_mus_a = [] ; rgbd_stds_a = []
         spe_mus_a = [] ; spe_stds_a = [] ; h = None
         for step in range(steps):
@@ -292,9 +292,11 @@ class Agent:
         rgbd_mus_a = torch.cat(rgbd_mus_a, dim = 1) ; rgbd_stds_a = torch.cat(rgbd_stds_a, dim = 1)
         spe_mus_a = torch.cat(spe_mus_a, dim = 1) ; spe_stds_a = torch.cat(spe_stds_a, dim = 1)
         
-        state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         rgbd_dkl_changes = torch.clamp(dkl(rgbd_mus_a, rgbd_stds_a, rgbd_mus_b, rgbd_stds_b).flatten(2).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
         spe_dkl_changes  = torch.clamp(dkl(spe_mus_a, spe_stds_a, spe_mus_b, spe_stds_b).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
+        
+        naive_curiosity = self.args.naive_eta_obs   * accuracy       * masks + \
+                          self.args.naive_eta_state * state_accuracy * masks
                     
         free_curiosity = self.args.free_eta_obs   * rgbd_dkl_changes  * masks + \
                          self.args.free_eta_obs   * spe_dkl_changes   * masks + \
