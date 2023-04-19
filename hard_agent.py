@@ -4,6 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch.distributions import MultivariateNormal
 import torch.optim as optim
+from torch.distributions import Normal
 
 import numpy as np
 from math import log
@@ -251,8 +252,8 @@ class Agent:
             accuracy  = F.mse_loss(pred_rgbd, next_rgbd, reduction = "none").sum(-1).unsqueeze(-1).flatten(2)
             accuracy += F.mse_loss(pred_spe, next_spe, reduction = "none").sum(-1).unsqueeze(-1)
         if(self.args.accuracy == "log_prob"): 
-            accuracy  = 0.5 * (torch.log(2 * np.pi * rgbd_stds_b**2) + ((next_rgbd - rgbd_mus_b) ** 2) / (rgbd_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1).flatten(2)
-            accuracy += 0.5 * (torch.log(2 * np.pi * spe_stds_b**2)  + ((next_spe  - spe_mus_b)  ** 2) / (spe_stds_b**2  + 1e-6)).sum(-1).unsqueeze(-1) 
+            distribution = Normal(rgbd_mus_b, rgbd_stds_b) ; accuracy = -distribution.log_prob(next_rgbd).sum(-1).unsqueeze(-1).flatten(2)
+            distribution = Normal(spe_mus_b, spe_stds_b) ; accuracy += -distribution.log_prob(next_spe).sum(-1).unsqueeze(-1)
         rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape)).flatten(2)
         spe_complexity = self.args.beta_obs * dkl(spe_mus_b, spe_stds_b, torch.zeros(spe_mus_b.shape), self.args.sigma_obs * torch.ones(spe_stds_b.shape))
         zq_complexity  = self.args.beta_zq  * dkl(zq_mus,  zq_stds,  torch.zeros(zq_mus.shape),  self.args.sigma_zq  * torch.ones(zq_stds.shape))

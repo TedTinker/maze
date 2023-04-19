@@ -37,11 +37,10 @@ class Hard_Maze:
             projectionMatrix=proj_matrix, viewMatrix=view_matrix, shadow = 0,
             physicsClientId = self.maze.physicsClient)
         
-        rgb = np.divide(rgba[:,:,:-1], 255) * 2 - 1
+        rgb = np.divide(rgba[:,:,:-1], 255)
         d = np.nan_to_num(np.expand_dims(depth, axis=-1), nan=1)
         if(d.max() == d.min()): pass
         else: d = (d.max() - d)/(d.max()-d.min())
-        d = d*2 - 1
         rgbd = np.concatenate([rgb, d], axis = -1)
         rgbd = torch.from_numpy(rgbd).float()
         rgbd = resize(rgbd.permute(-1,0,1), (self.args.image_size, self.args.image_size)).permute(1,2,0)
@@ -98,10 +97,15 @@ class Hard_Maze:
 if __name__ == "__main__":        
     from random import random
     from time import sleep
+    import matplotlib.pyplot as plt
 
     maze = Hard_Maze("t", True, args)
     done = False
     while(done == False):
         reward, name, done = maze.action(random(), random(), verbose = True)
+        rgbd, spe = maze.obs()
+        plt.imshow(rgbd[:,:,0:3])
+        plt.show()
+        plt.close()
         sleep(1)
 # %%

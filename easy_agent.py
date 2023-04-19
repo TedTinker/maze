@@ -2,8 +2,9 @@
 
 import torch
 import torch.nn.functional as F
-from torch.distributions import MultivariateNormal
+from torch.distributions import MultivariateNormal, Normal
 import torch.optim as optim
+from torch.distributions import Normal
 
 import numpy as np
 from math import log
@@ -227,7 +228,7 @@ class Agent:
         zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
         if(self.args.accuracy == "mse"):      accuracy = F.mse_loss(pred_obs, next_obs, reduction = "none").sum(-1).unsqueeze(-1)
-        if(self.args.accuracy == "log_prob"): accuracy = 0.5 * (torch.log(2 * np.pi * obs_stds_b**2) + ((next_obs - obs_mus_b) ** 2) / (obs_stds_b**2 + 1e-6)).sum(-1).unsqueeze(-1)
+        if(self.args.accuracy == "log_prob"): distribution = Normal(obs_mus_b, obs_stds_b) ; accuracy = -distribution.log_prob(next_obs).sum(-1).unsqueeze(-1)
         obs_complexity = self.args.beta_obs * dkl(obs_mus_b, obs_stds_b, torch.zeros(obs_mus_b.shape), self.args.sigma_obs * torch.ones(obs_stds_b.shape))
         zq_complexity  = self.args.beta_zq  * dkl(zq_mus,    zq_stds,    torch.zeros(zq_mus.shape),    self.args.sigma_zq  * torch.ones(zq_stds.shape))
                 
@@ -240,7 +241,8 @@ class Agent:
         forward_loss = accuracy_loss + obs_complexity_loss + zq_complexity_loss
         if(self.args.beta_obs == 0 and self.args.beta_zq == 0): obs_complexity_loss = None ; zq_complexity_loss = None
         
-        zp_loss = dkl(zp_mus,  zp_stds, zq_mus,  zq_stds).mean()
+        state_accuracy = F.mse_loss(zp_mus, zq_mus, reduction = "none").sum(-1).unsqueeze(-1) + F.mse_loss(zp_stds, zq_stds, reduction = "none").sum(-1).unsqueeze(-1)
+        zp_loss = dkl(zp_mus, zp_stds, zq_mus, zq_stds).mean()
         
         total_loss = forward_loss + zp_loss
         
@@ -252,17 +254,18 @@ class Agent:
             
                         
         
-        # Get curiosity  
-        naive_curiosity = self.args.naive_eta * accuracy
-        
+        # Get curiosity                  
         obs_mus_a = [] ; obs_stds_a = [] ; h = None
         for step in range(steps):
             (_, obs_mu, obs_std), _, _, h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
             obs_mus_a.append(obs_mu) ; obs_stds_a.append(obs_std)
         obs_mus_a = torch.cat(obs_mus_a, dim = 1) ; obs_stds_a = torch.cat(obs_stds_a, dim = 1)
         
-        state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
-        obs_dkl_changes = torch.clamp(dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).sum(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
+        state_dkl_changes = torch.clamp(dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
+        obs_dkl_changes = torch.clamp(dkl(obs_mus_a, obs_stds_a, obs_mus_b, obs_stds_b).mean(-1).unsqueeze(-1), min = 0, max = self.args.dkl_max)
+        
+        naive_curiosity = self.args.naive_eta_obs   * accuracy       * masks + \
+                          self.args.naive_eta_state * state_accuracy * masks
             
         free_curiosity = self.args.free_eta_obs   * obs_dkl_changes   * masks + \
                          self.args.free_eta_state * state_dkl_changes * masks

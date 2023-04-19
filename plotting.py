@@ -137,7 +137,6 @@ def plots(plot_dicts, min_max_dict):
         log_accuracy_dict = get_logs(accuracy_dict)
         log_obs_comp_dict = get_logs(obs_comp_dict)
         log_zq_comp_dict  = get_logs(zq_comp_dict)
-        min_max = (log(min_max[0]), log(min_max[1]))
         
         ax = axs[5,i] if len(plot_dicts) > 1 else axs[5]
         h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy")
@@ -147,13 +146,16 @@ def plots(plot_dicts, min_max_dict):
         ax.legend(handles = [h1, h2, h3])
         ax.set_title(plot_dict["arg_title"] + "\nlog Forward Losses")
         
-        ax = axs[6,i] if len(plot_dicts) > 1 else axs[6]
-        h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy", min_max)
-        ax.set_ylabel("log Loss")
-        h2 = awesome_plot(ax, log_obs_comp_dict, "red",  "log obs Complexity", min_max)
-        h3 = awesome_plot(ax, log_zq_comp_dict,  "pink", "log zq Complexity", min_max)
-        ax.legend(handles = [h1, h2, h3])
-        ax.set_title(plot_dict["arg_title"] + "\nlog Forward Losses, shared min/max")
+        try:
+            min_max = (log(min_max[0]), log(min_max[1]))
+            ax = axs[6,i] if len(plot_dicts) > 1 else axs[6]
+            h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy", min_max)
+            ax.set_ylabel("log Loss")
+            h2 = awesome_plot(ax, log_obs_comp_dict, "red",  "log obs Complexity", min_max)
+            h3 = awesome_plot(ax, log_zq_comp_dict,  "pink", "log zq Complexity", min_max)
+            ax.legend(handles = [h1, h2, h3])
+            ax.set_title(plot_dict["arg_title"] + "\nlog Forward Losses, shared min/max")
+        except: pass
         
         
         
@@ -269,7 +271,6 @@ def plots(plot_dicts, min_max_dict):
         # Log Curiosities
         log_naive_dict = get_logs(naive_dict)
         log_free_dict = get_logs(free_dict)
-        min_max = (log(min_max[0]), log(min_max[1]))
         
         ax = axs[15,i] if len(plot_dicts) > 1 else axs[15]
         awesome_plot(ax, log_naive_dict, "green", "log Naive")
@@ -278,12 +279,15 @@ def plots(plot_dicts, min_max_dict):
         ax.legend()
         ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities")
         
-        ax = axs[16,i] if len(plot_dicts) > 1 else axs[16]
-        awesome_plot(ax, log_naive_dict, "green", "log Naive", min_max)
-        awesome_plot(ax, log_free_dict, "red", "log Free", min_max)
-        ax.set_ylabel("log Curiosity")
-        ax.legend()
-        ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities, shared min/max")
+        try:
+            min_max = (log(min_max[0]), log(min_max[1]))
+            ax = axs[16,i] if len(plot_dicts) > 1 else axs[16]
+            awesome_plot(ax, log_naive_dict, "green", "log Naive", min_max)
+            awesome_plot(ax, log_free_dict, "red", "log Free", min_max)
+            ax.set_ylabel("log Curiosity")
+            ax.legend()
+            ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities, shared min/max")
+        except: pass
         
         
         

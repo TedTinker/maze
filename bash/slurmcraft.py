@@ -44,22 +44,21 @@ def expand_args(args = ""):
 slurm_dict = {
     "d"    : "", 
     "e"    : "--alpha None",
-
     "n"    : "--curiosity naive",
     "en"   : "--alpha None --curiosity naive",
-    "en_rand"   : "--alpha None --curiosity naive --randomness 3",
-    
-    "en_log_prob" : "--alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
-    
-    "ef"  : "--alpha None --curiosity free",
-    "ef_rand"  : "--alpha None --curiosity free --randomness 3",
-    
-    "ef_log_prob" : "--alpha None --curiosity free --accuracy log_prob"}
+    "ef"   : "--alpha None --curiosity free"
+}
 
-hard = " --hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\""
-keys, values = [], []
-for key, value in slurm_dict.items(): keys.append(key) ; values.append(value)
-for key, value in zip(keys, values):  slurm_dict[key + "_hard"] = value + hard    
+def add_this(name, this):
+    keys, values = [], []
+    for key, value in slurm_dict.items(): keys.append(key) ; values.append(value)
+    for key, value in zip(keys, values):  
+        this_this = this
+        if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
+        slurm_dict[key + "_" + name] = value + " " + this_this  
+add_this("hard",     "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\"")
+add_this("log_prob_", "--accuracy log_prob --beta_obs 1 2 3 5 10")
+add_this("rand",     "--randomness 3")
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():
