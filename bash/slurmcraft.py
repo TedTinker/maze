@@ -54,26 +54,12 @@ slurm_dict = {
     "ef"  : "--alpha None --curiosity free",
     "ef_rand"  : "--alpha None --curiosity free --randomness 3",
     
-    "ef_log_prob" : "--alpha None --curiosity free --accuracy log_prob",
-    
-    
-    
-    "d_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\"", 
-    "e_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None",
+    "ef_log_prob" : "--alpha None --curiosity free --accuracy log_prob"}
 
-    "n_hard"    : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --curiosity naive",
-    "en_hard"   : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive",
-    "en_rand_hard"   : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --randomness 3",
-    
-    "en_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity naive --accuracy log_prob --naive_eta .07",
-    
-    "ef_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free",
-        
-    "ef_rand_hard"  : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --randomness 3",
-    
-    "ef_log_prob_hard" : "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\" --alpha None --curiosity free --accuracy log_prob",
-    
-    }
+hard = " --hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\""
+keys, values = [], []
+for key, value in slurm_dict.items(): keys.append(key) ; values.append(value)
+for key, value in zip(keys, values):  slurm_dict[key + "_hard"] = value + hard    
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():
