@@ -82,7 +82,7 @@ parser.add_argument("--sigma_zq",           type=float, default = 1)
 parser.add_argument('--capacity',           type=int,   default = 100)
 
 # Training
-parser.add_argument('--epochs',             type=tuple_type,   default = (3000,))
+parser.add_argument('--epochs',             type=tuple_type,   default = (1000,))
 parser.add_argument('--steps_per_epoch',    type=int,   default = 10)
 parser.add_argument('--batch_size',         type=int,   default = 8)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
@@ -103,12 +103,12 @@ parser.add_argument("--dkl_max",            type=float, default = 1)
 
 # Saving data
 parser.add_argument('--keep_data',           type=int,   default = 25)
-parser.add_argument('--epochs_per_pred_list',type=int,   default = 500)
-parser.add_argument('--agents_per_pred_list',type=int,   default = 2)
-parser.add_argument('--episodes_in_pred_list',type=int,  default = 2)
+parser.add_argument('--epochs_per_pred_list',type=int,   default = 250)
+parser.add_argument('--agents_per_pred_list',type=int,   default = 1)
+parser.add_argument('--episodes_in_pred_list',type=int,  default = 1)
 parser.add_argument('--samples_per_pred',    type=int,   default = 3)
 
-parser.add_argument('--epochs_per_pos_list', type=int,   default = 500)
+parser.add_argument('--epochs_per_pos_list', type=int,   default = 250)
 parser.add_argument('--agents_per_pos_list', type=int,   default = -1)
 parser.add_argument('--episodes_in_pos_list',type=int,   default = 3)
 
