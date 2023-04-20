@@ -226,8 +226,8 @@ class Agent:
         zq_mus = torch.cat(zq_mus, dim = 1)           ; zq_stds = torch.cat(zq_stds, dim = 1)
                 
         next_obs_tiled = torch.tile(next_obs, (1, 1, self.args.elbo_num))
-        accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks
-        accuracy  = F.mse_loss(zp_pred_obs, next_obs_tiled).sum().mean(-1).unsqueeze(-1) * masks
+        accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        accuracy  = F.mse_loss(zp_pred_obs, next_obs_tiled).sum().mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         accuracy  = accuracy.sum() + accuracy_for_naive.sum()
         
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
