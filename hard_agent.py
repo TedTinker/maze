@@ -255,8 +255,8 @@ class Agent:
             distribution = Normal(rgbd_mus_b, rgbd_stds_b) ; accuracy = -distribution.log_prob(next_rgbd).flatten(2).sum(-1).unsqueeze(-1)
             distribution = Normal(spe_mus_b, spe_stds_b) ; accuracy += -distribution.log_prob(next_spe).sum(-1).unsqueeze(-1)
         rgbd_complexity = self.args.beta_obs * dkl(rgbd_mus_b, rgbd_stds_b, torch.zeros(rgbd_mus_b.shape), self.args.sigma_obs * torch.ones(rgbd_stds_b.shape)).flatten(2)
-        spe_complexity = self.args.beta_obs * dkl(spe_mus_b, spe_stds_b, torch.zeros(spe_mus_b.shape), self.args.sigma_obs * torch.ones(spe_stds_b.shape))
-        zq_complexity  = self.args.beta_zq  * dkl(zq_mus,  zq_stds,  torch.zeros(zq_mus.shape),  self.args.sigma_zq  * torch.ones(zq_stds.shape))
+        spe_complexity = self.args.beta_obs  * dkl(spe_mus_b,  spe_stds_b,  torch.zeros(spe_mus_b.shape),  self.args.sigma_obs * torch.ones(spe_stds_b.shape))
+        zq_complexity  = self.args.beta_zq   * dkl(zq_mus,     zq_stds,     torch.zeros(zq_mus.shape),     self.args.sigma_zq  * torch.ones(zq_stds.shape))
                 
         accuracy = accuracy * masks
         accuracy_loss = accuracy.mean()

@@ -33,7 +33,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                     obs_size = 12 + plot_dict["args"].randomness
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
-                        rows = len(pred_list) ; columns = 1 + plot_dict["args"].samples_per_pred
+                        rows = len(pred_list) ; columns = 2 + plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
@@ -45,10 +45,13 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                     if(column == 0): 
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = obs, norm = norm)
                                         ax.set_title("Step {}".format(row))
+                                    elif(column == 1):
+                                        ax.scatter([x for x in range(mu)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
+                                        ax.set_title("Prediction Mean")
                                     else:
                                         e = Normal(0, 1).sample(std.shape) ; pred = mu + e * std
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
-                                        ax.set_title("Prediction Sample {}".format(column))
+                                        ax.set_title("Prediction Sample {}".format(column-1))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
@@ -70,7 +73,7 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}".format(agent, epoch)] ; break 
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
-                        rows = len(pred_list) ; columns = 1 + plot_dict["args"].samples_per_pred
+                        rows = len(pred_list) ; columns = 2 + plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
@@ -82,12 +85,15 @@ def hard_plotting_pred(complete_order, plot_dicts):
                                     if(column == 0): 
                                         ax.imshow(rgbd[:,:,0:3])
                                         ax.set_title("Step {}:\nSpeed {}".format(row, round(spe.item())))
+                                    elif(column == 1):
+                                        ax.imshow(rgbd_mu[:,:,0:3])
+                                        ax.set_title("Prediction Mean:\nSpeed {}".format(round(spe_mu.item())))
                                     else:
                                         e = Normal(0, 1).sample(rgbd_std.shape) ; pred_rgbd = rgbd_mu + e * rgbd_std
                                         e = Normal(0, 1).sample(spe_std.shape)  ; pred_spe  = spe_mu  + e * spe_std
                                         pred_rgbd = torch.clamp(pred_rgbd, min = 0, max = 1)
                                         ax.imshow(pred_rgbd[:,:,0:3])
-                                        ax.set_title("Prediction Sample {}:\nSpeed {}".format(column, round(pred_spe.item())))
+                                        ax.set_title("Prediction Sample {}:\nSpeed {}".format(column-1, round(pred_spe.item())))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
