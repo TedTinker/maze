@@ -55,9 +55,9 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                         pred_num = column - 2
                                         pred = zp_preds[pred_num]
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
-                                        ax.set_title("ZP Sample {}".format(pred_num))
+                                        ax.set_title("ZP Sample {}".format(pred_num+1))
                                     # ZQ Mean
-                                    elif(column == 3 + plot_dict["args"].samples_per_pred):
+                                    elif(column == 2 + plot_dict["args"].samples_per_pred):
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = zq_mu_pred, norm = norm)
                                         ax.set_title("ZQ Mean")
                                     # ZQ Samples
@@ -65,7 +65,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                         pred_num = column - 3 - plot_dict["args"].samples_per_pred
                                         pred = zq_preds[pred_num]
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
-                                        ax.set_title("ZQ Sample {}".format(pred_num))
+                                        ax.set_title("ZQ Sample {}".format(pred_num+1))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
