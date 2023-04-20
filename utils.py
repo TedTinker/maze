@@ -82,6 +82,7 @@ parser.add_argument('--capacity',           type=int,   default = 100)
 parser.add_argument('--epochs',             type=tuple_type,   default = (1000,))
 parser.add_argument('--steps_per_epoch',    type=int,   default = 10)
 parser.add_argument('--batch_size',         type=int,   default = 8)
+parser.add_argument('--elbo_num',           type=int,   default = 3)
 parser.add_argument('--GAMMA',              type=int,   default = .99)
 parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors
 parser.add_argument('--accuracy',           type=str,   default = "mse")

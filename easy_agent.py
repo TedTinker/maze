@@ -126,14 +126,14 @@ class Agent:
             for episode in range(self.args.episodes_in_pred_list):
                 done = False ; h = None ; forward_h = None ; prev_a = torch.zeros((1, 1, action_size))
                 self.maze.begin()
-                pred_list = [(self.maze.obs(), None, None)]
+                pred_list = [(self.maze.obs(), None, None, None, None)]
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o = self.maze.obs()
                         a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
-                        zp_pred_o, zq_pred_o, _, _, forward_h = self.forward(o, prev_a, a, forward_h)
+                        (zp_mu_pred, zp_preds), (zq_mu_pred, zq_preds), _, _, forward_h = self.forward(o, prev_a, a, forward_h, quantity = self.args.samples_per_pred)
                         next_o = self.maze.obs()
-                        pred_list.append((next_o, zp_pred_o, zq_pred_o))
+                        pred_list.append((next_o, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a
                 pred_lists.append(pred_list)
             self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
@@ -217,16 +217,17 @@ class Agent:
         zp_mus = []      ; zp_stds = []
         zq_mus = []      ; zq_stds = [] ; h = None
         for step in range(steps):
-            zp_pred, zq_pred, (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h)   
-            zp_pred_obs.append(zp_pred) ; zq_pred_obs.append(zq_pred)
-            zp_mus.append(zp_mu)        ; zp_stds.append(zp_std)
-            zq_mus.append(zq_mu)        ; zq_stds.append(zq_std)
+            (_, zp_preds), (_, zq_preds), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h, quantity = self.args.elbo_num)   
+            zp_pred_obs.append(torch.cat(zp_preds, -1)) ; zq_pred_obs.append(torch.cat(zq_preds, -1))
+            zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
+            zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
         zp_pred_obs = torch.cat(zp_pred_obs, dim = 1) ; zq_pred_obs = torch.cat(zq_pred_obs, dim = 1)
         zp_mus = torch.cat(zp_mus, dim = 1)           ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1)           ; zq_stds = torch.cat(zq_stds, dim = 1)
                 
-        accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs, reduction = "none").mean(-1).unsqueeze(-1) * masks
-        accuracy  = F.mse_loss(zp_pred_obs, next_obs).sum().mean(-1).unsqueeze(-1) * masks
+        next_obs_tiled = torch.tile(next_obs, (1, 1, self.args.elbo_num))
+        accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks
+        accuracy  = F.mse_loss(zp_pred_obs, next_obs_tiled).sum().mean(-1).unsqueeze(-1) * masks
         accuracy  = accuracy.sum() + accuracy_for_naive.sum()
         
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks

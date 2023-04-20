@@ -33,25 +33,39 @@ def easy_plotting_pred(complete_order, plot_dicts):
                     obs_size = 12 + plot_dict["args"].randomness
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
-                        rows = len(pred_list) ; columns = 2 + plot_dict["args"].samples_per_pred
+                        rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
-                        for row, (obs, mu, std) in enumerate(pred_list):
+                        for row, (obs, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
                                 if(row == 0 and column > 0): pass
                                 else:                
-                                    if(column == 0): 
+                                    # Actual obs
+                                    if(column == 0):   
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = obs, norm = norm)
                                         ax.set_title("Step {}".format(row))
-                                    elif(column == 1):
-                                        ax.scatter([x for x in range(mu)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
-                                        ax.set_title("Prediction Mean")
-                                    else:
-                                        e = Normal(0, 1).sample(std.shape) ; pred = mu + e * std
+                                    # ZP Mean
+                                    elif(column == 1): 
+                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = zp_mu_pred, norm = norm)
+                                        ax.set_title("ZP Mean")
+                                    # ZP Samples
+                                    elif(column in [i+2 for i in range(plot_dict["args"].samples_per_pred)]):
+                                        pred_num = column - 2
+                                        pred = zp_preds[pred_num]
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
-                                        ax.set_title("Prediction Sample {}".format(column-1))
+                                        ax.set_title("ZP Sample {}".format(pred_num))
+                                    # ZQ Mean
+                                    elif(column == 3 + plot_dict["args"].samples_per_pred):
+                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = zq_mu_pred, norm = norm)
+                                        ax.set_title("ZQ Mean")
+                                    # ZQ Samples
+                                    else:
+                                        pred_num = column - 3 - plot_dict["args"].samples_per_pred
+                                        pred = zq_preds[pred_num]
+                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = pred, norm = norm)
+                                        ax.set_title("ZQ Sample {}".format(pred_num))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
