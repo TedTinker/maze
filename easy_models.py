@@ -42,27 +42,20 @@ class Forward(nn.Module):
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         
-        self.obs_mu = nn.Sequential(
+        self.obs = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, obs_size), 
             nn.Tanh())
-        self.obs_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, obs_size))
         
         self.gru.apply(init_weights)
         self.zp_mu.apply(init_weights)
         self.zp_rho.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_rho.apply(init_weights)
-        self.obs_mu.apply(init_weights)
-        self.obs_rho.apply(init_weights)
+        self.obs.apply(init_weights)
         self.to(args.device)
         
     def zp(self, prev_action, h = None):
@@ -90,15 +83,18 @@ class Forward(nn.Module):
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
         zp, zp_mu, zp_std = self.zp(prev_action, h)
         zq, zq_mu, zq_std = self.zq(obs, prev_action, h)
+        
         h = h if h == None else h.permute(1, 0, 2)
-        h, _ = self.gru(zq, h)
-        x = torch.cat((h, action), dim=-1)
-        obs_mu = self.obs_mu(x)
-        obs_std = torch.log1p(torch.exp(self.obs_rho(x)))
-        obs_std = torch.clamp(obs_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(obs_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        pred_obs = obs_mu + e * obs_std
-        return((pred_obs, obs_mu, obs_std), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h)
+        
+        zp_h, _ = self.gru(zp, h)
+        zp_x = torch.cat((zp_h, action), dim=-1)
+        zp_pred_obs = self.obs(zp_x)
+        
+        zq_h, _ = self.gru(zq, h)
+        zq_x = torch.cat((zq_h, action), dim=-1)
+        zq_pred_obs = self.obs(zq_x)
+        
+        return(zp_pred_obs, zq_pred_obs, (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), zq_h)
         
 
 

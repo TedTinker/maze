@@ -73,10 +73,7 @@ parser.add_argument("--tau",                type=float, default = .05)      # Fo
 # Complexity 
 parser.add_argument('--std_min',            type=int,   default = exp(-20))
 parser.add_argument('--std_max',            type=int,   default = exp(2))
-parser.add_argument("--beta_obs",           type=float, default = 2)
-parser.add_argument("--beta_zq",            type=float, default = 2)      
-parser.add_argument("--sigma_obs",          type=float, default = 1)     
-parser.add_argument("--sigma_zq",           type=float, default = 1)      
+parser.add_argument("--beta",               type=float, default = 2)
 
 # Memory buffer
 parser.add_argument('--capacity',           type=int,   default = 100)
@@ -95,10 +92,8 @@ parser.add_argument("--target_entropy",     type=float, default = -2)       # So
 
 # Curiosity
 parser.add_argument("--curiosity",          type=str,   default = "none")     # Which kind of curiosity
-parser.add_argument("--naive_eta_obs",      type=float, default = .15)        # Scale curiosity
-parser.add_argument("--naive_eta_state",    type=float, default = .15)        # Scale curiosity
-parser.add_argument("--free_eta_obs",       type=float, default = 3)        # Scale curiosity
-parser.add_argument("--free_eta_state",     type=float, default = 3)        # Scale curiosity
+parser.add_argument("--naive_eta",          type=float, default = .15)        # Scale curiosity
+parser.add_argument("--free_eta",           type=float, default = 3)        # Scale curiosity
 parser.add_argument("--dkl_max",            type=float, default = 1)        
 
 # Saving data
