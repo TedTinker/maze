@@ -70,43 +70,26 @@ class Forward(nn.Module):
         self.obs.apply(init_weights)
         self.to(args.device)
         
-    def zp(self, h = None):
-        x = torch.cat((h,), dim=-1)
-        zp_mu, zp_std = var(x, self.zp_mu, self.zp_rho, self.args)
-        return(zp_mu, zp_std)
-        
-    def zq(self, obs, h = None):
-        x = torch.cat((h, obs), dim=-1)
-        zq_mu, zq_std = var(x, self.zq_mu, self.zq_rho, self.args)
-        return(zq_mu, zq_std)
-        
     def forward(self, obs, action, h = None, quantity = 1):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
-        zp_mu, zp_std = self.zp(h)
-        zq_mu, zq_std = self.zq(obs, h)
-                
-        zp_x = torch.cat((zp_mu, action), dim=-1)
-        zp_mu_pred = self.obs(zp_x)
         
-        zq_x = torch.cat((zq_mu, action), dim=-1)
-        zq_mu_pred = self.obs(zq_x)
+        zp_mu, zp_std = var(torch.cat((h,),     dim=-1), self.zp_mu, self.zp_rho, self.args)
+        zq_mu, zq_std = var(torch.cat((h, obs), dim=-1), self.zq_mu, self.zq_rho, self.args)
+                
+        zp_mu_pred = self.obs(torch.cat((zp_mu, action), dim=-1))
+        zq_mu_pred = self.obs(torch.cat((zq_mu, action), dim=-1))
         
         zp_pred_obs = [] ; zq_pred_obs = []
         for _ in range(quantity):
             zp = sample(zp_mu, zp_std)
-            zp_x = torch.cat((zp, action), dim=-1)
-            zp_pred_obs.append(self.obs(zp_x))
-            
+            zp_pred_obs.append(self.obs(torch.cat((zp, action), dim=-1)))
             zq = sample(zq_mu, zq_std)
-            zq_x = torch.cat((zq, action), dim=-1)
-            zq_pred_obs.append(self.obs(zq_x))
+            zq_pred_obs.append(self.obs(torch.cat((zq, action), dim=-1)))
         if(quantity == 0): zq = sample(zq_mu, zq_std)
         
-        h = h if h == None else h.permute(1, 0, 2)
-        x = torch.cat((obs, action), dim=-1)
-        h, _ = self.gru(x, h)
+        h, _ = self.gru(torch.cat((obs, action), dim=-1), h.permute(1, 0, 2))
         
         return((zp_mu_pred, zp_pred_obs), (zq_mu_pred, zq_pred_obs), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h)
         
