@@ -10,7 +10,13 @@ from easy_maze import obs_size, action_size
 
 
 
-def var(mu, std):
+def var(x, mu_func, rho_func, args):
+    mu = mu_func(x)
+    std = torch.log1p(torch.exp(rho_func(x)))
+    std = torch.clamp(std, min = args.std_min, max = args.std_max)
+    return(mu, std)
+    
+def sample(mu, std):
     e = Normal(0, 1).sample(std.shape).to("cuda" if std.is_cuda else "cpu")
     return(mu + e * std)
     
@@ -66,16 +72,12 @@ class Forward(nn.Module):
         
     def zp(self, h = None):
         x = torch.cat((h,), dim=-1)
-        zp_mu = self.zp_mu(x)
-        zp_std = torch.log1p(torch.exp(self.zp_rho(x)))
-        zp_std = torch.clamp(zp_std, min = self.args.std_min, max = self.args.std_max)
+        zp_mu, zp_std = var(x, self.zp_mu, self.zp_rho, self.args)
         return(zp_mu, zp_std)
         
     def zq(self, obs, h = None):
         x = torch.cat((h, obs), dim=-1)
-        zq_mu = self.zq_mu(x)
-        zq_std = torch.log1p(torch.exp(self.zq_rho(x)))
-        zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
+        zq_mu, zq_std = var(x, self.zq_mu, self.zq_rho, self.args)
         return(zq_mu, zq_std)
         
     def forward(self, obs, action, h = None, quantity = 1):
@@ -93,16 +95,14 @@ class Forward(nn.Module):
         
         zp_pred_obs = [] ; zq_pred_obs = []
         for _ in range(quantity):
-            zp = var(zp_mu, zp_std)
+            zp = sample(zp_mu, zp_std)
             zp_x = torch.cat((zp, action), dim=-1)
             zp_pred_obs.append(self.obs(zp_x))
             
-            zq = var(zq_mu, zq_std)
+            zq = sample(zq_mu, zq_std)
             zq_x = torch.cat((zq, action), dim=-1)
             zq_pred_obs.append(self.obs(zq_x))
-        if(quantity == 0):             
-            e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-            zq = zq_mu + e * zq_std
+        if(quantity == 0): zq = sample(zq_mu, zq_std)
         
         h = h if h == None else h.permute(1, 0, 2)
         x = torch.cat((obs, action), dim=-1)
@@ -136,10 +136,8 @@ class Actor(nn.Module):
     def forward(self, obs, prev_action, h = None):
         x = torch.cat((obs, prev_action), dim=-1)
         h, _ = self.gru(x, h)
-        mu = self.mu(h)
-        std = torch.log1p(torch.exp(self.rho(h)))
-        std = torch.clamp(std, min = self.args.std_min, max = self.args.std_max)
-        x = var(mu, std)
+        mu, std = var(h, self.mu, self.rho, self.args)
+        x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
