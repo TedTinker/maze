@@ -7,6 +7,12 @@ from torchinfo import summary as torch_summary
 
 from utils import default_args, init_weights
 from easy_maze import obs_size, action_size
+
+
+
+def var(mu, std):
+    e = Normal(0, 1).sample(std.shape).to("cuda" if std.is_cuda else "cpu")
+    return(mu + e * std)
     
         
 
@@ -87,15 +93,16 @@ class Forward(nn.Module):
         
         zp_pred_obs = [] ; zq_pred_obs = []
         for _ in range(quantity):
-            e = Normal(0, 1).sample(zp_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-            zp = zp_mu + e * zp_std
+            zp = var(zp_mu, zp_std)
             zp_x = torch.cat((zp, action), dim=-1)
             zp_pred_obs.append(self.obs(zp_x))
             
-            e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-            zq = zq_mu + e * zq_std
+            zq = var(zq_mu, zq_std)
             zq_x = torch.cat((zq, action), dim=-1)
             zq_pred_obs.append(self.obs(zq_x))
+        if(quantity == 0):             
+            e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+            zq = zq_mu + e * zq_std
         
         h = h if h == None else h.permute(1, 0, 2)
         x = torch.cat((obs, action), dim=-1)
@@ -132,8 +139,7 @@ class Actor(nn.Module):
         mu = self.mu(h)
         std = torch.log1p(torch.exp(self.rho(h)))
         std = torch.clamp(std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = mu + e * std
+        x = var(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
