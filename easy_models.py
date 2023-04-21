@@ -35,22 +35,22 @@ class Forward(nn.Module):
             batch_first = True)
         
         self.zp_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
         self.zp_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         
         self.zq_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
         self.zq_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         
@@ -70,23 +70,22 @@ class Forward(nn.Module):
         self.obs.apply(init_weights)
         self.to(args.device)
         
-    def zp(self, prev_action, h = None):
-        x = torch.cat((h, prev_action), dim=-1)
+    def zp(self, h = None):
+        x = torch.cat((h,), dim=-1)
         zp_mu, zp_std = var(x, self.zp_mu, self.zp_rho, self.args)
         return(zp_mu, zp_std)
         
-    def zq(self, obs, prev_action, h = None):
-        x = torch.cat((h, obs, prev_action), dim=-1)
+    def zq(self, obs, h = None):
+        x = torch.cat((h, obs), dim=-1)
         zq_mu, zq_std = var(x, self.zq_mu, self.zq_rho, self.args)
         return(zq_mu, zq_std)
         
-    def forward(self, obs, prev_action, action, h = None, quantity = 1):
+    def forward(self, obs, action, h = None, quantity = 1):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
-        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
-        zp_mu, zp_std = self.zp(prev_action, h)
-        zq_mu, zq_std = self.zq(obs, prev_action, h)
+        zp_mu, zp_std = self.zp(h)
+        zq_mu, zq_std = self.zq(obs, h)
         
         h = h if h == None else h.permute(1, 0, 2)
         

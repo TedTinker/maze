@@ -131,7 +131,7 @@ class Agent:
                     if(not done): 
                         o = self.maze.obs()
                         a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
-                        (zp_mu_pred, zp_preds), (zq_mu_pred, zq_preds), _, _, forward_h = self.forward(o, prev_a, a, forward_h, quantity = self.args.samples_per_pred)
+                        (zp_mu_pred, zp_preds), (zq_mu_pred, zq_preds), _, _, forward_h = self.forward(o, a, forward_h, quantity = self.args.samples_per_pred)
                         next_o = self.maze.obs()
                         pred_list.append((next_o, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a
@@ -217,7 +217,7 @@ class Agent:
         zp_mus = []      ; zp_stds = []
         zq_mus = []      ; zq_stds = [] ; h = None
         for step in range(steps):
-            (_, zp_preds), (_, zq_preds), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h, quantity = self.args.elbo_num)   
+            (_, zp_preds), (_, zq_preds), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h = self.forward(obs[:, step], actions[:, step], h, quantity = self.args.elbo_num)   
             zp_pred_obs.append(torch.cat(zp_preds, -1)) ; zq_pred_obs.append(torch.cat(zq_preds, -1))
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
