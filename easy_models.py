@@ -162,7 +162,7 @@ class Critic(nn.Module):
             hidden_size = args.hidden_size,
             batch_first = True)
         self.lin = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size),
+            nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, 1))
 
@@ -170,12 +170,11 @@ class Critic(nn.Module):
         self.lin.apply(init_weights)
         self.to(args.device)
 
-    def forward(self, obs, prev_action, action, h = None):
-        x = torch.cat((obs, prev_action), dim=-1)
+    def forward(self, obs, action, h = None):
+        x = torch.cat((obs, action), dim=-1)
         h, _ = self.gru(x, h)
-        x = torch.cat((h, action), dim=-1)
-        x = self.lin(x)
-        return(x)
+        Q = self.lin(h)
+        return(Q)
     
 
 

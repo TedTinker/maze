@@ -40,8 +40,8 @@ class Agent:
         without_zp = [] 
         just_zp = []
         for name, param in self.forward.named_parameters():
-            if name.startswith("zp"): just_zp.append(param) ; print("ZP: ", name)
-            else:                     without_zp.append(param) ; print("NOT:", name)
+            if name.startswith("zp"): just_zp.append(param)    #; print("ZP: ", name)
+            else:                     without_zp.append(param) #; print("NOT:", name)
         self.forward_opt = optim.Adam(without_zp, lr=self.args.forward_lr, weight_decay=0)   
         self.zp_opt = optim.Adam(just_zp, lr=self.args.forward_lr, weight_decay=0)     
                            
@@ -260,19 +260,19 @@ class Agent:
         # Train critics
         with torch.no_grad():
             next_action, log_pis_next, _ = self.actor(next_obs, actions)
-            Q_target1_next = self.critic1_target(next_obs, actions, next_action)
-            Q_target2_next = self.critic2_target(next_obs, actions, next_action)
+            Q_target1_next = self.critic1_target(next_obs, next_action)
+            Q_target2_next = self.critic2_target(next_obs, next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(obs, prev_actions, actions)
+        Q_1 = self.critic1(obs, actions)
         critic1_loss = 0.5*F.mse_loss(Q_1*masks, Q_targets*masks)
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(obs, prev_actions, actions)
+        Q_2 = self.critic2(obs, actions)
         critic2_loss = 0.5*F.mse_loss(Q_2*masks, Q_targets*masks)
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
@@ -309,8 +309,8 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
-                self.critic1(obs, prev_actions, actions_pred), 
-                self.critic2(obs, prev_actions, actions_pred)).mean(-1).unsqueeze(-1)
+                self.critic1(obs, actions_pred), 
+                self.critic2(obs, actions_pred)).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()
