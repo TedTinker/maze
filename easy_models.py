@@ -30,7 +30,7 @@ class Forward(nn.Module):
         self.args = args
         
         self.gru = nn.GRU(
-            input_size =  obs_size + action_size,
+            input_size =  args.state_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         
@@ -55,7 +55,7 @@ class Forward(nn.Module):
             nn.Linear(args.hidden_size, args.state_size))
         
         self.obs = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(args.state_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
@@ -74,23 +74,27 @@ class Forward(nn.Module):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
+        permuted_h = h if h == None else h.permute(1, 0, 2)
         
-        zp_mu, zp_std = var(torch.cat((h,),     dim=-1), self.zp_mu, self.zp_rho, self.args)
-        zq_mu, zq_std = var(torch.cat((h, obs), dim=-1), self.zq_mu, self.zq_rho, self.args)
-                
-        zp_mu_pred = self.obs(torch.cat((zp_mu, action), dim=-1))
-        zq_mu_pred = self.obs(torch.cat((zq_mu, action), dim=-1))
+        zp_mu, zp_std = var(torch.cat((h,),           dim=-1), self.zp_mu, self.zp_rho, self.args)
+        zp_h, _ = self.gru(torch.cat((zp_mu, action), dim=-1), permuted_h)
+        zp_mu_pred = self.obs(zp_h)
+        
+        zq_mu, zq_std = var(torch.cat((h, obs),       dim=-1), self.zq_mu, self.zq_rho, self.args)
+        zq_h, _ = self.gru(torch.cat((zq_mu, action), dim=-1), permuted_h)
+        zq_mu_pred = self.obs(zq_h)
         
         zp_pred_obs = [] ; zq_pred_obs = []
         for _ in range(quantity):
             zp = sample(zp_mu, zp_std)
-            zp_pred_obs.append(self.obs(torch.cat((zp, action), dim=-1)))
+            zp_h, _ = self.gru(torch.cat((zp, action), dim=-1), permuted_h)
+            zp_pred_obs.append(self.obs(zp_h))
+            
             zq = sample(zq_mu, zq_std)
-            zq_pred_obs.append(self.obs(torch.cat((zq, action), dim=-1)))
-        
-        h, _ = self.gru(torch.cat((obs, action), dim=-1), h.permute(1, 0, 2))
-        
-        return((zp_mu_pred, zp_pred_obs), (zq_mu_pred, zq_pred_obs), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h)
+            zq_h, _ = self.gru(torch.cat((zq, action), dim=-1), permuted_h)
+            zq_pred_obs.append(self.obs(zq_h))
+                
+        return((zp_mu_pred, zp_pred_obs), (zq_mu_pred, zq_pred_obs), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), zq_h)
         
 
 
@@ -116,7 +120,8 @@ class Actor(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
-        h, _ = self.gru(torch.cat((obs, prev_action), dim=-1), h)
+        permuted_h = h if h == None else h.permute(1, 0, 2)
+        h, _ = self.gru(torch.cat((obs, prev_action), dim=-1), permuted_h)
         mu, std = var(h, self.mu, self.rho, self.args)
         x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
@@ -148,7 +153,8 @@ class Critic(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, action, h = None):
-        h, _ = self.gru(torch.cat((obs,action), dim=-1), h)
+        permuted_h = h if h == None else h.permute(1, 0, 2)
+        h, _ = self.gru(torch.cat((obs,action), dim=-1), permuted_h)
         x = self.lin(h)
         return(x)
     
@@ -185,6 +191,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((3, 1, obs_size), (3, 1, action_size), (3, 1, action_size))))
+    print(torch_summary(critic, ((3, 1, obs_size), (3, 1, action_size))))
 
 # %%
