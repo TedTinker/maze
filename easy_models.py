@@ -29,11 +29,8 @@ class Forward(nn.Module):
         
         self.args = args
         
-        self.gru_input = nn.Sequential(
-            nn.Linear(obs_size + action_size, args.hidden_size), 
-            nn.LeakyReLU())
         self.gru = nn.GRU(
-            input_size =  args.hidden_size,
+            input_size =  obs_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         
@@ -91,8 +88,7 @@ class Forward(nn.Module):
             zq = sample(zq_mu, zq_std)
             zq_pred_obs.append(self.obs(torch.cat((zq, action), dim=-1)))
         
-        x = self.gru_input(torch.cat((obs, action), dim=-1))
-        h, _ = self.gru(x, h.permute(1, 0, 2))
+        h, _ = self.gru(torch.cat((obs, action), dim=-1), h.permute(1, 0, 2))
         
         return((zp_mu_pred, zp_pred_obs), (zq_mu_pred, zq_pred_obs), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h)
         
@@ -104,12 +100,9 @@ class Actor(nn.Module):
         super(Actor, self).__init__()
         
         self.args = args
-        
-        self.gru_input = nn.Sequential(
-            nn.Linear(obs_size + action_size, args.hidden_size), 
-            nn.LeakyReLU())
+
         self.gru = nn.GRU(
-            input_size =  args.hidden_size,
+            input_size =  obs_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         self.mu = nn.Sequential(
@@ -123,8 +116,7 @@ class Actor(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
-        x = self.gru_input(torch.cat((obs, prev_action), dim=-1))
-        h, _ = self.gru(x, h)
+        h, _ = self.gru(torch.cat((obs, prev_action), dim=-1), h)
         mu, std = var(h, self.mu, self.rho, self.args)
         x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
@@ -141,12 +133,9 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
         
         self.args = args
-        
-        self.gru_input = nn.Sequential(
-            nn.Linear(obs_size + action_size, args.hidden_size), 
-            nn.LeakyReLU())
+
         self.gru = nn.GRU(
-            input_size =  args.hidden_size,
+            input_size =  obs_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         self.lin = nn.Sequential(
@@ -159,8 +148,7 @@ class Critic(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, action, h = None):
-        x = self.gru_input(torch.cat((obs,action), dim=-1))
-        h, _ = self.gru(x, h)
+        h, _ = self.gru(torch.cat((obs,action), dim=-1), h)
         x = self.lin(h)
         return(x)
     

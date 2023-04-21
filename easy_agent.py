@@ -237,14 +237,16 @@ class Agent:
         if(self.args.beta == 0): complexity = None
                         
         self.forward_opt.zero_grad()
+        self.zp_opt.zero_grad()
         forward_loss.backward()
         self.forward_opt.step()
+        self.zp_opt.step()
             
                         
         
         # Get curiosity                  
         naive_curiosity = self.args.naive_eta * accuracy_for_naive  
-        free_curiosity  = self.args.free_eta  * complexity_for_free
+        free_curiosity  = self.args.free_eta  * torch.clamp(complexity_for_free, min = 0, max = self.args.dkl_max)
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
         elif(self.args.curiosity == "free"): curiosity = free_curiosity
         else:                                curiosity = torch.zeros(rewards.shape)
