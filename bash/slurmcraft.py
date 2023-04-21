@@ -58,7 +58,7 @@ def add_this(name, this):
         slurm_dict[key + "_" + name] = value + " " + this_this  
 add_this("hard",      "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\"")
 add_this("log_prob", "--accuracy log_prob")
-add_this("rand",      "--randomness 3")
+add_this("rand",      "--randomness 10")
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():
