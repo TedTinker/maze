@@ -70,24 +70,14 @@ class Forward(nn.Module):
         self.obs.apply(init_weights)
         self.to(args.device)
         
-    def zp(self, h = None):
-        x = torch.cat((h,), dim=-1)
-        zp_mu, zp_std = var(x, self.zp_mu, self.zp_rho, self.args)
-        return(zp_mu, zp_std)
-        
-    def zq(self, obs, h = None):
-        x = torch.cat((h, obs), dim=-1)
-        zq_mu, zq_std = var(x, self.zq_mu, self.zq_rho, self.args)
-        return(zq_mu, zq_std)
-        
     def forward(self, obs, action, h = None, quantity = 1):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
-        zp_mu, zp_std = self.zp(h)
-        zq_mu, zq_std = self.zq(obs, h)
+        zp_mu, zp_std = var(h,                           self.zp_mu, self.zp_rho, self.args)
+        zq_mu, zq_std = var(torch.cat((h, obs), dim=-1), self.zq_mu, self.zq_rho, self.args)
         
-        h = h if h == None else h.permute(1, 0, 2)
+        h = h.permute(1, 0, 2)
         
         zp_h, _ = self.gru(zp_mu, h)
         zp_x = torch.cat((zp_h, action), dim=-1)
@@ -101,13 +91,11 @@ class Forward(nn.Module):
         for _ in range(quantity):
             zp = sample(zp_mu, zp_std)
             zp_h, _ = self.gru(zp, h)
-            zp_x = torch.cat((zp_h, action), dim=-1)
-            zp_pred_obs.append(self.obs(zp_x))
+            zp_pred_obs.append(self.obs(torch.cat((zp_h, action), dim=-1)))
             
             zq = sample(zq_mu, zq_std)
             zq_h, _ = self.gru(zq, h)
-            zq_x = torch.cat((zq_h, action), dim=-1)
-            zq_pred_obs.append(self.obs(zq_x))
+            zq_pred_obs.append(self.obs(torch.cat((zq_h, action), dim=-1)))
         if(quantity == 0): 
             zq = sample(zq_mu, zq_std)
             zq_h, _ = self.gru(zq, h)
