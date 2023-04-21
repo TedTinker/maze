@@ -131,7 +131,7 @@ class Agent:
                     if(not done): 
                         o = self.maze.obs()
                         a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
-                        (zp_mu_pred, zp_preds), (zq_mu_pred, zq_preds), _, _, forward_h = self.forward(o, prev_a, a, forward_h, quantity = self.args.samples_per_pred)
+                        (zp_mu_pred, zp_preds), (zq_mu_pred, zq_preds), _, _, forward_h = self.forward(o, a, forward_h, quantity = self.args.samples_per_pred)
                         next_o = self.maze.obs()
                         pred_list.append((next_o, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a
@@ -217,7 +217,7 @@ class Agent:
         zp_mus = []      ; zp_stds = []
         zq_mus = []      ; zq_stds = [] ; h = None
         for step in range(steps):
-            (_, zp_preds), (_, zq_preds), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h = self.forward(obs[:, step], prev_actions[:, step], actions[:, step], h, quantity = self.args.elbo_num)   
+            (_, zp_preds), (_, zq_preds), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h = self.forward(obs[:, step], actions[:, step], h, quantity = self.args.elbo_num)   
             zp_pred_obs.append(torch.cat(zp_preds, -1)) ; zq_pred_obs.append(torch.cat(zq_preds, -1))
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
@@ -257,19 +257,19 @@ class Agent:
         # Train critics
         with torch.no_grad():
             next_action, log_pis_next, _ = self.actor(next_obs, actions)
-            Q_target1_next = self.critic1_target(next_obs, actions, next_action)
-            Q_target2_next = self.critic2_target(next_obs, actions, next_action)
+            Q_target1_next = self.critic1_target(next_obs, next_action)
+            Q_target2_next = self.critic2_target(next_obs, next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(obs, prev_actions, actions)
+        Q_1 = self.critic1(obs, actions)
         critic1_loss = 0.5*F.mse_loss(Q_1*masks, Q_targets*masks)
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(obs, prev_actions, actions)
+        Q_2 = self.critic2(obs, actions)
         critic2_loss = 0.5*F.mse_loss(Q_2*masks, Q_targets*masks)
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
@@ -306,8 +306,8 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
-                self.critic1(obs, prev_actions, actions_pred), 
-                self.critic2(obs, prev_actions, actions_pred)).mean(-1).unsqueeze(-1)
+                self.critic1(obs, actions_pred), 
+                self.critic2(obs, actions_pred)).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()
