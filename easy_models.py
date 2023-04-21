@@ -15,6 +15,10 @@ def var(x, mu_func, rho_func, args):
     std = torch.log1p(torch.exp(rho_func(x)))
     std = torch.clamp(std, min = args.std_min, max = args.std_max)
     return(mu, std)
+
+def sample(mu, std):
+    e = Normal(0, 1).sample(std.shape).to("cuda" if std.is_cuda else "cpu")
+    return(mu + e * std)
     
     
     
@@ -96,20 +100,17 @@ class Forward(nn.Module):
         
         zp_pred_obs = [] ; zq_pred_obs = []
         for _ in range(quantity):
-            e = Normal(0, 1).sample(zp_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-            zp = zp_mu + e * zp_std
+            zp = sample(zp_mu, zp_std)
             zp_h, _ = self.gru(zp, h)
             zp_x = torch.cat((zp_h, action), dim=-1)
             zp_pred_obs.append(self.obs(zp_x))
             
-            e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-            zq = zq_mu + e * zq_std
+            zq = sample(zq_mu, zq_std)
             zq_h, _ = self.gru(zq, h)
             zq_x = torch.cat((zq_h, action), dim=-1)
             zq_pred_obs.append(self.obs(zq_x))
         if(quantity == 0): 
-            e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-            zq = zq_mu + e * zq_std
+            zq = sample(zq_mu, zq_std)
             zq_h, _ = self.gru(zq, h)
         
         return((zp_mu_pred, zp_pred_obs), (zq_mu_pred, zq_pred_obs), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), zq_h)
@@ -141,8 +142,7 @@ class Actor(nn.Module):
         x = torch.cat((obs, prev_action), dim=-1)
         h, _ = self.gru(x, h)
         mu, std = var(h, self.mu, self.rho, self.args)
-        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = mu + e * std
+        x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
