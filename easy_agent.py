@@ -40,8 +40,8 @@ class Agent:
         without_zp = [] 
         just_zp = []
         for name, param in self.forward.named_parameters():
-            if name.startswith("zp"): just_zp.append(param)
-            else:                     without_zp.append(param)
+            if name.startswith("zp"): just_zp.append(param) ; print("ZP: ", name)
+            else:                     without_zp.append(param) ; print("NOT:", name)
         self.forward_opt = optim.Adam(without_zp, lr=self.args.forward_lr, weight_decay=0)   
         self.zp_opt = optim.Adam(just_zp, lr=self.args.forward_lr, weight_decay=0)     
                            
@@ -236,9 +236,12 @@ class Agent:
         forward_loss = accuracy + complexity
         if(self.args.beta == 0): complexity = None
                         
+                        
+        #print("BEFORE:", [param for name, param in self.forward.named_parameters() if name.startswith("zp")])
         self.forward_opt.zero_grad()
         forward_loss.backward()
         self.forward_opt.step()
+        #print("AFTER:", [param for name, param in self.forward.named_parameters() if name.startswith("zp")])
             
                         
         

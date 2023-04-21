@@ -10,6 +10,14 @@ from easy_maze import obs_size, action_size
     
         
 
+def var(x, mu_func, rho_func, args):
+    mu = mu_func(x)
+    std = torch.log1p(torch.exp(rho_func(x)))
+    std = torch.clamp(std, min = args.std_min, max = args.std_max)
+    return(mu, std)
+    
+    
+    
 class Forward(nn.Module):
     
     def __init__(self, args = default_args):
@@ -60,16 +68,12 @@ class Forward(nn.Module):
         
     def zp(self, prev_action, h = None):
         x = torch.cat((h, prev_action), dim=-1)
-        zp_mu = self.zp_mu(x)
-        zp_std = torch.log1p(torch.exp(self.zp_rho(x)))
-        zp_std = torch.clamp(zp_std, min = self.args.std_min, max = self.args.std_max)
+        zp_mu, zp_std = var(x, self.zp_mu, self.zp_rho, self.args)
         return(zp_mu, zp_std)
         
     def zq(self, obs, prev_action, h = None):
         x = torch.cat((h, obs, prev_action), dim=-1)
-        zq_mu = self.zq_mu(x)
-        zq_std = torch.log1p(torch.exp(self.zq_rho(x)))
-        zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
+        zq_mu, zq_std = var(x, self.zq_mu, self.zq_rho, self.args)
         return(zq_mu, zq_std)
         
     def forward(self, obs, prev_action, action, h = None, quantity = 1):
@@ -103,6 +107,10 @@ class Forward(nn.Module):
             zq_h, _ = self.gru(zq, h)
             zq_x = torch.cat((zq_h, action), dim=-1)
             zq_pred_obs.append(self.obs(zq_x))
+        if(quantity == 0): 
+            e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
+            zq = zq_mu + e * zq_std
+            zq_h, _ = self.gru(zq, h)
         
         return((zp_mu_pred, zp_pred_obs), (zq_mu_pred, zq_pred_obs), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), zq_h)
         
@@ -132,9 +140,7 @@ class Actor(nn.Module):
     def forward(self, obs, prev_action, h = None):
         x = torch.cat((obs, prev_action), dim=-1)
         h, _ = self.gru(x, h)
-        mu = self.mu(h)
-        std = torch.log1p(torch.exp(self.rho(h)))
-        std = torch.clamp(std, min = self.args.std_min, max = self.args.std_max)
+        mu, std = var(h, self.mu, self.rho, self.args)
         e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
         x = mu + e * std
         #action = torch.clamp(x, min = -1, max = 1)
