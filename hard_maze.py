@@ -45,7 +45,7 @@ class Hard_Maze:
         rgbd = torch.from_numpy(rgbd).float()
         rgbd = resize(rgbd.permute(-1,0,1), (self.args.image_size, self.args.image_size)).permute(1,2,0)
         spe = torch.tensor(self.agent_spe).unsqueeze(0)
-        return(rgbd, spe)
+        return(rgbd.unsqueeze(0), spe.unsqueeze(0))
     
     def change_velocity(self, yaw_change, speed, verbose = False):
         old_yaw = self.agent_yaw

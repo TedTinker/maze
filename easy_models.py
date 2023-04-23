@@ -82,6 +82,7 @@ class Forward(nn.Module):
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         h_q_m1 = h_q_m1.permute(1, 0, 2)
         h, _ = self.gru(z_mu, h_q_m1)
+                
         mu_pred = self.obs(torch.cat((h, action), dim=-1))
         pred_obs = []
         for _ in range(quantity):

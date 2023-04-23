@@ -132,14 +132,17 @@ class Forward(nn.Module):
     def get_preds(self, action, z_mu, z_std, h_q_m1, quantity = 1):
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         h_q_m1 = h_q_m1.permute(1, 0, 2)
-        h, _ = self.gru(z_mu, h_q_m1)
-        rgbd_mu_pred = self.rgbd(self.rgbd_up(torch.cat((h, action), dim=-1)))
+        h, _ = self.gru(z_mu, h_q_m1)        
+        
+        rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], self.args.image_size//2, self.args.image_size//2, 4))
+        rgbd_mu_pred = rnn_cnn(self.rgbd, rgbd)
         spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
         pred_rgbd = [] ; pred_spe = []
         for _ in range(quantity):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
-            pred_rgbd.append(self.rgbd(self.rgbd_up(torch.cat((h, action), dim=-1))))
+            rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], self.args.image_size//2, self.args.image_size//2, 4))
+            pred_rgbd.append(rnn_cnn(self.rgbd, rgbd))
             pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
 
@@ -185,6 +188,8 @@ class Actor(nn.Module):
         self.to(args.device)
 
     def forward(self, rgbd, spe, prev_action, h = None):
+        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
+        if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
@@ -239,6 +244,8 @@ class Critic(nn.Module):
         self.to(args.device)
 
     def forward(self, rgbd, spe, action, h = None):
+        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
+        if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)

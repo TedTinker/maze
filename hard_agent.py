@@ -64,7 +64,7 @@ class Agent:
             "arg_name" : self.args.arg_name,
             "pred_lists" : {}, "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
-            "accuracy" : [], "obs_complexity" : [], "zq_complexity" : [], "zp" : [],
+            "accuracy" : [], "complexity" : [],
             "alpha" : [], "actor" : [], 
             "critic_1" : [], "critic_2" : [], 
             "extrinsic" : [], "intrinsic_curiosity" : [], 
@@ -142,7 +142,7 @@ class Agent:
                     if(not done): 
                         o, s = self.maze.obs()
                         a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
-                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, h_q)
+                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, s, h_q)
                         (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         pred_list.append((self.maze.obs(), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))))
@@ -188,13 +188,11 @@ class Agent:
                     l, e, ic, ie, naive, free = plot_data
                     if(self.epochs == 1 or self.epochs >= sum(self.args.epochs) or self.epochs % self.args.keep_data == 0):
                         self.plot_dict["accuracy"].append(l[0][0])
-                        self.plot_dict["obs_complexity"].append(l[0][1])
-                        self.plot_dict["zq_complexity"].append(l[0][2])
-                        self.plot_dict["zp"].append(l[0][3])
-                        self.plot_dict["alpha"].append(l[0][4])
-                        self.plot_dict["actor"].append(l[0][5])
-                        self.plot_dict["critic_1"].append(l[0][6])
-                        self.plot_dict["critic_2"].append(l[0][7])
+                        self.plot_dict["complexity"].append(l[0][1])
+                        self.plot_dict["alpha"].append(l[0][2])
+                        self.plot_dict["actor"].append(l[0][3])
+                        self.plot_dict["critic_1"].append(l[0][4])
+                        self.plot_dict["critic_2"].append(l[0][5])
                         self.plot_dict["extrinsic"].append(e)
                         self.plot_dict["intrinsic_curiosity"].append(ic)
                         self.plot_dict["intrinsic_entropy"].append(ie)
@@ -233,7 +231,7 @@ class Agent:
         zp_pred_rgbd = [] ; zp_pred_spe = []
         zq_pred_rgbd = [] ; zq_pred_spe = []
         zp_mus = [] ; zp_stds = []
-        zq_mus = [] ; zq_stds = [] ; h_q = torch.zeros((episodes, 1, self.args.hidden_size)).to(obs.device)
+        zq_mus = [] ; zq_stds = [] ; h_q = torch.zeros((episodes, 1, self.args.hidden_size)).to(rgbd.device)
         for step in range(steps):
             (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(rgbd[:, step], spe[:, step], h_q)
             (_, zp_preds_rgbd), (_, zp_preds_spe) = self.forward.get_preds(actions[:, step], zp_mu, zp_std, h_q, quantity = self.args.elbo_num)
@@ -286,19 +284,19 @@ class Agent:
         # Train critics
         with torch.no_grad():
             next_action, log_pis_next, _ = self.actor(next_rgbd, next_spe, actions)
-            Q_target1_next = self.critic1_target(next_rgbd, next_spe, actions, next_action)
-            Q_target2_next = self.critic2_target(next_rgbd, next_spe, actions, next_action)
+            Q_target1_next = self.critic1_target(next_rgbd, next_spe, next_action)
+            Q_target2_next = self.critic2_target(next_rgbd, next_spe, next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(rgbd, spe, prev_actions, actions)
+        Q_1 = self.critic1(rgbd, spe, actions)
         critic1_loss = 0.5*F.mse_loss(Q_1*masks, Q_targets*masks)
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(rgbd, spe, prev_actions, actions)
+        Q_2 = self.critic2(rgbd, spe, actions)
         critic2_loss = 0.5*F.mse_loss(Q_2*masks, Q_targets*masks)
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
@@ -335,8 +333,8 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_prrgbd = 0.0
             Q = torch.min(
-                self.critic1(rgbd, spe, prev_actions, actions_pred), 
-                self.critic2(rgbd, spe, prev_actions, actions_pred)).mean(-1).unsqueeze(-1)
+                self.critic1(rgbd, spe, actions_pred), 
+                self.critic2(rgbd, spe, actions_pred)).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_prrgbd - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()
