@@ -73,7 +73,8 @@ parser.add_argument("--tau",                type=float, default = .05)      # Fo
 # Complexity 
 parser.add_argument('--std_min',            type=int,   default = exp(-20))
 parser.add_argument('--std_max',            type=int,   default = exp(2))
-parser.add_argument("--beta",               type=float, default = 2)
+parser.add_argument("--beta_p",             type=float, default = 2)
+parser.add_argument("--beta_q",             type=float, default = 2)
 
 # Memory buffer
 parser.add_argument('--capacity',           type=int,   default = 100)

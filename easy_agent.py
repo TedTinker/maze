@@ -230,22 +230,20 @@ class Agent:
                 
         next_obs_tiled = torch.tile(next_obs, (1, 1, self.args.elbo_num))
         
-        prior_accuracy   = (F.mse_loss(zp_pred_obs, next_obs_tiled).mean(-1).unsqueeze(-1) * masks / self.args.elbo_num).sum()
-        accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
-        posterior_accuracy = accuracy_for_naive.sum()
+        accuracy_p   = (F.mse_loss(zp_pred_obs, next_obs_tiled).mean(-1).unsqueeze(-1) * masks / self.args.elbo_num).sum()
+        complexity_p = (self.args.beta_p * dkl(zp_mus, zp_stds, torch.zeros(zp_mus.shape), torch.ones(zp_stds.shape)).mean(-1).unsqueeze(-1) * masks).sum()
         
-        prior_complexity = (self.args.beta * dkl(zp_mus, zp_stds, torch.zeros(zp_mus.shape), torch.ones(zp_stds.shape)).mean(-1).unsqueeze(-1) * masks).sum()
-        complexity_for_free = dkl(zq_mus, zq_stds, zp_mus.detach(), zp_stds.detach()).mean(-1).unsqueeze(-1) * masks
-        posterior_complexity = self.args.beta * complexity_for_free.mean()        
-        
-        accuracy     = prior_accuracy   + posterior_accuracy
-        complexity   = prior_complexity + posterior_complexity
-        forward_loss = accuracy + complexity
+        accuracy_for_naive   = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        accuracy_q           = accuracy_for_naive.sum()
+        complexity_for_free  = dkl(zq_mus, zq_stds, zp_mus.detach(), zp_stds.detach()).mean(-1).unsqueeze(-1) * masks
+        complexity_q         = self.args.beta_q * complexity_for_free.mean()        
                         
         self.forward_opt.zero_grad()
-        forward_loss.backward()
+        (accuracy_p + accuracy_q + complexity_p + complexity_q).backward()
         self.forward_opt.step()
-        if(self.args.beta == 0): complexity = None
+        
+        if(self.args.beta_p == 0): complexity_p = None
+        if(self.args.beta_q == 0): complexity_q = None
             
                         
         
@@ -330,20 +328,18 @@ class Agent:
             intrinsic_entropy = None
             actor_loss = None
         
-        if(accuracy != None):   accuracy = accuracy.item()
-        if(complexity != None): complexity = complexity.item()
-        if(alpha_loss != None): alpha_loss = alpha_loss.item()
-        if(actor_loss != None): actor_loss = actor_loss.item()
-        if(critic1_loss != None): 
-            critic1_loss = critic1_loss.item()
-            critic1_loss = log(critic1_loss) if critic1_loss > 0 else critic1_loss
-        if(critic2_loss != None): 
-            critic2_loss = critic2_loss.item()
-            critic2_loss = log(critic2_loss) if critic2_loss > 0 else critic2_loss
-        losses = np.array([[accuracy, complexity, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
+        if(accuracy_p != None):   accuracy_p = accuracy_p.item()
+        if(accuracy_q != None):   accuracy_q = accuracy_q.item()
+        if(complexity_p != None): complexity_p = complexity_p.item()
+        if(complexity_q != None): complexity_q = complexity_q.item()
+        if(alpha_loss != None):   alpha_loss = alpha_loss.item()
+        if(actor_loss != None):   actor_loss = actor_loss.item()
+        if(critic1_loss != None): critic1_loss = log(critic1_loss.item()) if critic1_loss > 0 else critic1_loss.item()
+        if(critic2_loss != None): critic2_loss = log(critic2_loss.item()) if critic2_loss > 0 else critic2_loss.item()
+        losses = np.array([[accuracy_p + accuracy_q, complexity_p + complexity_q, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         naive_curiosity = naive_curiosity.mean().item()
-        free_curiosity = free_curiosity.mean().item()
+        free_curiosity  = free_curiosity.mean().item()
         if(free_curiosity == 0): free_curiosity = None
         
         return(losses, extrinsic, intrinsic_curiosity, intrinsic_entropy, naive_curiosity, free_curiosity)
