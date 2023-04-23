@@ -135,14 +135,17 @@ class Forward(nn.Module):
         h, _ = self.gru(z_mu, h_q_m1)        
         
         rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], self.args.image_size//2, self.args.image_size//2, 4))
-        rgbd_mu_pred = rnn_cnn(self.rgbd, rgbd)
+        rgbd_mu_pred = (rnn_cnn(self.rgbd, rgbd) + 1) / 2
         spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
+        print(rgbd_mu_pred.shape, flush = True)
+        print(rgbd_mu_pred.permute(0, 1, -1, 2, 3).shape, flush = True)
+        
         pred_rgbd = [] ; pred_spe = []
         for _ in range(quantity):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
             rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], self.args.image_size//2, self.args.image_size//2, 4))
-            pred_rgbd.append(rnn_cnn(self.rgbd, rgbd))
+            pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, -1, 2, 3) + 1) / 2)
             pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
 

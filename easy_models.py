@@ -10,10 +10,9 @@ from easy_maze import obs_size, action_size
     
         
 
-def var(x, mu_func, rho_func, args):
+def var(x, mu_func, std_func, args):
     mu = mu_func(x)
-    std = torch.log1p(torch.exp(rho_func(x)))
-    std = torch.clamp(std, min = args.std_min, max = args.std_max)
+    std = torch.clamp(std_func(x), min = args.std_min, max = args.std_max)
     return(mu, std)
 
 def sample(mu, std):
@@ -39,20 +38,22 @@ class Forward(nn.Module):
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
-        self.zp_rho = nn.Sequential(
+        self.zp_std = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.state_size))
+            nn.Linear(args.hidden_size, args.state_size),
+            nn.Softplus())
         
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
-        self.zq_rho = nn.Sequential(
+        self.zq_std = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.state_size))
+            nn.Linear(args.hidden_size, args.state_size),
+            nn.Softplus())
         
         self.obs = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
@@ -64,16 +65,16 @@ class Forward(nn.Module):
         
         self.gru.apply(init_weights)
         self.zp_mu.apply(init_weights)
-        self.zp_rho.apply(init_weights)
+        self.zp_std.apply(init_weights)
         self.zq_mu.apply(init_weights)
-        self.zq_rho.apply(init_weights)
+        self.zq_std.apply(init_weights)
         self.obs.apply(init_weights)
         self.to(args.device)
         
     def forward(self, obs, h_q_m1):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
-        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_rho, self.args)
-        zq_mu, zq_std = var(torch.cat((h_q_m1, obs), dim=-1), self.zq_mu, self.zq_rho, self.args)        
+        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_std, self.args)
+        zq_mu, zq_std = var(torch.cat((h_q_m1, obs), dim=-1), self.zq_mu, self.zq_std, self.args)        
         zq = sample(zq_mu, zq_std)
         h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
         return((zp_mu, zp_std), (zq_mu, zq_std), h_q)
@@ -106,18 +107,19 @@ class Actor(nn.Module):
             batch_first = True)
         self.mu = nn.Sequential(
             nn.Linear(args.hidden_size, action_size))
-        self.rho = nn.Sequential(
-            nn.Linear(args.hidden_size, action_size))
+        self.std = nn.Sequential(
+            nn.Linear(args.hidden_size, action_size),
+            nn.Softplus())
 
         self.gru.apply(init_weights)
         self.mu.apply(init_weights)
-        self.rho.apply(init_weights)
+        self.std.apply(init_weights)
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
         x = torch.cat((obs, prev_action), dim=-1)
         h, _ = self.gru(x, h)
-        mu, std = var(h, self.mu, self.rho, self.args)
+        mu, std = var(h, self.mu, self.std, self.args)
         x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
