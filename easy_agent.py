@@ -15,7 +15,7 @@ from math import exp
 from utils import default_args, dkl
 from easy_maze import Easy_Maze, action_size
 from easy_buffer import RecurrentReplayBuffer
-from easy_models import Prior_Forward, Posterior_Forward, Actor, Critic
+from easy_models import Forward, Actor, Critic
 
 
 
@@ -36,11 +36,8 @@ class Agent:
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        self.prior_forward = Prior_Forward(self.args)
-        self.prior_forward_opt = optim.Adam(self.prior_forward.parameters(), lr=self.args.forward_lr, weight_decay=0)  
-        
-        self.posterior_forward = Posterior_Forward(self.args)
-        self.posterior_forward_opt = optim.Adam(self.posterior_forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
+        self.forward = Forward(self.args)
+        self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)  
                            
         self.actor = Actor(args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
@@ -130,10 +127,9 @@ class Agent:
                     if(not done): 
                         o = self.maze.obs()
                         a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
-                        zp_mu, zp_std        = self.prior_forward(       h_q)
-                        (zq_mu, zq_std), h_q_p1 = self.posterior_forward(o, h_q)
-                        zp_mu_pred, zp_preds = self.posterior_forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
-                        zq_mu_pred, zq_preds = self.posterior_forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
+                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, h_q)
+                        zp_mu_pred, zp_preds = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
+                        zq_mu_pred, zq_preds = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         h_q = h_q_p1
                         next_o = self.maze.obs()
                         pred_list.append((next_o, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
@@ -221,35 +217,34 @@ class Agent:
         zp_mus = []      ; zp_stds = []
         zq_mus = []      ; zq_stds = [] ; h_q = torch.zeros((episodes, 1, self.args.hidden_size)).to(obs.device)
         for step in range(steps):
-            zp_mu, zp_std        = self.prior_forward(                     h_q.detach())
-            (zq_mu, zq_std), h_q_p1 = self.posterior_forward(obs[:, step], h_q)
-            _, zp_preds = self.posterior_forward.get_preds(actions[:, step], zp_mu, zp_std, h_q, quantity = self.args.elbo_num)
-            _, zq_preds = self.posterior_forward.get_preds(actions[:, step], zq_mu, zq_std, h_q, quantity = self.args.elbo_num)
+            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(obs[:, step], h_q)
+            _, zp_preds = self.forward.get_preds(actions[:, step], zp_mu, zp_std, h_q, quantity = self.args.elbo_num)
+            _, zq_preds = self.forward.get_preds(actions[:, step], zq_mu, zq_std, h_q, quantity = self.args.elbo_num)
             zp_pred_obs.append(torch.cat(zp_preds, -1)) ; zq_pred_obs.append(torch.cat(zq_preds, -1))
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
-            h_q + h_q_p1
+            h_q = h_q_p1
         zp_pred_obs = torch.cat(zp_pred_obs, dim = 1) ; zq_pred_obs = torch.cat(zq_pred_obs, dim = 1)
         zp_mus = torch.cat(zp_mus, dim = 1)           ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1)           ; zq_stds = torch.cat(zq_stds, dim = 1)
                 
         next_obs_tiled = torch.tile(next_obs, (1, 1, self.args.elbo_num))
+        
         prior_accuracy   = (F.mse_loss(zp_pred_obs, next_obs_tiled).mean(-1).unsqueeze(-1) * masks / self.args.elbo_num).sum()
-        prior_complexity = (self.args.beta * dkl(zp_mus, zp_stds, torch.zeros(zp_mus.shape), torch.ones(zp_stds.shape)).mean(-1).unsqueeze(-1) * masks).sum()
-        
-        self.prior_forward_opt.zero_grad()
-        (prior_accuracy + prior_complexity).backward()
-        self.prior_forward_opt.step()
-        
         accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
-        accuracy = accuracy_for_naive.sum()
+        posterior_accuracy = accuracy_for_naive.sum()
         
+        prior_complexity = (self.args.beta * dkl(zp_mus, zp_stds, torch.zeros(zp_mus.shape), torch.ones(zp_stds.shape)).mean(-1).unsqueeze(-1) * masks).sum()
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus.detach(), zp_stds.detach()).mean(-1).unsqueeze(-1) * masks
-        complexity = self.args.beta * complexity_for_free.mean()        
+        posterior_complexity = self.args.beta * complexity_for_free.mean()        
+        
+        accuracy     = prior_accuracy   + posterior_accuracy
+        complexity   = prior_complexity + posterior_complexity
+        forward_loss = accuracy + complexity
                         
-        self.posterior_forward_opt.zero_grad()
-        (accuracy + complexity).backward()
-        self.posterior_forward_opt.step()
+        self.forward_opt.zero_grad()
+        forward_loss.backward()
+        self.forward_opt.step()
         if(self.args.beta == 0): complexity = None
             
                         
@@ -336,7 +331,7 @@ class Agent:
             actor_loss = None
         
         if(accuracy != None):   accuracy = accuracy.item()
-        if(complexity != None):  complexity = complexity.item()
+        if(complexity != None): complexity = complexity.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): 
@@ -360,7 +355,6 @@ class Agent:
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
     def state_dict(self):
-        return
         return(
             self.forward.state_dict(),
             self.actor.state_dict(),
@@ -370,7 +364,6 @@ class Agent:
             self.critic2_target.state_dict())
 
     def load_state_dict(self, state_dict):
-        return
         self.forward.load_state_dict(state_dict[0])
         self.actor.load_state_dict(state_dict[1])
         self.critic1.load_state_dict(state_dict[2])
@@ -380,7 +373,6 @@ class Agent:
         self.memory = RecurrentReplayBuffer(self.args)
 
     def eval(self):
-        return
         self.forward.eval()
         self.actor.eval()
         self.critic1.eval()
@@ -389,7 +381,6 @@ class Agent:
         self.critic2_target.eval()
 
     def train(self):
-        return
         self.forward.train()
         self.actor.train()
         self.critic1.train()

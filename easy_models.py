@@ -19,15 +19,20 @@ def var(x, mu_func, rho_func, args):
 def sample(mu, std):
     e = Normal(0, 1).sample(std.shape).to("cuda" if std.is_cuda else "cpu")
     return(mu + e * std)
-
-
-
-class Prior_Forward(nn.Module):
+    
+    
+    
+class Forward(nn.Module):
     
     def __init__(self, args = default_args):
-        super(Prior_Forward, self).__init__()
+        super(Forward, self).__init__()
         
         self.args = args
+        
+        self.gru = nn.GRU(
+            input_size =  args.hidden_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
@@ -38,28 +43,6 @@ class Prior_Forward(nn.Module):
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
-        
-        self.zp_mu.apply(init_weights)
-        self.zp_rho.apply(init_weights)
-        self.to(args.device)
-        
-    def forward(self, h_q_m1):
-        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_rho, self.args)
-        return(zp_mu, zp_std)
-    
-    
-    
-class Posterior_Forward(nn.Module):
-    
-    def __init__(self, args = default_args):
-        super(Posterior_Forward, self).__init__()
-        
-        self.args = args
-        
-        self.gru = nn.GRU(
-            input_size =  args.hidden_size,
-            hidden_size = args.hidden_size,
-            batch_first = True)
         
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
@@ -80,6 +63,8 @@ class Posterior_Forward(nn.Module):
             nn.Tanh())
         
         self.gru.apply(init_weights)
+        self.zp_mu.apply(init_weights)
+        self.zp_rho.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_rho.apply(init_weights)
         self.obs.apply(init_weights)
@@ -87,10 +72,11 @@ class Posterior_Forward(nn.Module):
         
     def forward(self, obs, h_q_m1):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
+        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_rho, self.args)
         zq_mu, zq_std = var(torch.cat((h_q_m1, obs), dim=-1), self.zq_mu, self.zq_rho, self.args)        
         zq = sample(zq_mu, zq_std)
         h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
-        return((zq_mu, zq_std), h_q)
+        return((zp_mu, zp_std), (zq_mu, zq_std), h_q)
     
     def get_preds(self, action, z_mu, z_std, h_q_m1, quantity = 1):
         if(len(action.shape) == 2): action = action.unsqueeze(1)
