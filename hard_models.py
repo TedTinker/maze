@@ -10,10 +10,9 @@ spe_size = 1 ; action_size = 2
 
 
 
-def var(x, mu_func, rho_func, args):
+def var(x, mu_func, std_func, args):
     mu = mu_func(x)
-    std = torch.log1p(torch.exp(rho_func(x)))
-    std = torch.clamp(std, min = args.std_min, max = args.std_max)
+    std = torch.clamp(std_func(x), min = args.std_min, max = args.std_max)
     return(mu, std)
 
 def sample(mu, std):
@@ -63,20 +62,22 @@ class Forward(nn.Module):
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
-        self.zp_rho = nn.Sequential(
+        self.zp_std = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.state_size))
+            nn.Linear(args.hidden_size, args.state_size),
+            nn.Softplus())
         
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + rgbd_size + spe_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
-        self.zq_rho = nn.Sequential(
+        self.zq_std = nn.Sequential(
             nn.Linear(args.hidden_size + rgbd_size + spe_size, args.hidden_size), 
             nn.Tanh(),
-            nn.Linear(args.hidden_size, args.state_size))
+            nn.Linear(args.hidden_size, args.state_size),
+            nn.Softplus())
         
         self.rgbd_up = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, rgbd_size),
@@ -109,9 +110,9 @@ class Forward(nn.Module):
         self.gru.apply(init_weights)
         self.rgbd_in.apply(init_weights)
         self.zp_mu.apply(init_weights)
-        self.zp_rho.apply(init_weights)
+        self.zp_std.apply(init_weights)
         self.zq_mu.apply(init_weights)
-        self.zq_rho.apply(init_weights)
+        self.zq_std.apply(init_weights)
         self.rgbd_up.apply(init_weights)
         self.rgbd.apply(init_weights)
         self.spe.apply(init_weights)
@@ -122,9 +123,9 @@ class Forward(nn.Module):
         if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
-        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_rho, self.args)
-        zq_mu, zq_std = var(torch.cat((h_q_m1, rgbd, spe), dim=-1), self.zq_mu, self.zq_rho, self.args)        
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
+        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_std, self.args)
+        zq_mu, zq_std = var(torch.cat((h_q_m1, rgbd, spe), dim=-1), self.zq_mu, self.zq_std, self.args)        
         zq = sample(zq_mu, zq_std)
         h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
         return((zp_mu, zp_std), (zq_mu, zq_std), h_q)
@@ -134,18 +135,16 @@ class Forward(nn.Module):
         h_q_m1 = h_q_m1.permute(1, 0, 2)
         h, _ = self.gru(z_mu, h_q_m1)        
         
-        rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], self.args.image_size//2, self.args.image_size//2, 4))
-        rgbd_mu_pred = (rnn_cnn(self.rgbd, rgbd) + 1) / 2
+        rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
+        rgbd_mu_pred = (rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2) + 1) / 2
         spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
-        print(rgbd_mu_pred.shape, flush = True)
-        print(rgbd_mu_pred.permute(0, 1, -1, 2, 3).shape, flush = True)
-        
+                
         pred_rgbd = [] ; pred_spe = []
         for _ in range(quantity):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
-            rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], self.args.image_size//2, self.args.image_size//2, 4))
-            pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, -1, 2, 3) + 1) / 2)
+            rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
+            pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2) + 1) / 2)
             pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
 
@@ -181,13 +180,14 @@ class Actor(nn.Module):
             batch_first = True)
         self.mu = nn.Sequential(
             nn.Linear(args.hidden_size, action_size))
-        self.rho = nn.Sequential(
-            nn.Linear(args.hidden_size, action_size))
+        self.std = nn.Sequential(
+            nn.Linear(args.hidden_size, action_size),
+            nn.Softplus())
 
         self.rgbd_in.apply(init_weights)
         self.gru.apply(init_weights)
         self.mu.apply(init_weights)
-        self.rho.apply(init_weights)
+        self.std.apply(init_weights)
         self.to(args.device)
 
     def forward(self, rgbd, spe, prev_action, h = None):
@@ -195,10 +195,10 @@ class Actor(nn.Module):
         if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
         x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)
-        mu, std = var(h, self.mu, self.rho, self.args)
+        mu, std = var(h, self.mu, self.std, self.args)
         x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
@@ -251,7 +251,7 @@ class Critic(nn.Module):
         if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
         x = torch.cat((rgbd, spe, action), dim=-1)
         h, _ = self.gru(x, h)
         Q = self.lin(h)

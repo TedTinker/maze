@@ -91,23 +91,36 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
-                        for row, ((rgbd, spe), (rgbd_mu, rgbd_std), (spe_mu, spe_std)) in enumerate(pred_list):
+                        for row, ((rgbd, spe), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))) in enumerate(pred_list):
+                            print(rgbd.shape, spe.shape, rgbd_mu_pred_p.shape, spe_mu_pred_p.shape, flush = True)
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
                                 if(row == 0 and column > 0): pass
                                 else:                
-                                    if(column == 0): 
+                                    # Actual obs
+                                    if(column == 0):   
                                         ax.imshow(rgbd[:,:,0:3])
-                                        ax.set_title("Step {}:\nSpeed {}".format(row, round(spe.item())))
-                                    elif(column == 1):
-                                        ax.imshow(rgbd_mu[:,:,0:3])
-                                        ax.set_title("Prediction Mean:\nSpeed {}".format(round(spe_mu.item())))
+                                        ax.set_title("Step {}".format(row))
+                                    # ZP Mean
+                                    elif(column == 1): 
+                                        ax.imshow(rgbd_mu_pred_p) # Still gotta add speeds in titles!
+                                        ax.set_title("ZP Mean")
+                                    # ZP Samples
+                                    elif(column in [i+2 for i in range(plot_dict["args"].samples_per_pred)]):
+                                        pred_num = column - 2
+                                        pred = pred_rgbd_p[pred_num]
+                                        ax.imshow(pred)
+                                        ax.set_title("ZP Sample {}".format(pred_num+1))
+                                    # ZQ Mean
+                                    elif(column == 2 + plot_dict["args"].samples_per_pred):
+                                        ax.imshow(rgbd_mu_pred_q)
+                                        ax.set_title("ZQ Mean")
+                                    # ZQ Samples
                                     else:
-                                        e = Normal(0, 1).sample(rgbd_std.shape) ; pred_rgbd = rgbd_mu + e * rgbd_std
-                                        e = Normal(0, 1).sample(spe_std.shape)  ; pred_spe  = spe_mu  + e * spe_std
-                                        pred_rgbd = torch.clamp(pred_rgbd, min = 0, max = 1)
-                                        ax.imshow(pred_rgbd[:,:,0:3])
-                                        ax.set_title("Prediction Sample {}:\nSpeed {}".format(column-1, round(pred_spe.item())))
+                                        pred_num = column - 3 - plot_dict["args"].samples_per_pred
+                                        pred = pred_rgbd_q[pred_num]
+                                        ax.imshow(pred)
+                                        ax.set_title("ZQ Sample {}".format(pred_num+1))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
