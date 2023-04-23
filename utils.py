@@ -35,79 +35,79 @@ parser = argparse.ArgumentParser()
 def tuple_type(arg_string): return(ast.literal_eval(arg_string))
 
 # Meta 
-parser.add_argument("--arg_title",          type=str,   default = "default") 
-parser.add_argument("--arg_name",           type=str,   default = "default") 
-parser.add_argument("--agents",             type=int,   default = 36)
-parser.add_argument("--previous_agents",    type=int,   default = 0)
-parser.add_argument('--device',             type=str,   default = "cpu")
+parser.add_argument("--arg_title",          type=str,        default = "default") 
+parser.add_argument("--arg_name",           type=str,        default = "default") 
+parser.add_argument("--agents",             type=int,        default = 36)
+parser.add_argument("--previous_agents",    type=int,        default = 0)
+parser.add_argument('--device',             type=str,        default = "cpu")
 
 # Maze 
-parser.add_argument('--hard_maze',          type=bool,  default = False)
-parser.add_argument('--maze_list',          type=tuple_type,   default = ("easy",))
-parser.add_argument('--max_steps',          type=int,   default = 10)
-parser.add_argument('--step_lim_punishment',type=int,   default = -1)
-parser.add_argument('--wall_punishment',    type=int,   default = -1)
-parser.add_argument('--non_one',            type=int,   default = -1)
+parser.add_argument('--hard_maze',          type=bool,       default = False)
+parser.add_argument('--maze_list',          type=tuple_type, default = ("easy",))
+parser.add_argument('--max_steps',          type=int,        default = 10)
+parser.add_argument('--step_lim_punishment',type=int,        default = -1)
+parser.add_argument('--wall_punishment',    type=int,        default = -1)
+parser.add_argument('--non_one',            type=int,        default = -1)
 parser.add_argument('--default_reward',     type=tuple_type, default = ((1, 1),))  # ((weight, reward), (weight, reward))
 parser.add_argument('--better_reward',      type=tuple_type, default = ((1, 10),))
-parser.add_argument('--randomness',         type=int,   default = 0)
+parser.add_argument('--randomness',         type=int,        default = 0)
 
 # Hard Maze
-parser.add_argument('--body_size',          type=float, default = 2)    
-parser.add_argument('--image_size',         type=int,   default = 8)
-parser.add_argument('--min_speed',          type=float, default = 50)
-parser.add_argument('--max_speed',          type=float, default = 100)
-parser.add_argument('--steps_per_step',     type=int,   default = 5)
-parser.add_argument('--max_yaw_change',     type=float, default = pi/2)
+parser.add_argument('--body_size',          type=float,      default = 2)    
+parser.add_argument('--image_size',         type=int,        default = 8)
+parser.add_argument('--min_speed',          type=float,      default = 50)
+parser.add_argument('--max_speed',          type=float,      default = 100)
+parser.add_argument('--steps_per_step',     type=int,        default = 5)
+parser.add_argument('--max_yaw_change',     type=float,      default = pi/2)
 
 # Module 
-parser.add_argument('--hidden_size',        type=int,   default = 32)   
-parser.add_argument('--state_size',         type=int,   default = 32)
-parser.add_argument('--forward_lr',         type=float, default = .01)
-parser.add_argument('--alpha_lr',           type=float, default = .01) 
-parser.add_argument('--actor_lr',           type=float, default = .01)
-parser.add_argument('--critic_lr',          type=float, default = .01)
-parser.add_argument('--action_prior',       type=str,   default = "normal")
-parser.add_argument("--tau",                type=float, default = .05)      # For soft-updating target critics
+parser.add_argument('--hidden_size',        type=int,        default = 32)   
+parser.add_argument('--state_size',         type=int,        default = 32)
+parser.add_argument('--forward_lr',         type=float,      default = .01)
+parser.add_argument('--alpha_lr',           type=float,      default = .01) 
+parser.add_argument('--actor_lr',           type=float,      default = .01)
+parser.add_argument('--critic_lr',          type=float,      default = .01)
+parser.add_argument('--action_prior',       type=str,        default = "normal")
+parser.add_argument("--tau",                type=float,      default = .05)      # For soft-updating target critics
 
 # Complexity 
-parser.add_argument('--std_min',            type=int,   default = exp(-20))
-parser.add_argument('--std_max',            type=int,   default = exp(2))
-parser.add_argument("--beta_p",             type=float, default = 2)
-parser.add_argument("--beta_q",             type=float, default = 2)
+parser.add_argument('--std_min',            type=int,        default = exp(-20))
+parser.add_argument('--std_max',            type=int,        default = exp(2))
+parser.add_argument("--beta_p",             type=float,      default = 2)
+parser.add_argument("--beta_q",             type=float,      default = 2)
 
 # Memory buffer
-parser.add_argument('--capacity',           type=int,   default = 100)
+parser.add_argument('--capacity',           type=int,        default = 100)
 
 # Training
-parser.add_argument('--epochs',             type=tuple_type,   default = (1000,))
-parser.add_argument('--steps_per_epoch',    type=int,   default = 10)
-parser.add_argument('--batch_size',         type=int,   default = 8)
-parser.add_argument('--elbo_num',           type=int,   default = 3)
-parser.add_argument('--GAMMA',              type=int,   default = .99)
-parser.add_argument("--d",                  type=int,   default = 2)        # Delay to train actors
-parser.add_argument('--accuracy',           type=str,   default = "mse")
+parser.add_argument('--epochs',             type=tuple_type, default = (1000,))
+parser.add_argument('--steps_per_epoch',    type=int,        default = 10)
+parser.add_argument('--batch_size',         type=int,        default = 8)
+parser.add_argument('--elbo_num',           type=int,        default = 3)
+parser.add_argument('--GAMMA',              type=int,        default = .99)
+parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
+parser.add_argument('--accuracy',           type=str,        default = "mse")
 
 # Entropy
-parser.add_argument("--alpha",              type=str,   default = 0)        # Soft-Actor-Critic entropy aim
-parser.add_argument("--target_entropy",     type=float, default = -2)       # Soft-Actor-Critic entropy aim
+parser.add_argument("--alpha",              type=str,        default = 0)        # Soft-Actor-Critic entropy aim
+parser.add_argument("--target_entropy",     type=float,      default = -2)       # Soft-Actor-Critic entropy aim
 
 # Curiosity
-parser.add_argument("--curiosity",          type=str,   default = "none")     # Which kind of curiosity
-parser.add_argument("--naive_eta",          type=float, default = 10)        # Scale curiosity
-parser.add_argument("--free_eta",           type=float, default = 4)        # Scale curiosity
-parser.add_argument("--dkl_max",            type=float, default = 1)        
+parser.add_argument("--curiosity",          type=str,        default = "none")     # Which kind of curiosity
+parser.add_argument("--naive_eta",          type=float,      default = 10)        # Scale curiosity
+parser.add_argument("--free_eta",           type=float,      default = 4)        # Scale curiosity
+parser.add_argument("--dkl_max",            type=float,      default = 1)        
 
 # Saving data
-parser.add_argument('--keep_data',           type=int,   default = 25)
-parser.add_argument('--epochs_per_pred_list',type=int,   default = 250)
-parser.add_argument('--agents_per_pred_list',type=int,   default = 1)
-parser.add_argument('--episodes_in_pred_list',type=int,  default = 1)
-parser.add_argument('--samples_per_pred',    type=int,   default = 1)
+parser.add_argument('--keep_data',           type=int,        default = 25)
+parser.add_argument('--epochs_per_pred_list',type=int,        default = 250)
+parser.add_argument('--agents_per_pred_list',type=int,        default = 1)
+parser.add_argument('--episodes_in_pred_list',type=int,       default = 1)
+parser.add_argument('--samples_per_pred',    type=int,        default = 1)
 
-parser.add_argument('--epochs_per_pos_list', type=int,   default = 250)
-parser.add_argument('--agents_per_pos_list', type=int,   default = -1)
-parser.add_argument('--episodes_in_pos_list',type=int,   default = 3)
+parser.add_argument('--epochs_per_pos_list', type=int,        default = 250)
+parser.add_argument('--agents_per_pos_list', type=int,        default = -1)
+parser.add_argument('--episodes_in_pos_list',type=int,        default = 3)
 
 
 
