@@ -137,7 +137,8 @@ class Agent:
                 h_actor = torch.zeros((1, 1, self.args.hidden_size))
                 h_q     = torch.zeros((1, 1, self.args.hidden_size))
                 self.maze.begin()
-                pred_list = [(self.maze.obs(), ((None, None), (None, None)), ((None, None), (None, None)))]
+                o, s = self.maze.obs()
+                pred_list = [((o.squeeze(0), s.squeeze(0)), ((None, None), (None, None)), ((None, None), (None, None)))]
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o, s = self.maze.obs()
@@ -145,7 +146,13 @@ class Agent:
                         (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, s, h_q)
                         (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
-                        pred_list.append((self.maze.obs(), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))))
+                        pred_rgbd_p = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_p] ; pred_rgbd_q = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_q]
+                        pred_spe_p = [pred.squeeze(0).squeeze(0) for pred in pred_spe_p]   ; pred_spe_q = [pred.squeeze(0).squeeze(0) for pred in pred_spe_q]
+                        o, s = self.maze.obs()
+                        pred_list.append((
+                            (o.squeeze(0), s.squeeze(0)), 
+                            ((rgbd_mu_pred_p.squeeze(0).squeeze(0), pred_rgbd_p), (spe_mu_pred_p.squeeze(0).squeeze(0), pred_spe_p)), 
+                            ((rgbd_mu_pred_q.squeeze(0).squeeze(0), pred_rgbd_q), (spe_mu_pred_q.squeeze(0).squeeze(0), pred_spe_q))))
                         prev_a = a ; h_q = h_q_p1
                 pred_lists.append(pred_list)
             self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
