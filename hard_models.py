@@ -10,6 +10,16 @@ spe_size = 1 ; action_size = 2
 
 
 
+def var(x, mu_func, rho_func, args):
+    mu = mu_func(x)
+    std = torch.log1p(torch.exp(rho_func(x)))
+    std = torch.clamp(std, min = args.std_min, max = args.std_max)
+    return(mu, std)
+
+def sample(mu, std):
+    e = Normal(0, 1).sample(std.shape).to("cuda" if std.is_cuda else "cpu")
+    return(mu + e * std)
+
 def rnn_cnn(do_this, to_this):
     episodes = to_this.shape[0] ; steps = to_this.shape[1]
     this = to_this.view((episodes * steps, to_this.shape[2], to_this.shape[3], to_this.shape[4]))
@@ -29,7 +39,7 @@ class Forward(nn.Module):
         example = torch.zeros(rgbd_size)
         
         self.gru = nn.GRU(
-            input_size =  args.hidden_size,
+            input_size =  args.state_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         
@@ -49,29 +59,29 @@ class Forward(nn.Module):
         rgbd_size = example.shape[1]
         
         self.zp_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zp_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         
         self.zq_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + rgbd_size + spe_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + rgbd_size + spe_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zq_rho = nn.Sequential(
-            nn.Linear(args.hidden_size + rgbd_size + spe_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + rgbd_size + spe_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
         
         self.rgbd_up = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, rgbd_size),
             nn.LeakyReLU())
-        self.rgbd_mu = nn.Sequential(
+        self.rgbd = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = 4,
                 out_channels = 4,
@@ -88,30 +98,8 @@ class Forward(nn.Module):
                 out_channels = 4,
                 kernel_size = (1,1)),
             nn.Tanh())
-        self.rgbd_rho = nn.Sequential(
-            ConstrainedConv2d(
-                in_channels = 4,
-                out_channels = 4,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.Tanh(),
-            nn.Upsample(
-                scale_factor = 2, 
-                mode = "bilinear", 
-                align_corners = True),
-            ConstrainedConv2d(
-                in_channels = 4,
-                out_channels = 4,
-                kernel_size = (1,1)))
         
-        self.spe_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
-            nn.Linear(args.hidden_size, spe_size))
-        self.spe_rho = nn.Sequential(
+        self.spe = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.hidden_size), 
@@ -125,61 +113,36 @@ class Forward(nn.Module):
         self.zq_mu.apply(init_weights)
         self.zq_rho.apply(init_weights)
         self.rgbd_up.apply(init_weights)
-        self.rgbd_mu.apply(init_weights)
-        self.rgbd_rho.apply(init_weights)
-        self.spe_mu.apply(init_weights)
-        self.spe_rho.apply(init_weights)
+        self.rgbd.apply(init_weights)
+        self.spe.apply(init_weights)
         self.to(args.device)
         
-    def zp(self, prev_action, h = None):
-        x = torch.cat((h, prev_action), dim=-1)
-        zp_mu = self.zp_mu(x)
-        zp_std = torch.log1p(torch.exp(self.zp_rho(x)))
-        zp_std = torch.clamp(zp_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(zp_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        zp = zp_mu + e * zp_std
-        return(zp, zp_mu, zp_std)
-        
-    def zq(self, rgbd, spe, prev_action, h = None):
-        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
-        x = torch.cat((h, rgbd, spe, prev_action), dim=-1)
-        zq_mu = self.zq_mu(x)
-        zq_std = torch.log1p(torch.exp(self.zq_rho(x)))
-        zq_std = torch.clamp(zq_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(zq_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        zq = zq_mu + e * zq_std
-        return(zq, zq_mu, zq_std)
-        
-    def forward(self, rgbd, spe, prev_action, action, h = None):
+    def forward(self, rgbd, spe, h_q_m1):
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
-        if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
-        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
-        if(len(action.shape) == 2): action = action.unsqueeze(1)
+        if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        if(h == None): h = torch.zeros((spe.shape[0], 1, self.args.hidden_size)).to(spe.device)
-        zp, zp_mu, zp_std = self.zp(prev_action, h)
-        zq, zq_mu, zq_std = self.zq(rgbd, spe, prev_action, h)
-        h = h if h == None else h.permute(1, 0, 2)
-        h, _ = self.gru(zq, h)
-        x = torch.cat((h, action), dim=-1)
-        
-        rgbd_x = self.rgbd_up(x).view((spe.shape[0], spe.shape[1], 4, 4, 4))
-        rgbd_mu = (rnn_cnn(self.rgbd_mu, rgbd_x) + 1) / 2
-        rgbd_mu = rgbd_mu.permute(0, 1, 3, 4, 2)
-        rgbd_std = torch.log1p(torch.exp(rnn_cnn(self.rgbd_rho, rgbd_x)))
-        rgbd_std = torch.clamp(rgbd_std, min = self.args.std_min, max = self.args.std_max)
-        rgbd_std = rgbd_std.permute(0, 1, 3, 4, 2)
-        e = Normal(0, 1).sample(rgbd_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        pred_rgbd = rgbd_mu + e * rgbd_std
-        
-        spe_mu = self.spe_mu(x)
-        spe_std = torch.log1p(torch.exp(self.spe_rho(x)))
-        spe_std = torch.clamp(spe_std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(spe_std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        pred_spe = spe_mu + e * spe_std
-        return((pred_rgbd, rgbd_mu, rgbd_std), (pred_spe, spe_mu, spe_std), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h)
-        
+        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
+        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_rho, self.args)
+        zq_mu, zq_std = var(torch.cat((h_q_m1, rgbd, spe), dim=-1), self.zq_mu, self.zq_rho, self.args)        
+        zq = sample(zq_mu, zq_std)
+        h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
+        return((zp_mu, zp_std), (zq_mu, zq_std), h_q)
+
+    def get_preds(self, action, z_mu, z_std, h_q_m1, quantity = 1):
+        if(len(action.shape) == 2): action = action.unsqueeze(1)
+        h_q_m1 = h_q_m1.permute(1, 0, 2)
+        h, _ = self.gru(z_mu, h_q_m1)
+        rgbd_mu_pred = self.rgbd(self.rgbd_up(torch.cat((h, action), dim=-1)))
+        spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
+        pred_rgbd = [] ; pred_spe = []
+        for _ in range(quantity):
+            z = sample(z_mu, z_std)
+            h, _ = self.gru(z, h_q_m1)
+            pred_rgbd.append(self.rgbd(self.rgbd_up(torch.cat((h, action), dim=-1))))
+            pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
+        return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
+
 
 
 class Actor(nn.Module):
@@ -222,19 +185,13 @@ class Actor(nn.Module):
         self.to(args.device)
 
     def forward(self, rgbd, spe, prev_action, h = None):
-        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
-        if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
-        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
         x = torch.cat((rgbd, spe, prev_action), dim=-1)
         h, _ = self.gru(x, h)
-        mu = self.mu(h)
-        std = torch.log1p(torch.exp(self.rho(h)))
-        std = torch.clamp(std, min = self.args.std_min, max = self.args.std_max)
-        e = Normal(0, 1).sample(std.shape).to("cuda" if next(self.parameters()).is_cuda else "cpu")
-        x = mu + e * std
+        mu, std = var(h, self.mu, self.rho, self.args)
+        x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
@@ -272,7 +229,7 @@ class Critic(nn.Module):
             hidden_size = args.hidden_size,
             batch_first = True)
         self.lin = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size),
+            nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, 1))
 
@@ -281,18 +238,14 @@ class Critic(nn.Module):
         self.lin.apply(init_weights)
         self.to(args.device)
 
-    def forward(self, rgbd, spe, prev_action, action, h = None):
-        if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
-        if(len(spe.shape) == 2): spe = spe.unsqueeze(1)
-        if(len(prev_action.shape) == 2): prev_action = prev_action.unsqueeze(1)
+    def forward(self, rgbd, spe, action, h = None):
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, -1, 2, 3)).flatten(2)
-        x = torch.cat((rgbd, spe, prev_action), dim=-1)
+        x = torch.cat((rgbd, spe, action), dim=-1)
         h, _ = self.gru(x, h)
-        x = torch.cat((h, action), dim=-1)
-        x = self.lin(x)
-        return(x)
+        Q = self.lin(h)
+        return(Q)
     
 
 
@@ -309,7 +262,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, action_size))))
+    print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, args.hidden_size))))
     
 
 
@@ -327,6 +280,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, action_size))))
+    print(torch_summary(critic, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size))))
 
 # %%

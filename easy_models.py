@@ -30,7 +30,7 @@ class Forward(nn.Module):
         self.args = args
         
         self.gru = nn.GRU(
-            input_size =  args.hidden_size,
+            input_size =  args.state_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((3, obs_size), (3, action_size), (3, action_size))))
+    print(torch_summary(forward, ((3, 1, obs_size), (3, 1, args.hidden_size))))
     
 
 
@@ -185,6 +185,6 @@ if __name__ == "__main__":
     print("\n\n")
     print(critic)
     print()
-    print(torch_summary(critic, ((3, 1, obs_size), (3, 1, action_size), (3, 1, action_size))))
+    print(torch_summary(critic, ((3, 1, obs_size), (3, 1, action_size))))
 
 # %%
