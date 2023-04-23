@@ -19,20 +19,15 @@ def var(x, mu_func, rho_func, args):
 def sample(mu, std):
     e = Normal(0, 1).sample(std.shape).to("cuda" if std.is_cuda else "cpu")
     return(mu + e * std)
-    
-    
-    
-class Forward(nn.Module):
+
+
+
+class Prior_Forward(nn.Module):
     
     def __init__(self, args = default_args):
-        super(Forward, self).__init__()
+        super(Prior_Forward, self).__init__()
         
         self.args = args
-        
-        self.gru = nn.GRU(
-            input_size =  args.hidden_size,
-            hidden_size = args.hidden_size,
-            batch_first = True)
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
@@ -43,6 +38,28 @@ class Forward(nn.Module):
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
             nn.Linear(args.hidden_size, args.state_size))
+        
+        self.zp_mu.apply(init_weights)
+        self.zp_rho.apply(init_weights)
+        self.to(args.device)
+        
+    def forward(self, h_q_m1):
+        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_rho, self.args)
+        return(zp_mu, zp_std)
+    
+    
+    
+class Posterior_Forward(nn.Module):
+    
+    def __init__(self, args = default_args):
+        super(Posterior_Forward, self).__init__()
+        
+        self.args = args
+        
+        self.gru = nn.GRU(
+            input_size =  args.hidden_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
         
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
@@ -63,44 +80,29 @@ class Forward(nn.Module):
             nn.Tanh())
         
         self.gru.apply(init_weights)
-        self.zp_mu.apply(init_weights)
-        self.zp_rho.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_rho.apply(init_weights)
         self.obs.apply(init_weights)
         self.to(args.device)
         
-    def forward(self, obs, action, h = None, quantity = 1):
+    def forward(self, obs, h_q_m1):
         if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
+        zq_mu, zq_std = var(torch.cat((h_q_m1, obs), dim=-1), self.zq_mu, self.zq_rho, self.args)        
+        zq = sample(zq_mu, zq_std)
+        h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
+        return((zq_mu, zq_std), h_q)
+    
+    def get_preds(self, action, z_mu, z_std, h_q_m1, quantity = 1):
         if(len(action.shape) == 2): action = action.unsqueeze(1)
-        if(h == None): h = torch.zeros((obs.shape[0], 1, self.args.hidden_size)).to(obs.device)
-        zp_mu, zp_std = var(h,                           self.zp_mu, self.zp_rho, self.args)
-        zq_mu, zq_std = var(torch.cat((h, obs), dim=-1), self.zq_mu, self.zq_rho, self.args)
-        
-        h = h.permute(1, 0, 2)
-        
-        zp_h, _ = self.gru(zp_mu, h)
-        zp_x = torch.cat((zp_h, action), dim=-1)
-        zp_mu_pred = self.obs(zp_x)
-        
-        zq_h, _ = self.gru(zq_mu, h)
-        zq_x = torch.cat((zq_h, action), dim=-1)
-        zq_mu_pred = self.obs(zq_x)
-        
-        zp_pred_obs = [] ; zq_pred_obs = []
+        h_q_m1 = h_q_m1.permute(1, 0, 2)
+        h, _ = self.gru(z_mu, h_q_m1)
+        mu_pred = self.obs(torch.cat((h, action), dim=-1))
+        pred_obs = []
         for _ in range(quantity):
-            zp = sample(zp_mu, zp_std)
-            zp_h, _ = self.gru(zp, h)
-            zp_pred_obs.append(self.obs(torch.cat((zp_h, action), dim=-1)))
-            
-            zq = sample(zq_mu, zq_std)
-            zq_h, _ = self.gru(zq, h)
-            zq_pred_obs.append(self.obs(torch.cat((zq_h, action), dim=-1)))
-        if(quantity == 0): 
-            zq = sample(zq_mu, zq_std)
-            zq_h, _ = self.gru(zq, h)
-        
-        return((zp_mu_pred, zp_pred_obs), (zq_mu_pred, zq_pred_obs), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), zq_h)
+            z = sample(z_mu, z_std)
+            h, _ = self.gru(z, h_q_m1)
+            pred_obs.append(self.obs(torch.cat((h, action), dim=-1)))
+        return(mu_pred, pred_obs)
         
 
 

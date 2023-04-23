@@ -15,7 +15,7 @@ from math import exp
 from utils import default_args, dkl
 from easy_maze import Easy_Maze, action_size
 from easy_buffer import RecurrentReplayBuffer
-from easy_models import Forward, Actor, Critic
+from easy_models import Prior_Forward, Posterior_Forward, Actor, Critic
 
 
 
@@ -36,14 +36,11 @@ class Agent:
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        self.forward = Forward(self.args)
-        without_zp = [] 
-        just_zp = []
-        for name, param in self.forward.named_parameters():
-            if name.startswith("zp"): just_zp.append(param)    #; print("ZP: ", name)
-            else:                     without_zp.append(param) #; print("NOT:", name)
-        self.forward_opt = optim.Adam(without_zp, lr=self.args.forward_lr, weight_decay=0)   
-        self.zp_opt = optim.Adam(just_zp, lr=self.args.forward_lr, weight_decay=0)     
+        self.prior_forward = Prior_Forward(self.args)
+        self.prior_forward_opt = optim.Adam(self.prior_forward.parameters(), lr=self.args.forward_lr, weight_decay=0)  
+        
+        self.posterior_forward = Posterior_Forward(self.args)
+        self.posterior_forward_opt = optim.Adam(self.posterior_forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
                            
         self.actor = Actor(args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
@@ -107,15 +104,15 @@ class Agent:
                        
        
                 
-    def step_in_episode(self, prev_a, h, push, verbose):
+    def step_in_episode(self, prev_a, h_actor, push, verbose):
         with torch.no_grad():
             o = self.maze.obs().unsqueeze(0)
-            a, _, h = self.actor(o, prev_a, h)
+            a, _, h_actor = self.actor(o, prev_a, h_actor)
             action = torch.flatten(a).tolist()
             r, spot_name, done = self.maze.action(action[0], action[1], verbose)
             no = self.maze.obs().unsqueeze(0)
             if(push): self.memory.push(o, a, r, no, done, done)
-        return(a, h, r, spot_name, done)
+        return(a, h_actor, r, spot_name, done)
     
     
     
@@ -124,14 +121,20 @@ class Agent:
             if(self.args.agents_per_pred_list != -1 and self.agent_num >= self.args.agents_per_pred_list): return
             pred_lists = []
             for episode in range(self.args.episodes_in_pred_list):
-                done = False ; h = None ; forward_h = None ; prev_a = torch.zeros((1, 1, action_size))
+                done = False ; prev_a = torch.zeros((1, 1, action_size))
+                h_actor = torch.zeros((1, 1, self.args.hidden_size))
+                h_q     = torch.zeros((1, 1, self.args.hidden_size))
                 self.maze.begin()
                 pred_list = [(self.maze.obs(), None, None, None, None)]
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o = self.maze.obs()
-                        a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
-                        (zp_mu_pred, zp_preds), (zq_mu_pred, zq_preds), _, _, forward_h = self.forward(o, a, forward_h, quantity = self.args.samples_per_pred)
+                        a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
+                        zp_mu, zp_std        = self.prior_forward(       h_q)
+                        (zq_mu, zq_std), h_q_p1 = self.posterior_forward(o, h_q)
+                        zp_mu_pred, zp_preds = self.posterior_forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
+                        zq_mu_pred, zq_preds = self.posterior_forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
+                        h_q = h_q_p1
                         next_o = self.maze.obs()
                         pred_list.append((next_o, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a
@@ -156,7 +159,8 @@ class Agent:
     
     
     def training_episode(self, push = True, verbose = False):
-        done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size)) ; cumulative_r = 0
+        done = False ; prev_a = torch.zeros((1, 1, action_size)) ; cumulative_r = 0
+        h_actor = torch.zeros((1, 1, self.args.hidden_size))
         self.maze.begin()
         if(verbose): print("\n\n\n\n\nSTART!\n")
         if(verbose): print(self.maze)
@@ -164,7 +168,7 @@ class Agent:
         for step in range(self.args.max_steps):
             self.steps += 1
             if(not done):
-                prev_a, h, r, spot_name, done = self.step_in_episode(prev_a, h, push, verbose)
+                prev_a, h_actor, r, spot_name, done = self.step_in_episode(prev_a, h_actor, push, verbose)
                 cumulative_r += r
                 
             if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
@@ -215,33 +219,38 @@ class Agent:
         # Train forward
         zp_pred_obs = [] ; zq_pred_obs = []
         zp_mus = []      ; zp_stds = []
-        zq_mus = []      ; zq_stds = [] ; h = None
+        zq_mus = []      ; zq_stds = [] ; h_q = torch.zeros((episodes, 1, self.args.hidden_size)).to(obs.device)
         for step in range(steps):
-            (_, zp_preds), (_, zq_preds), (zp, zp_mu, zp_std), (zq, zq_mu, zq_std), h = self.forward(obs[:, step], actions[:, step], h, quantity = self.args.elbo_num)   
+            zp_mu, zp_std        = self.prior_forward(                     h_q.detach())
+            (zq_mu, zq_std), h_q_p1 = self.posterior_forward(obs[:, step], h_q)
+            _, zp_preds = self.posterior_forward.get_preds(actions[:, step], zp_mu, zp_std, h_q, quantity = self.args.elbo_num)
+            _, zq_preds = self.posterior_forward.get_preds(actions[:, step], zq_mu, zq_std, h_q, quantity = self.args.elbo_num)
             zp_pred_obs.append(torch.cat(zp_preds, -1)) ; zq_pred_obs.append(torch.cat(zq_preds, -1))
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
+            h_q + h_q_p1
         zp_pred_obs = torch.cat(zp_pred_obs, dim = 1) ; zq_pred_obs = torch.cat(zq_pred_obs, dim = 1)
         zp_mus = torch.cat(zp_mus, dim = 1)           ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1)           ; zq_stds = torch.cat(zq_stds, dim = 1)
                 
         next_obs_tiled = torch.tile(next_obs, (1, 1, self.args.elbo_num))
-        accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
-        accuracy  = F.mse_loss(zp_pred_obs, next_obs_tiled).sum().mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
-        accuracy  = accuracy.sum() + accuracy_for_naive.sum()
+        prior_accuracy   = (F.mse_loss(zp_pred_obs, next_obs_tiled).mean(-1).unsqueeze(-1) * masks / self.args.elbo_num).sum()
+        prior_complexity = (self.args.beta * dkl(zp_mus, zp_stds, torch.zeros(zp_mus.shape), torch.ones(zp_stds.shape)).mean(-1).unsqueeze(-1) * masks).sum()
         
-        complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
-        complexity = self.args.beta * complexity_for_free.mean()
-                
-        forward_loss = accuracy + complexity
+        self.prior_forward_opt.zero_grad()
+        (prior_accuracy + prior_complexity).backward()
+        self.prior_forward_opt.step()
+        
+        accuracy_for_naive = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        accuracy = accuracy_for_naive.sum()
+        
+        complexity_for_free = dkl(zq_mus, zq_stds, zp_mus.detach(), zp_stds.detach()).mean(-1).unsqueeze(-1) * masks
+        complexity = self.args.beta * complexity_for_free.mean()        
+                        
+        self.posterior_forward_opt.zero_grad()
+        (accuracy + complexity).backward()
+        self.posterior_forward_opt.step()
         if(self.args.beta == 0): complexity = None
-                        
-                        
-        #print("BEFORE:", [param for name, param in self.forward.named_parameters() if name.startswith("zp")])
-        self.forward_opt.zero_grad()
-        forward_loss.backward()
-        self.forward_opt.step()
-        #print("AFTER:", [param for name, param in self.forward.named_parameters() if name.startswith("zp")])
             
                         
         
@@ -351,6 +360,7 @@ class Agent:
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
     def state_dict(self):
+        return
         return(
             self.forward.state_dict(),
             self.actor.state_dict(),
@@ -360,6 +370,7 @@ class Agent:
             self.critic2_target.state_dict())
 
     def load_state_dict(self, state_dict):
+        return
         self.forward.load_state_dict(state_dict[0])
         self.actor.load_state_dict(state_dict[1])
         self.critic1.load_state_dict(state_dict[2])
@@ -369,6 +380,7 @@ class Agent:
         self.memory = RecurrentReplayBuffer(self.args)
 
     def eval(self):
+        return
         self.forward.eval()
         self.actor.eval()
         self.critic1.eval()
@@ -377,6 +389,7 @@ class Agent:
         self.critic2_target.eval()
 
     def train(self):
+        return
         self.forward.train()
         self.actor.train()
         self.critic1.train()
