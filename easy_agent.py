@@ -130,10 +130,8 @@ class Agent:
                         (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, h_q)
                         zp_mu_pred, zp_preds = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         zq_mu_pred, zq_preds = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
-                        h_q = h_q_p1
-                        next_o = self.maze.obs()
-                        pred_list.append((next_o, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
-                        prev_a = a
+                        pred_list.append((self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
+                        prev_a = a ; h_q = h_q_p1
                 pred_lists.append(pred_list)
             self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
     
@@ -143,11 +141,12 @@ class Agent:
         if(self.args.agents_per_pos_list != -1 and self.agent_num >= self.args.agents_per_pos_list): return
         pos_lists = []
         for episode in range(self.args.episodes_in_pos_list):
-            done = False ; h = None ; prev_a = torch.zeros((1, 1, action_size))
+            done = False ; prev_a = torch.zeros((1, 1, action_size))
+            h_actor = torch.zeros((1, 1, self.args.hidden_size))
             self.maze.begin()
             pos_list = [self.maze.agent_pos]
             for step in range(self.args.max_steps):
-                if(not done): prev_a, h, _, _, done = self.step_in_episode(prev_a, h, push = False, verbose = False)
+                if(not done): prev_a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
                 pos_list.append(self.maze.agent_pos)
             pos_lists.append(pos_list)
         self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
