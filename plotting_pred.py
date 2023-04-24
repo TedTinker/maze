@@ -87,7 +87,7 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}".format(agent, epoch)] ; break 
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
-                        rows = len(pred_list) ; columns = 2 + plot_dict["args"].samples_per_pred
+                        rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)

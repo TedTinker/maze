@@ -235,50 +235,42 @@ class Agent:
         
 
         # Train forward
-        zp_pred_rgbd = [] ; zp_pred_spe = []
+        h_q = torch.zeros((episodes, 1, self.args.hidden_size)).to(rgbd.device)
+        zp_mus = []       ; zp_stds = []
+        zq_mus = []       ; zq_stds = []
         zq_pred_rgbd = [] ; zq_pred_spe = []
-        zp_mus = [] ; zp_stds = []
-        zq_mus = [] ; zq_stds = [] ; h_q = torch.zeros((episodes, 1, self.args.hidden_size)).to(rgbd.device)
         for step in range(steps):
             (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(rgbd[:, step], spe[:, step], h_q)
-            (_, zp_preds_rgbd), (_, zp_preds_spe) = self.forward.get_preds(actions[:, step], zp_mu, zp_std, h_q, quantity = self.args.elbo_num)
             (_, zq_preds_rgbd), (_, zq_preds_spe) = self.forward.get_preds(actions[:, step], zq_mu, zq_std, h_q, quantity = self.args.elbo_num)
-            zp_pred_rgbd.append(torch.cat(zp_preds_rgbd, -1)) ; zp_pred_spe.append(torch.cat(zp_preds_spe, -1))
-            zq_pred_rgbd.append(torch.cat(zq_preds_rgbd, -1)) ; zq_pred_spe.append(torch.cat(zq_preds_spe, -1))
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
+            zq_pred_rgbd.append(torch.cat(zq_preds_rgbd, -1)) ; zq_pred_spe.append(torch.cat(zq_preds_spe, -1))
             h_q = h_q_p1
-        zp_pred_rgbd = torch.cat(zp_pred_rgbd, dim = 1) ; zp_pred_spe = torch.cat(zp_pred_spe, dim = 1) 
-        zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1) ; zq_pred_spe = torch.cat(zq_pred_spe, dim = 1) 
         zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
+        zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1) ; zq_pred_spe = torch.cat(zq_pred_spe, dim = 1) 
         
         next_rgbd_tiled = torch.tile(next_rgbd.flatten(2), (1, 1, self.args.elbo_num))
         next_spe_tiled  = torch.tile(next_spe,             (1, 1, self.args.elbo_num))
-        zp_preds        = torch.cat([zp_pred_rgbd.flatten(2), zp_pred_spe], dim = -1)
         zq_preds        = torch.cat([zq_pred_rgbd.flatten(2), zq_pred_spe], dim = -1)
         next_obs_tiled  = torch.cat([next_rgbd_tiled, next_spe_tiled], dim = -1)
-        
-        accuracy_p   = (F.mse_loss(zp_preds, next_obs_tiled).mean(-1).unsqueeze(-1) * masks / self.args.elbo_num).sum()
-        complexity_p = (self.args.beta_p * dkl(zp_mus, zp_stds, torch.zeros(zp_mus.shape), torch.ones(zp_stds.shape)).mean(-1).unsqueeze(-1) * masks).sum()
-        
-        accuracy_for_naive   = F.mse_loss(zq_preds, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
-        accuracy_q           = accuracy_for_naive.sum()
-        complexity_for_free  = dkl(zq_mus, zq_stds, zp_mus.detach(), zp_stds.detach()).mean(-1).unsqueeze(-1) * masks
-        complexity_q         = self.args.beta_q * complexity_for_free.mean()        
+                
+        accuracy_for_naive  = F.mse_loss(zq_preds, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        accuracy            = accuracy_for_naive.sum()
+        complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
+        complexity          = self.args.beta * complexity_for_free.mean()        
                         
         self.forward_opt.zero_grad()
-        (accuracy_p + accuracy_q + complexity_p + complexity_q).backward()
+        (accuracy + complexity).backward()
         self.forward_opt.step()
         
-        if(self.args.beta_p == 0): complexity_p = None
-        if(self.args.beta_q == 0): complexity_q = None
+        if(self.args.beta == 0): complexity = None
         
                         
         
         # Get curiosity                  
         naive_curiosity = self.args.naive_eta * accuracy_for_naive  
-        free_curiosity  = self.args.free_eta  * complexity_for_free
+        free_curiosity  = self.args.free_eta  * torch.clamp(complexity_for_free, min = 0, max = 1)
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
         elif(self.args.curiosity == "free"): curiosity = free_curiosity
         else:                                curiosity = torch.zeros(rewards.shape)
@@ -357,10 +349,8 @@ class Agent:
             intrinsic_entropy = None
             actor_loss = None
         
-        if(accuracy_p != None):   accuracy_p = accuracy_p.item()
-        if(accuracy_q != None):   accuracy_q = accuracy_q.item()
-        if(complexity_p != None): complexity_p = complexity_p.item()
-        if(complexity_q != None): complexity_q = complexity_q.item()
+        if(accuracy != None):   accuracy = accuracy.item()
+        if(complexity != None): complexity = complexity.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()
         if(actor_loss != None): actor_loss = actor_loss.item()
         if(critic1_loss != None): 
@@ -369,7 +359,7 @@ class Agent:
         if(critic2_loss != None): 
             critic2_loss = critic2_loss.item()
             critic2_loss = log(critic2_loss) if critic2_loss > 0 else critic2_loss
-        losses = np.array([[accuracy_p + accuracy_q, complexity_p + complexity_q, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
+        losses = np.array([[accuracy, complexity, alpha_loss, actor_loss, critic1_loss, critic2_loss]])
         
         naive_curiosity = naive_curiosity.mean().item()
         free_curiosity = free_curiosity.mean().item()
