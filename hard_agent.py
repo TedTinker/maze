@@ -250,8 +250,8 @@ class Agent:
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
         zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1) ; zq_pred_spe = torch.cat(zq_pred_spe, dim = 1) 
         
-        next_rgbd_tiled = torch.tile(next_rgbd.flatten(2), (1, 1, self.args.elbo_num))
-        next_spe_tiled  = torch.tile(next_spe,             (1, 1, self.args.elbo_num))
+        next_rgbd_tiled = torch.tile(next_rgbd, (1, 1, 1, 1, self.args.elbo_num)).flatten(2)
+        next_spe_tiled  = torch.tile(next_spe,  (1, 1, self.args.elbo_num))
         zq_preds        = torch.cat([zq_pred_rgbd.flatten(2), zq_pred_spe], dim = -1)
         next_obs_tiled  = torch.cat([next_rgbd_tiled, next_spe_tiled], dim = -1)
                 

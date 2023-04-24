@@ -99,27 +99,27 @@ def hard_plotting_pred(complete_order, plot_dicts):
                                     # Actual obs
                                     if(column == 0):   
                                         ax.imshow(rgbd[:,:,0:3])
-                                        ax.set_title("Step {}\nSpeed {}".format(row, spe))
+                                        ax.set_title("Step {}\nSpeed {}".format(row, round(spe.item())))
                                     # ZP Mean
                                     elif(column == 1): 
                                         ax.imshow(rgbd_mu_pred_p[:,:,0:3]) # Still gotta add speeds in titles!
-                                        ax.set_title("ZP Mean\nSpeed {}".format(spe_mu_pred_p))
+                                        ax.set_title("ZP Mean\nSpeed {}".format(round(spe_mu_pred_p.item())))
                                     # ZP Samples
                                     elif(column in [i+2 for i in range(plot_dict["args"].samples_per_pred)]):
                                         pred_num = column - 2
                                         pred = pred_rgbd_p[pred_num]
                                         ax.imshow(pred[:,:,0:3])
-                                        ax.set_title("ZP Sample {}\nSpeed {}".format(pred_num+1, pred_spe_p))
+                                        ax.set_title("ZP Sample {}\nSpeed {}".format(pred_num+1, round(pred_spe_p[pred_num].item())))
                                     # ZQ Mean
                                     elif(column == 2 + plot_dict["args"].samples_per_pred):
                                         ax.imshow(rgbd_mu_pred_q[:,:,0:3])
-                                        ax.set_title("ZQ Mean\nSpeed {}".format(spe_mu_pred_q))
+                                        ax.set_title("ZQ Mean\nSpeed {}".format(round(spe_mu_pred_q.item())))
                                     # ZQ Samples
                                     else:
                                         pred_num = column - 3 - plot_dict["args"].samples_per_pred
                                         pred = pred_rgbd_q[pred_num]
                                         ax.imshow(pred[:,:,0:3])
-                                        ax.set_title("ZQ Sample {}\nSpeed {}".format(pred_num+1, pred_spe_q))
+                                        ax.set_title("ZQ Sample {}\nSpeed {}".format(pred_num+1, round(pred_spe_q[pred_num].item())))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
