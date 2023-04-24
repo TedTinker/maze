@@ -30,23 +30,23 @@ class Forward(nn.Module):
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
         self.zp_std = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
         self.zq_std = nn.Sequential(
             nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
@@ -57,9 +57,9 @@ class Forward(nn.Module):
         
         self.obs = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, obs_size), 
             nn.Tanh())
         

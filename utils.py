@@ -99,11 +99,11 @@ parser.add_argument("--dkl_max",            type=float,      default = 1)
 
 # Saving data
 parser.add_argument('--keep_data',           type=int,        default = 25)
-parser.add_argument('--epochs_per_pred_list',type=int,        default = 250)
+parser.add_argument('--epochs_per_pred_list',type=int,        default = 100)
 parser.add_argument('--agents_per_pred_list',type=int,        default = 1)
 parser.add_argument('--episodes_in_pred_list',type=int,       default = 1)
-parser.add_argument('--samples_per_pred',    type=int,        default = 1)
-parser.add_argument('--epochs_per_pos_list', type=int,        default = 250)
+parser.add_argument('--samples_per_pred',    type=int,        default = 2)
+parser.add_argument('--epochs_per_pos_list', type=int,        default = 100)
 parser.add_argument('--agents_per_pos_list', type=int,        default = -1)
 parser.add_argument('--episodes_in_pos_list',type=int,        default = 3)
 

@@ -54,23 +54,23 @@ class Forward(nn.Module):
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zp_std = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + rgbd_size + spe_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zq_std = nn.Sequential(
             nn.Linear(args.hidden_size + rgbd_size + spe_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
@@ -89,7 +89,7 @@ class Forward(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Upsample(
                 scale_factor = 2, 
                 mode = "bilinear",
@@ -102,9 +102,9 @@ class Forward(nn.Module):
         
         self.spe = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.Tanh(),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, spe_size))
         
         self.rgbd_in.apply(init_weights)
