@@ -37,11 +37,6 @@ class Forward(nn.Module):
         rgbd_size = (1, 4, args.image_size, args.image_size)
         example = torch.zeros(rgbd_size)
         
-        self.gru = nn.GRU(
-            input_size =  args.state_size,
-            hidden_size = args.hidden_size,
-            batch_first = True)
-        
         self.rgbd_in = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = 4,
@@ -79,6 +74,11 @@ class Forward(nn.Module):
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
+        self.gru = nn.GRU(
+            input_size =  args.state_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
+        
         self.rgbd_up = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, rgbd_size),
             nn.LeakyReLU())
@@ -107,12 +107,12 @@ class Forward(nn.Module):
             nn.Tanh(),
             nn.Linear(args.hidden_size, spe_size))
         
-        self.gru.apply(init_weights)
         self.rgbd_in.apply(init_weights)
         self.zp_mu.apply(init_weights)
         self.zp_std.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_std.apply(init_weights)
+        self.gru.apply(init_weights)
         self.rgbd_up.apply(init_weights)
         self.rgbd.apply(init_weights)
         self.spe.apply(init_weights)

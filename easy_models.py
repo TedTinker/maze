@@ -28,11 +28,6 @@ class Forward(nn.Module):
         
         self.args = args
         
-        self.gru = nn.GRU(
-            input_size =  args.state_size,
-            hidden_size = args.hidden_size,
-            batch_first = True)
-        
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.Tanh(),
@@ -55,6 +50,11 @@ class Forward(nn.Module):
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
+        self.gru = nn.GRU(
+            input_size =  args.state_size,
+            hidden_size = args.hidden_size,
+            batch_first = True)
+        
         self.obs = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.Tanh(),
@@ -63,11 +63,11 @@ class Forward(nn.Module):
             nn.Linear(args.hidden_size, obs_size), 
             nn.Tanh())
         
-        self.gru.apply(init_weights)
         self.zp_mu.apply(init_weights)
         self.zp_std.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_std.apply(init_weights)
+        self.gru.apply(init_weights)
         self.obs.apply(init_weights)
         self.to(args.device)
         
@@ -82,9 +82,10 @@ class Forward(nn.Module):
     def get_preds(self, action, z_mu, z_std, h_q_m1, quantity = 1):
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         h_q_m1 = h_q_m1.permute(1, 0, 2)
+        
         h, _ = self.gru(z_mu, h_q_m1)
-                
         mu_pred = self.obs(torch.cat((h, action), dim=-1))
+            
         pred_obs = []
         for _ in range(quantity):
             z = sample(z_mu, z_std)
