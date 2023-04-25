@@ -118,8 +118,7 @@ class Actor(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
-        x = torch.cat((obs, prev_action), dim=-1)
-        h, _ = self.gru(x, h)
+        h, _ = self.gru(torch.cat((obs, prev_action), dim=-1), h)
         mu, std = var(h, self.mu, self.std, self.args)
         x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
@@ -151,9 +150,64 @@ class Critic(nn.Module):
         self.to(args.device)
 
     def forward(self, obs, action, h = None):
-        x = torch.cat((obs, action), dim=-1)
-        h, _ = self.gru(x, h)
+        h, _ = self.gru(torch.cat((obs, action), dim=-1), h)
         Q = self.lin(h)
+        return(Q)
+    
+    
+    
+class Actor_HQ(nn.Module):
+
+    def __init__(self, args = default_args):
+        super(Actor, self).__init__()
+        
+        self.args = args
+        
+        self.lin = nn.Sequential(
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU())
+        self.mu = nn.Sequential(
+            nn.Linear(args.hidden_size, action_size))
+        self.std = nn.Sequential(
+            nn.Linear(args.hidden_size, action_size),
+            nn.Softplus())
+
+        self.lin.apply(init_weights)
+        self.mu.apply(init_weights)
+        self.std.apply(init_weights)
+        self.to(args.device)
+
+    def forward(self, h):
+        x = self.lin(h)
+        mu, std = var(x, self.mu, self.std, self.args)
+        x = sample(mu, std)
+        #action = torch.clamp(x, min = -1, max = 1)
+        action = torch.tanh(x)
+        log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
+        log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
+        return(action, log_prob)
+    
+    
+    
+class Critic_HQ(nn.Module):
+
+    def __init__(self, args = default_args):
+        super(Critic, self).__init__()
+        
+        self.args = args
+        
+        self.lin = nn.Sequential(
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, 1))
+
+        self.lin.apply(init_weights)
+        self.to(args.device)
+
+    def forward(self, h, action):
+        Q = self.lin(torch.cat((h, action), dim=-1))
         return(Q)
     
 

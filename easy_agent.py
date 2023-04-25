@@ -12,10 +12,10 @@ from itertools import accumulate
 from copy import deepcopy
 from math import exp
 
-from utils import default_args, dkl, print
+from utils import args, default_args, dkl, print
 from easy_maze import Easy_Maze, action_size
 from easy_buffer import RecurrentReplayBuffer
-from easy_models import Forward, Actor, Critic
+from easy_models import Forward, Actor, Actor_HQ, Critic, Critic_HQ
 
 
 
@@ -36,29 +36,29 @@ class Agent:
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        self.forward = Forward(self.args)
-        self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)  
+        self.forward = Forward(args)
+        self.forward_opt = optim.Adam(self.forward.parameters(), lr=args.forward_lr, weight_decay=0)  
                            
-        self.actor = Actor(args)
+        self.actor = Actor_HQ(args) if args.actor_hq else Actor(args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
         
-        self.critic1 = Critic(args)
+        self.critic1 = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic1_opt = optim.Adam(self.critic1.parameters(), lr=args.critic_lr, weight_decay=0)
-        self.critic1_target = Critic(args)
+        self.critic1_target = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic1_target.load_state_dict(self.critic1.state_dict())
 
-        self.critic2 = Critic(args)
+        self.critic2 = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic2_opt = optim.Adam(self.critic2.parameters(), lr=args.critic_lr, weight_decay=0) 
-        self.critic2_target = Critic(args)
+        self.critic2_target = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic2_target.load_state_dict(self.critic2.state_dict())
         
         self.train()
         
-        self.memory = RecurrentReplayBuffer(self.args)
+        self.memory = RecurrentReplayBuffer(args)
         self.plot_dict = {
-            "args" : self.args,
-            "arg_title" : self.args.arg_title,
-            "arg_name" : self.args.arg_name,
+            "args" : args,
+            "arg_title" : args.arg_title,
+            "arg_name" : args.arg_name,
             "pred_lists" : {}, "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "complexity" : [],

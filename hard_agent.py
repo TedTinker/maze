@@ -29,7 +29,7 @@ class Agent:
         self.args = args
         self.episodes = 0 ; self.epochs = 0 ; self.steps = 0
         self.maze_name = self.args.maze_list[0]
-        self.maze = Hard_Maze(self.maze_name, args = self.args)
+        self.maze = Hard_Maze(self.maze_name, args = args)
         
         self.target_entropy = args.target_entropy # -dim(A)
         self.alpha = 1
@@ -39,8 +39,8 @@ class Agent:
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
-        self.forward = Forward(self.args)
-        self.forward_opt = optim.Adam(self.forward.parameters(), lr=self.args.forward_lr, weight_decay=0)   
+        self.forward = Forward(args)
+        self.forward_opt = optim.Adam(self.forward.parameters(), lr=args.forward_lr, weight_decay=0)   
                            
         self.actor = Actor(args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
@@ -57,11 +57,11 @@ class Agent:
         
         self.train()
         
-        self.memory = RecurrentReplayBuffer(self.args)
+        self.memory = RecurrentReplayBuffer(args)
         self.plot_dict = {
-            "args" : self.args,
-            "arg_title" : self.args.arg_title,
-            "arg_name" : self.args.arg_name,
+            "args" : args,
+            "arg_title" : args.arg_title,
+            "arg_name" : args.arg_name,
             "pred_lists" : {}, "pos_lists" : {},
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "complexity" : [],

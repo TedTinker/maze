@@ -70,6 +70,8 @@ parser.add_argument('--steps_per_step',     type=int,        default = 5)
 # Module 
 parser.add_argument('--hidden_size',        type=int,        default = 32)   
 parser.add_argument('--state_size',         type=int,        default = 32)
+parser.add_argument('--actor_hq',           type=bool,       default = False)
+parser.add_argument('--critic_hq',          type=bool,       default = False)
 parser.add_argument('--forward_lr',         type=float,      default = .01)
 parser.add_argument('--alpha_lr',           type=float,      default = .01) 
 parser.add_argument('--actor_lr',           type=float,      default = .01)
