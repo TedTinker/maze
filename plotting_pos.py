@@ -21,9 +21,9 @@ def easy_plotting_pos(complete_order, plot_dicts):
     if(complete_order[-1] != "break"): rows += 1
         
     epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs.sort()
-    steps = len(plot_dicts[0]["pos_lists"]["0_0"][0])
+    steps = len(plot_dicts[0]["pos_lists"]["1_0"][0])
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
+    episodes = len(plot_dicts[0]["pos_lists"]["1_0"])
     
     cmap = plt.cm.get_cmap("gray_r")
     norm = Normalize(vmin = 0, vmax = 1)
@@ -99,8 +99,8 @@ def hard_plotting_pos(complete_order, plot_dicts):
     
     epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pos_lists"]["0_0"])
-    maze_names = [plot_dicts[0]["pos_lists"]["{}_{}".format(0, e)][0][0] for e in epochs]
+    episodes = len(plot_dicts[0]["pos_lists"]["1_0"])
+    maze_names = [plot_dicts[0]["pos_lists"]["1_{}".format(e)][0][0] for e in epochs]
             
     cmap = plt.cm.get_cmap("hsv", len(agents))
     norm = Normalize(vmin = 0, vmax = len(agents))

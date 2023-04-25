@@ -13,7 +13,7 @@ print("name:\n{}".format(args.arg_name))
 def easy_plotting_pred(complete_order, plot_dicts):
     epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pred_lists"].keys()])) ; epochs.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pred_lists"]["0_0"])
+    episodes = len(plot_dicts[0]["pred_lists"]["1_0"])
     
     cmap = plt.cm.get_cmap("gray_r")
     norm = Normalize(vmin = -1, vmax = 1)
@@ -76,7 +76,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
 def hard_plotting_pred(complete_order, plot_dicts):
     epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pred_lists"].keys()])) ; epochs.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pred_lists"]["0_0"])
+    episodes = len(plot_dicts[0]["pred_lists"]["1_0"])
         
     for epoch in epochs:
         for agent in agents:

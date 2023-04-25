@@ -45,6 +45,7 @@ parser.add_argument("--arg_title",          type=str,        default = "default"
 parser.add_argument("--arg_name",           type=str,        default = "default") 
 parser.add_argument("--agents",             type=int,        default = 36)
 parser.add_argument("--previous_agents",    type=int,        default = 0)
+parser.add_argument("--init_seed",          type=float,      default = 777)
 parser.add_argument('--device',             type=str,        default = "cpu")
 
 # Maze 
@@ -138,7 +139,7 @@ for arg in vars(default_args):
 
 
 
-args_not_in_title = ["arg_title", "id", "agents", "previous_agents", "hard_maze", "maze_list", "keep_data", "epochs_per_pred_list", "episodes_in_pred_list", "agents_per_pred_list", "epochs_per_pos_list", "episodes_in_pos_list", "agents_per_pos_list"]
+args_not_in_title = ["arg_title", "id", "agents", "previous_agents", "init_seed", "hard_maze", "maze_list", "keep_data", "epochs_per_pred_list", "episodes_in_pred_list", "agents_per_pred_list", "epochs_per_pos_list", "episodes_in_pos_list", "agents_per_pos_list"]
 def get_args_title(default_args, args):
     if(args.arg_title[:3] == "___"): return(args.arg_title)
     name = "" ; first = True

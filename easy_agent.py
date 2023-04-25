@@ -115,7 +115,7 @@ class Agent:
     
     def pred_episodes(self):
         with torch.no_grad():
-            if(self.args.agents_per_pred_list != -1 and self.agent_num >= self.args.agents_per_pred_list): return
+            if(self.args.agents_per_pred_list != -1 and self.agent_num > self.args.agents_per_pred_list): return
             pred_lists = []
             for episode in range(self.args.episodes_in_pred_list):
                 done = False ; prev_a = torch.zeros((1, 1, action_size))
@@ -138,7 +138,7 @@ class Agent:
     
     
     def pos_episodes(self):
-        if(self.args.agents_per_pos_list != -1 and self.agent_num >= self.args.agents_per_pos_list): return
+        if(self.args.agents_per_pos_list != -1 and self.agent_num > self.args.agents_per_pos_list): return
         pos_lists = []
         for episode in range(self.args.episodes_in_pos_list):
             done = False ; prev_a = torch.zeros((1, 1, action_size))
