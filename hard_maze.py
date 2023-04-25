@@ -89,7 +89,7 @@ class Hard_Maze:
         if(verbose): print("end {}, which {}, reward {}".format(end, which, reward))
         
         col = self.maze.other_collisions()
-        if(col): reward -= self.args.wall_punishment
+        if(col): reward += self.args.wall_punishment
         if(not end): end = self.steps >= self.args.max_steps
         exit = which != "NONE"
         if(end and not exit): reward = self.args.step_lim_punishment

@@ -175,7 +175,7 @@ class Agent:
     
     
     
-    def training_episode(self, push = True, verbose = True):
+    def training_episode(self, push = True, verbose = False):
         done = False ; prev_a = torch.zeros((1, 1, 2)) ; cumulative_r = 0
         h_actor = torch.zeros((1, 1, self.args.hidden_size))
         self.maze.begin()
