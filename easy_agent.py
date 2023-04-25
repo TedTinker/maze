@@ -72,18 +72,18 @@ class Agent:
         
     def training(self, q):
         
-        self.pred_episodes()
-        self.pos_episodes()
+        self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
+        self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
         while(True):
             self.training_episode()
             percent_done = str(self.epochs / sum(self.args.epochs))
             q.put((self.agent_num, percent_done))
             if(self.epochs >= sum(self.args.epochs)): break
-            if(self.epochs % self.args.epochs_per_pred_list == 0): self.pred_episodes()
-            if(self.epochs % self.args.epochs_per_pos_list == 0):  self.pos_episodes()
+            if(self.epochs % self.args.epochs_per_pred_list == 0): self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
+            if(self.epochs % self.args.epochs_per_pos_list == 0):  self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
-        self.pred_episodes()
-        self.pos_episodes()
+        self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
+        self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
                 
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in self.min_max_dict.keys():
@@ -113,15 +113,16 @@ class Agent:
     
     
     
-    def step_in_episode_hq(self, prev_a, h_actor, push, verbose):
+    def step_in_episode_hq(self, prev_a, h_q_m1, push, verbose):
         with torch.no_grad():
             o = self.maze.obs().unsqueeze(0)
-            a, _, h_actor = self.actor(o, prev_a, h_actor)
+            _, _, h_q = self.forward(o, prev_a, h_q_m1)
+            a, _, _ = self.actor(h_q)
             action = torch.flatten(a).tolist()
             r, spot_name, done = self.maze.action(action[0], action[1], verbose)
             no = self.maze.obs().unsqueeze(0)
             if(push): self.memory.push(o, a, r, no, done, done)
-        return(a, h_actor, r, spot_name, done)
+        return(a, h_q, r, spot_name, done)
     
     
     
@@ -146,6 +147,29 @@ class Agent:
                         prev_a = a ; h_q = h_q_p1
                 pred_lists.append(pred_list)
             self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
+            
+            
+            
+    def pred_episodes_hq(self):
+        with torch.no_grad():
+            if(self.args.agents_per_pred_list != -1 and self.agent_num > self.args.agents_per_pred_list): return
+            pred_lists = []
+            for episode in range(self.args.episodes_in_pred_list):
+                done = False ; prev_a = torch.zeros((1, 1, action_size))
+                h_q     = torch.zeros((1, 1, self.args.hidden_size))
+                self.maze.begin()
+                pred_list = [(self.maze.obs(), None, None, None, None)]
+                for step in range(self.args.max_steps):
+                    if(not done): 
+                        o = self.maze.obs()
+                        a, h_q_p1, _, _, done = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
+                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, prev_a, h_q)
+                        zp_mu_pred, zp_preds = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
+                        zq_mu_pred, zq_preds = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
+                        pred_list.append((self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
+                        prev_a = a ; h_q = h_q_p1
+                pred_lists.append(pred_list)
+            self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
     
     
     
@@ -162,12 +186,28 @@ class Agent:
                 pos_list.append(self.maze.agent_pos)
             pos_lists.append(pos_list)
         self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
+        
+        
+        
+    def pos_episodes_hq(self):
+        if(self.args.agents_per_pos_list != -1 and self.agent_num > self.args.agents_per_pos_list): return
+        pos_lists = []
+        for episode in range(self.args.episodes_in_pos_list):
+            done = False ; prev_a = torch.zeros((1, 1, action_size))
+            h_q = torch.zeros((1, 1, self.args.hidden_size))
+            self.maze.begin()
+            pos_list = [self.maze.agent_pos]
+            for step in range(self.args.max_steps):
+                if(not done): prev_a, h_q, _, _, done = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
+                pos_list.append(self.maze.agent_pos)
+            pos_lists.append(pos_list)
+        self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
     
     
     
     def training_episode(self, push = True, verbose = False):
         done = False ; prev_a = torch.zeros((1, 1, action_size)) ; cumulative_r = 0
-        h_actor = torch.zeros((1, 1, self.args.hidden_size))
+        h = torch.zeros((1, 1, self.args.hidden_size))
         self.maze.begin()
         if(verbose): print("\n\n\n\n\nSTART!\n")
         if(verbose): print(self.maze)
@@ -175,7 +215,8 @@ class Agent:
         for step in range(self.args.max_steps):
             self.steps += 1
             if(not done):
-                prev_a, h_actor, r, spot_name, done = self.step_in_episode(prev_a, h_actor, push, verbose)
+                if(self.args.actor_hq): prev_a, h, r, spot_name, done = self.step_in_episode_hq(prev_a, h, push, verbose)
+                else:                   prev_a, h, r, spot_name, done = self.step_in_episode(   prev_a, h, push, verbose)
                 cumulative_r += r
                 
             if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
@@ -224,15 +265,16 @@ class Agent:
         
 
         # Train forward
-        h_q = torch.zeros((episodes, 1, self.args.hidden_size)).to(obs.device)
+        h_qs = [torch.zeros((episodes, 1, self.args.hidden_size)).to(obs.device)]
         zp_mus = [] ; zp_stds = []
         zq_mus = [] ; zq_stds = [] ; zq_pred_obs = []
         for step in range(steps):
-            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(obs[:, step], prev_actions[:, step], h_q)
-            _, zq_preds = self.forward.get_preds(actions[:, step], zq_mu, zq_std, h_q, quantity = self.args.elbo_num)
+            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(obs[:, step], prev_actions[:, step], h_qs[-1])
+            _, zq_preds = self.forward.get_preds(actions[:, step], zq_mu, zq_std, h_qs[-1], quantity = self.args.elbo_num)
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std) ; zq_pred_obs.append(torch.cat(zq_preds, -1))
-            h_q = h_q_p1
+            h_qs.append(h_q_p1)
+        h_qs.append(h_qs.pop(0)) ; h_qs = torch.cat(h_qs, dim = 1) ; next_hqs = h_qs[:, 1:] ; hqs = h_qs[:, :-1]
         zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1) ; zq_pred_obs = torch.cat(zq_pred_obs, dim = 1)
                 
@@ -265,20 +307,20 @@ class Agent:
                 
         # Train critics
         with torch.no_grad():
-            next_action, log_pis_next, _ = self.actor(next_obs, actions)
-            Q_target1_next = self.critic1_target(next_obs, next_action)
-            Q_target2_next = self.critic2_target(next_obs, next_action)
+            next_action, log_pis_next, _ = self.actor(next_hqs) if self.args.actor_hq else self.actor(next_obs, actions)
+            Q_target1_next = self.critic1_target(next_hqs, next_action) if self.args.critic_hq else self.critic1_target(next_obs, next_action)
+            Q_target2_next = self.critic2_target(next_hqs, next_action) if self.args.critic_hq else self.critic2_target(next_obs, next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(obs, actions)
+        Q_1 = self.critic1(hqs.detach(), actions) if self.args.critic_hq else self.critic1(obs, actions)
         critic1_loss = 0.5*F.mse_loss(Q_1*masks, Q_targets*masks)
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(obs, actions)
+        Q_2 = self.critic2(hqs.detach(), actions) if self.args.critic_hq else self.critic2(obs, actions)
         critic2_loss = 0.5*F.mse_loss(Q_2*masks, Q_targets*masks)
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
@@ -288,7 +330,7 @@ class Agent:
         
         # Train alpha
         if self.args.alpha == None:
-            _, log_pis, _ = self.actor(obs, prev_actions)
+            _, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(obs, prev_actions)
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy))*masks
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()
@@ -305,7 +347,7 @@ class Agent:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha
-            actions_pred, log_pis, _ = self.actor(obs, prev_actions)
+            actions_pred, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(obs, prev_actions)
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
@@ -315,8 +357,8 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
-                self.critic1(obs, actions_pred), 
-                self.critic2(obs, actions_pred)).mean(-1).unsqueeze(-1)
+                self.critic1(hqs, actions_pred) if self.args.critic_hq else self.critic1(obs, actions_pred), 
+                self.critic2(hqs, actions_pred) if self.args.critic_hq else self.critic2(obs, actions_pred)).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()

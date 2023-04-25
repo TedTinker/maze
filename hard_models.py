@@ -260,7 +260,7 @@ class Critic(nn.Module):
 class Actor_HQ(nn.Module):
 
     def __init__(self, args = default_args):
-        super(Actor, self).__init__()
+        super(Actor_HQ, self).__init__()
         
         self.args = args
         
@@ -294,7 +294,7 @@ class Actor_HQ(nn.Module):
 class Critic_HQ(nn.Module):
 
     def __init__(self, args = default_args):
-        super(Critic, self).__init__()
+        super(Critic_HQ, self).__init__()
         
         self.args = args
         

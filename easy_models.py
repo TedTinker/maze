@@ -160,7 +160,7 @@ class Critic(nn.Module):
 class Actor_HQ(nn.Module):
 
     def __init__(self, args = default_args):
-        super(Actor, self).__init__()
+        super(Actor_HQ, self).__init__()
         
         self.args = args
         
@@ -186,14 +186,14 @@ class Actor_HQ(nn.Module):
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
-        return(action, log_prob)
+        return(action, log_prob, None)
     
     
     
 class Critic_HQ(nn.Module):
 
     def __init__(self, args = default_args):
-        super(Critic, self).__init__()
+        super(Critic_HQ, self).__init__()
         
         self.args = args
         
