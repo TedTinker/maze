@@ -80,7 +80,7 @@ class Forward(nn.Module):
             batch_first = True)
         
         self.rgbd_up = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, rgbd_size),
+            nn.Linear(args.hidden_size, rgbd_size),
             nn.LeakyReLU())
         self.rgbd = nn.Sequential(
             ConstrainedConv2d(
@@ -101,7 +101,7 @@ class Forward(nn.Module):
             nn.Tanh())
         
         self.spe = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(args.hidden_size, args.hidden_size), 
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.LeakyReLU(),
@@ -130,22 +130,21 @@ class Forward(nn.Module):
         h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
         return((zp_mu, zp_std), (zq_mu, zq_std), h_q)
 
-    def get_preds(self, action, z_mu, z_std, h_q_m1, quantity = 1):
-        if(len(action.shape) == 2): action = action.unsqueeze(1)
+    def get_preds(self, z_mu, z_std, h_q_m1, quantity = 1):
         h_q_m1 = h_q_m1.permute(1, 0, 2)
         h, _ = self.gru(z_mu, h_q_m1)        
         
-        rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
+        rgbd = self.rgbd_up(h).view((z_mu.shape[0], z_mu.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
         rgbd_mu_pred = (rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2) + 1) / 2
-        spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
+        spe_mu_pred  = self.spe(h)
                 
         pred_rgbd = [] ; pred_spe = []
         for _ in range(quantity):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
-            rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((action.shape[0], action.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
+            rgbd = self.rgbd_up(h).view((z_mu.shape[0], z_mu.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
             pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2) + 1) / 2)
-            pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
+            pred_spe.append(self.spe(h))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
 
 
