@@ -311,6 +311,10 @@ class Critic_HQ(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, 1))
 
         self.lin.apply(init_weights)
