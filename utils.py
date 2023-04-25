@@ -1,5 +1,11 @@
 #%% 
 
+import builtins
+
+def print(*args, **kwargs):
+    kwargs["flush"] = True
+    builtins.print(*args, **kwargs)
+
 import datetime 
 
 start_time = datetime.datetime.now()
@@ -55,10 +61,10 @@ parser.add_argument('--randomness',         type=int,        default = 0)
 # Hard Maze
 parser.add_argument('--body_size',          type=float,      default = 2)    
 parser.add_argument('--image_size',         type=int,        default = 8)
+parser.add_argument('--max_yaw_change',     type=float,      default = pi/2)
 parser.add_argument('--min_speed',          type=float,      default = 50)
 parser.add_argument('--max_speed',          type=float,      default = 100)
 parser.add_argument('--steps_per_step',     type=int,        default = 5)
-parser.add_argument('--max_yaw_change',     type=float,      default = pi/2)
 
 # Module 
 parser.add_argument('--hidden_size',        type=int,        default = 32)   
@@ -163,12 +169,12 @@ if(args.arg_title[:3] != "___" and not args.arg_name in ["default", "finishing_d
 if(default_args.alpha == "None"): default_args.alpha = None
 if(args.alpha == "None"):         args.alpha = None
 
-if(args == default_args): print("Using default arguments.", flush = True)
+if(args == default_args): print("Using default arguments.")
 else:
     for arg in vars(default_args):
         default, this_time = getattr(default_args, arg), getattr(args, arg)
         if(this_time == default): pass
-        else: print("{}:\n\tDefault:\t{}\n\tThis time:\t{}".format(arg, default, this_time), flush = True)
+        else: print("{}:\n\tDefault:\t{}\n\tThis time:\t{}".format(arg, default, this_time))
 
 
 
@@ -220,13 +226,13 @@ def load_dicts(args):
             try:
                 with open(name + "/" + "plot_dict.pickle", "rb") as handle: 
                     plot_dicts.append(pickle.load(handle)) ; got_plot_dicts = True
-            except: print("Stuck trying to get {}'s plot_dicts...".format(name), flush = True) ; sleep(1)
+            except: print("Stuck trying to get {}'s plot_dicts...".format(name)) ; sleep(1)
         while(not got_min_max_dicts):
             try:
                 with open(name + "/" + "min_max_dict.pickle", "rb") as handle: 
                     min_max_dicts.append(pickle.load(handle)) ; got_min_max_dicts = True 
-            except: print("Stuck trying to get {}'s min_max_dicts...".format(name), flush = True) ; sleep(1)
-            
+            except: print("Stuck trying to get {}'s min_max_dicts...".format(name)) ; sleep(1)
+    
     min_max_dict = {}
     for key in plot_dicts[0].keys():
         if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "spot_names"]):

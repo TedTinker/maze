@@ -5,9 +5,9 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Without this, pyplot crashes the ker
 import numpy as np
 from math import log
 
-from utils import args, duration, load_dicts
+from utils import args, duration, load_dicts, print
 
-print("name:\n{}\n".format(args.arg_name), flush = True)
+print("name:\n{}\n".format(args.arg_name),)
 
 
 
@@ -273,7 +273,7 @@ def plots(plot_dicts, min_max_dict):
         
         
         
-        print("{}:\t{}.".format(duration(), plot_dict["arg_name"]), flush = True)
+        print("{}:\t{}.".format(duration(), plot_dict["arg_name"]))
 
     
     
@@ -286,4 +286,4 @@ def plots(plot_dicts, min_max_dict):
 
 plot_dicts, min_max_dict, _, _ = load_dicts(args)
 plots(plot_dicts, min_max_dict)
-print("\nDuration: {}. Done!".format(duration()), flush = True)
+print("\nDuration: {}. Done!".format(duration()))

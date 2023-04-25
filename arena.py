@@ -7,7 +7,7 @@ import cv2, os
 from itertools import product
 from math import pi, sin, cos
 
-from utils import default_args, args
+from utils import default_args, args, print
 
 class Exit:
     def __init__(self, name, pos, rew):     # Position (Y, X)

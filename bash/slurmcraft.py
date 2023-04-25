@@ -3,7 +3,7 @@ import argparse, ast, json
 parser = argparse.ArgumentParser()
 parser.add_argument("--comp",         type=str,  default = "deigo")
 parser.add_argument("--agents",       type=int,  default = 10)
-parser.add_argument("--arg_list",     type=str,  default = ["d", "e", "en1"])
+parser.add_argument("--arg_list",     type=str,  default = ["d"])
 try:    args = parser.parse_args()
 except: args, _ = parser.parse_known_args()
 
@@ -44,7 +44,6 @@ def expand_args(args = ""):
 slurm_dict = {
     "d"    : "", 
     "e"    : "--alpha None",
-    "n"    : "--curiosity naive",
     "en"   : "--alpha None --curiosity naive",
     "ef"   : "--alpha None --curiosity free"
 }
@@ -56,9 +55,9 @@ def add_this(name, this):
         this_this = this
         if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
         slurm_dict[key + "_" + name] = value + " " + this_this  
-add_this("hard",      "--hard_maze True --agents_per_pos_list 10 --maze_list \"('t',)\"")
+add_this("hard",     "--hard_maze True --epochs \"(1000,)\" --agents_per_pos_list 10 --maze_list \"('t',)\"")
 add_this("log_prob", "--accuracy log_prob")
-add_this("rand",      "--randomness 10")
+add_this("rand",     "--randomness 10")
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():

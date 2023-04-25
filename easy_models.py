@@ -5,7 +5,7 @@ from torch import nn
 from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 
-from utils import default_args, init_weights
+from utils import default_args, init_weights, print
 from easy_maze import obs_size, action_size
     
         

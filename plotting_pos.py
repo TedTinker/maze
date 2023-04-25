@@ -5,9 +5,9 @@ from io import BytesIO
 import os
 import numpy as np
 
-from utils import args, duration, load_dicts
+from utils import args, duration, load_dicts, print
 
-print("name:\n{}".format(args.arg_name), flush = True)
+print("name:\n{}".format(args.arg_name))
 
 
 
@@ -81,7 +81,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             buf.close()
             plt.close()
             
-        print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
+        print("{}:\tDone with epoch {}.".format(duration(), epoch))
             
     imageio.mimwrite("easy_video.mp4", images, fps = 3)
             
@@ -150,7 +150,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         buf.close()
         plt.close()
             
-        print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
+        print("{}:\tDone with epoch {}.".format(duration(), epoch))
                 
     imageio.mimwrite("saved/hard_video.mp4", images, fps = 1/3)
     
@@ -159,4 +159,4 @@ def hard_plotting_pos(complete_order, plot_dicts):
 plot_dicts, min_max_dict, (easy, complete_easy_order, easy_plot_dicts), (hard, complete_hard_order, hard_plot_dicts) = load_dicts(args)               
 if(easy): print("\nPlotting positions in easy maze.\n")    ; easy_plotting_pos(complete_easy_order, easy_plot_dicts)
 if(hard): print("\nPlotting positions in hard maze(s).\n") ; hard_plotting_pos(complete_hard_order, hard_plot_dicts)   
-print("\nDuration: {}. Done!".format(duration()), flush = True)
+print("\nDuration: {}. Done!".format(duration()))

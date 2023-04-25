@@ -3,7 +3,7 @@ import numpy as np
 import pybullet as p
 from math import pi, degrees, sin, cos
 
-from utils import default_args, args
+from utils import default_args, args, print
 from arena import Arena
 
 
@@ -64,31 +64,36 @@ class Hard_Maze:
             print("\n\nOld yaw:\t{}\nChange:\t\t{}\nNew yaw:\t{}".format(
                 round(degrees(old_yaw)) % 360, round(degrees(yaw_change)), round(degrees(new_yaw))))
             print("Old speed:\t{}\nNew speed:\t{}".format(old_speed, speed))
-            self.render(view = "body")  
+            #self.render(view = "body")  
             print("\n")
         
-    def action(self, yaw, spe, verbose = False):
+    def action(self, yaw, spe, verbose = True):
         self.steps += 1
-
+        
+        if(verbose): print("\n\nStep {}: yaw {}, spe {}.".format(self.steps, yaw, spe))
         yaw = -yaw * self.args.max_yaw_change
         yaw = [-self.args.max_yaw_change, self.args.max_yaw_change, yaw] ; yaw.sort() ; yaw = yaw[1]
-        
         spe = self.args.min_speed + ((spe + 1)/2) * \
             (self.args.max_speed - self.args.min_speed)
         spe = [self.args.min_speed, self.args.max_speed, spe] ; spe.sort() ; spe = spe[1]
+        if(verbose): print("updated: yaw {}, spe {}.".format(yaw, spe))
             
-        self.change_velocity(yaw, spe)
-      
+        self.change_velocity(yaw, spe, verbose = verbose)
         for _ in range(self.args.steps_per_step):
             p.stepSimulation(physicsClientId = self.maze.physicsClient)
             
         self.agent_pos, self.agent_yaw, self.agent_spe = self.maze.get_pos_yaw_spe()
+        if(verbose): print("agent: pos {}, yaw {}, spe {}.".format(self.agent_pos, self.agent_yaw, self.agent_spe))
+        
         end, which, reward = self.maze.end_collisions()
+        if(verbose): print("end {}, which {}, reward {}".format(end, which, reward))
+        
         col = self.maze.other_collisions()
         if(col): reward -= self.args.wall_punishment
-        if(not end):  end = self.steps >= self.args.max_steps
+        if(not end): end = self.steps >= self.args.max_steps
         exit = which != "NONE"
         if(end and not exit): reward = self.args.step_lim_punishment
+        if(verbose): print("end {}, which {}, reward {}\n\n".format(end, which, reward))
 
         return(reward, which, end)
     

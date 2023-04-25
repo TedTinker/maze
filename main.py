@@ -6,7 +6,7 @@ from multiprocessing import Process, Queue
 from time import sleep 
 from math import floor
 
-from utils import args, folder, duration, estimate_total_duration
+from utils import args, folder, duration, estimate_total_duration, print
 
 print("\nname:\n{}".format(args.arg_name))
 print("\nagents: {}. previous_agents: {}.".format(args.agents, args.previous_agents))
@@ -59,7 +59,7 @@ while any(process.is_alive() for process in processes) or not queue.empty():
         string = "{} ({} left):".format(so_far, to_do) + string
         if(hundreds == 0): string += " ##"
         string = string.rstrip() + "."
-        print(string, flush=True)
+        print(string)
     sleep(1)
 
 for process in processes:

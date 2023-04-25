@@ -12,7 +12,7 @@ from itertools import accumulate
 from copy import deepcopy
 from math import exp
 
-from utils import default_args, dkl
+from utils import default_args, dkl, print
 from hard_maze import Hard_Maze
 from hard_buffer import RecurrentReplayBuffer
 from hard_models import Forward, Actor, Critic
@@ -175,7 +175,7 @@ class Agent:
     
     
     
-    def training_episode(self, push = True, verbose = False):
+    def training_episode(self, push = True, verbose = True):
         done = False ; prev_a = torch.zeros((1, 1, 2)) ; cumulative_r = 0
         h_actor = torch.zeros((1, 1, self.args.hidden_size))
         self.maze.begin()

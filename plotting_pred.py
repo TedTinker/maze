@@ -4,9 +4,9 @@ from matplotlib.colors import Normalize
 import torch
 from torch.distributions import Normal
 
-from utils import args, duration, load_dicts
+from utils import args, duration, load_dicts, print
 
-print("name:\n{}".format(args.arg_name), flush = True)
+print("name:\n{}".format(args.arg_name))
 
 
 
@@ -69,7 +69,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
-        print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
+        print("{}:\tDone with epoch {}.".format(duration(), epoch))
                                 
                                                 
         
@@ -123,11 +123,11 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
-        print("{}:\tDone with epoch {}.".format(duration(), epoch), flush = True)
+        print("{}:\tDone with epoch {}.".format(duration(), epoch))
     
 
 
 plot_dicts, min_max_dict, (easy, complete_easy_order, easy_plot_dicts), (hard, complete_hard_order, hard_plot_dicts) = load_dicts(args)    
 if(easy): print("\nPlotting predictions in easy maze.\n")    ; easy_plotting_pred(complete_easy_order, easy_plot_dicts)
 if(hard): print("\nPlotting predictions in hard maze(s).\n") ; hard_plotting_pred(complete_hard_order, hard_plot_dicts)    
-print("\nDuration: {}. Done!".format(duration()), flush = True)
+print("\nDuration: {}. Done!".format(duration()))

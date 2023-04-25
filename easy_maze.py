@@ -2,7 +2,7 @@
 from random import choice, choices
 import torch
 
-from utils import default_args, args
+from utils import default_args, args, print
 
 
 

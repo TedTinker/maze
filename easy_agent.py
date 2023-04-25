@@ -12,7 +12,7 @@ from itertools import accumulate
 from copy import deepcopy
 from math import exp
 
-from utils import default_args, dkl
+from utils import default_args, dkl, print
 from easy_maze import Easy_Maze, action_size
 from easy_buffer import RecurrentReplayBuffer
 from easy_models import Forward, Actor, Critic

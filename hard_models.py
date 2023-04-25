@@ -5,7 +5,7 @@ from torch import nn
 from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 
-from utils import default_args, init_weights, ConstrainedConv2d
+from utils import default_args, init_weights, ConstrainedConv2d, print
 spe_size = 1 ; action_size = 2
 
 
