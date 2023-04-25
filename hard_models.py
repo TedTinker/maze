@@ -80,7 +80,7 @@ class Forward(nn.Module):
             batch_first = True)
         
         self.rgbd_up = nn.Sequential(
-            nn.Linear(args.hidden_size, rgbd_size),
+            nn.Linear(args.hidden_size + action_size, rgbd_size),
             nn.LeakyReLU())
         self.rgbd = nn.Sequential(
             ConstrainedConv2d(
@@ -101,7 +101,7 @@ class Forward(nn.Module):
             nn.Tanh())
         
         self.spe = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.LeakyReLU(),
@@ -266,6 +266,13 @@ class Actor_HQ(nn.Module):
         self.args = args
         
         self.lin = nn.Sequential(
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU())
         self.mu = nn.Sequential(
@@ -274,8 +281,7 @@ class Actor_HQ(nn.Module):
             nn.Linear(args.hidden_size, action_size),
             nn.Softplus())
 
-        self.rgbd_in.apply(init_weights)
-        self.gru.apply(init_weights)
+        self.lin.apply(init_weights)
         self.mu.apply(init_weights)
         self.std.apply(init_weights)
         self.to(args.device)
@@ -288,7 +294,7 @@ class Actor_HQ(nn.Module):
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
-        return(action, log_prob)
+        return(action, log_prob, None)
     
     
     
@@ -300,7 +306,8 @@ class Critic_HQ(nn.Module):
         self.args = args
         
         self.lin = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size + action_size, args.hidden_size),
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU(),
@@ -328,7 +335,7 @@ if __name__ == "__main__":
     print("\n\n")
     print(forward)
     print()
-    print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, args.hidden_size))))
+    print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, args.hidden_size))))
     
 
 
@@ -347,5 +354,23 @@ if __name__ == "__main__":
     print(critic)
     print()
     print(torch_summary(critic, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size))))
+    
+    
+    
+    actor = Actor_HQ(args)
+    
+    print("\n\n")
+    print(actor)
+    print()
+    print(torch_summary(actor, ((3, 1, args.hidden_size))))
+    
+    
+    
+    critic = Critic_HQ(args)
+    
+    print("\n\n")
+    print(critic)
+    print()
+    print(torch_summary(critic, ((3, 1, args.hidden_size), (3, 1, action_size))))
 
 # %%
