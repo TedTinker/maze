@@ -171,6 +171,8 @@ class Actor_HQ(nn.Module):
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU())
         self.mu = nn.Sequential(
             nn.Linear(args.hidden_size, action_size))
@@ -205,6 +207,10 @@ class Critic_HQ(nn.Module):
         self.lin = nn.Sequential(
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size + action_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.LeakyReLU(),

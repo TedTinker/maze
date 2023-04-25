@@ -357,8 +357,8 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
             Q = torch.min(
-                self.critic1(hqs, actions_pred) if self.args.critic_hq else self.critic1(obs, actions_pred), 
-                self.critic2(hqs, actions_pred) if self.args.critic_hq else self.critic2(obs, actions_pred)).mean(-1).unsqueeze(-1)
+                self.critic1(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic1(obs, actions_pred), 
+                self.critic2(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic2(obs, actions_pred)).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()
