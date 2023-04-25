@@ -29,23 +29,23 @@ class Forward(nn.Module):
         self.args = args
         
         self.zp_mu = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
         self.zp_std = nn.Sequential(
-            nn.Linear(args.hidden_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
         self.zq_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + action_size + obs_size, args.hidden_size), 
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size), 
             nn.Tanh())
         self.zq_std = nn.Sequential(
-            nn.Linear(args.hidden_size + obs_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + action_size + obs_size, args.hidden_size), 
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
@@ -71,10 +71,11 @@ class Forward(nn.Module):
         self.obs.apply(init_weights)
         self.to(args.device)
         
-    def forward(self, obs, h_q_m1):
-        if(len(obs.shape) == 2): obs = obs.unsqueeze(1)
-        zp_mu, zp_std = var(h_q_m1, self.zp_mu, self.zp_std, self.args)
-        zq_mu, zq_std = var(torch.cat((h_q_m1, obs), dim=-1), self.zq_mu, self.zq_std, self.args)        
+    def forward(self, obs, prev_a, h_q_m1):
+        if(len(obs.shape) == 2):    obs    = obs.unsqueeze(1)
+        if(len(prev_a.shape) == 2): prev_a = prev_a.unsqueeze(1)
+        zp_mu, zp_std = var(torch.cat((h_q_m1, prev_a), dim=-1),      self.zp_mu, self.zp_std, self.args)
+        zq_mu, zq_std = var(torch.cat((h_q_m1, prev_a, obs), dim=-1), self.zq_mu, self.zq_std, self.args)        
         zq = sample(zq_mu, zq_std)
         h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
         return((zp_mu, zp_std), (zq_mu, zq_std), h_q)

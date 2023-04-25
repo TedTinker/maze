@@ -113,6 +113,18 @@ class Agent:
     
     
     
+    def step_in_episode_hq(self, prev_a, h_actor, push, verbose):
+        with torch.no_grad():
+            o = self.maze.obs().unsqueeze(0)
+            a, _, h_actor = self.actor(o, prev_a, h_actor)
+            action = torch.flatten(a).tolist()
+            r, spot_name, done = self.maze.action(action[0], action[1], verbose)
+            no = self.maze.obs().unsqueeze(0)
+            if(push): self.memory.push(o, a, r, no, done, done)
+        return(a, h_actor, r, spot_name, done)
+    
+    
+    
     def pred_episodes(self):
         with torch.no_grad():
             if(self.args.agents_per_pred_list != -1 and self.agent_num > self.args.agents_per_pred_list): return
@@ -127,7 +139,7 @@ class Agent:
                     if(not done): 
                         o = self.maze.obs()
                         a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
-                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, h_q)
+                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, prev_a, h_q)
                         zp_mu_pred, zp_preds = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         zq_mu_pred, zq_preds = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         pred_list.append((self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
@@ -216,7 +228,7 @@ class Agent:
         zp_mus = [] ; zp_stds = []
         zq_mus = [] ; zq_stds = [] ; zq_pred_obs = []
         for step in range(steps):
-            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(obs[:, step], h_q)
+            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(obs[:, step], prev_actions[:, step], h_q)
             _, zq_preds = self.forward.get_preds(actions[:, step], zq_mu, zq_std, h_q, quantity = self.args.elbo_num)
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std) ; zq_pred_obs.append(torch.cat(zq_preds, -1))

@@ -15,7 +15,7 @@ from math import exp
 from utils import default_args, dkl, print
 from hard_maze import Hard_Maze
 from hard_buffer import RecurrentReplayBuffer
-from hard_models import Forward, Actor, Critic
+from hard_models import Forward, Actor, Actor_HQ, Critic, Critic_HQ
 
 action_size = 2
 
@@ -42,17 +42,17 @@ class Agent:
         self.forward = Forward(args)
         self.forward_opt = optim.Adam(self.forward.parameters(), lr=args.forward_lr, weight_decay=0)   
                            
-        self.actor = Actor(args)
+        self.actor = Actor_HQ(args) if args.actor_hq else Actor(args)
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
         
-        self.critic1 = Critic(args)
+        self.critic1 = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic1_opt = optim.Adam(self.critic1.parameters(), lr=args.critic_lr, weight_decay=0)
-        self.critic1_target = Critic(args)
+        self.critic1_target = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic1_target.load_state_dict(self.critic1.state_dict())
 
-        self.critic2 = Critic(args)
+        self.critic2 = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic2_opt = optim.Adam(self.critic2.parameters(), lr=args.critic_lr, weight_decay=0) 
-        self.critic2_target = Critic(args)
+        self.critic2_target = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic2_target.load_state_dict(self.critic2.state_dict())
         
         self.train()
@@ -143,7 +143,7 @@ class Agent:
                     if(not done): 
                         o, s = self.maze.obs()
                         a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
-                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, s, h_q)
+                        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, s, prev_a, h_q)
                         (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         pred_rgbd_p = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_p] ; pred_rgbd_q = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_q]
@@ -240,7 +240,7 @@ class Agent:
         zq_mus = []       ; zq_stds = []
         zq_pred_rgbd = [] ; zq_pred_spe = []
         for step in range(steps):
-            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(rgbd[:, step], spe[:, step], h_q)
+            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], h_q)
             (_, zq_preds_rgbd), (_, zq_preds_spe) = self.forward.get_preds(zq_mu, zq_std, h_q, quantity = self.args.elbo_num)
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
@@ -251,7 +251,7 @@ class Agent:
         zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1) ; zq_pred_spe = (torch.cat(zq_pred_spe, dim = 1) - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         
         next_rgbd_tiled = torch.tile(next_rgbd, (1, 1, 1, 1, self.args.elbo_num)).flatten(2)
-        next_spe_tiled  = (torch.tile(next_spe,  (1, 1, self.args.elbo_num))  - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
+        next_spe_tiled  = (torch.tile(next_spe, (1, 1, self.args.elbo_num))  - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         zq_preds        = torch.cat([zq_pred_rgbd.flatten(2), zq_pred_spe], dim = -1)
         next_obs_tiled  = torch.cat([next_rgbd_tiled, next_spe_tiled], dim = -1)
                 
