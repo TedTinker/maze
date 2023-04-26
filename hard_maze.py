@@ -63,7 +63,7 @@ class Hard_Maze:
         if(verbose):
             print("\n\nOld yaw:\t{}\nChange:\t\t{}\nNew yaw:\t{}".format(
                 round(degrees(old_yaw)) % 360, round(degrees(yaw_change)), round(degrees(new_yaw))))
-            print("Old speed:\t{}\nNew speed:\t{}".format(old_speed, speed))
+            print("Old speed:\t{}\nNew speed:\t{}".format(old_speed, speed / self.args.steps_per_step))
             #self.render(view = "body")  
             print("\n")
         
@@ -82,8 +82,9 @@ class Hard_Maze:
         self.change_velocity(yaw, spe, verbose = verbose)
         for _ in range(self.args.steps_per_step):
             p.stepSimulation(physicsClientId = self.maze.physicsClient)
+            self.agent_pos, self.agent_yaw, self.agent_spe = self.maze.get_pos_yaw_spe()
+            self.change_velocity(0, spe, verbose = verbose)
             
-        self.agent_pos, self.agent_yaw, self.agent_spe = self.maze.get_pos_yaw_spe()
         if(verbose): print("agent: pos {}, yaw {}, spe {}.".format(self.agent_pos, self.agent_yaw, self.agent_spe))
         
         end, which, reward = self.maze.end_collisions()
@@ -108,9 +109,10 @@ if __name__ == "__main__":
     maze = Hard_Maze("t", True, args)
     done = False
     while(done == False):
-        reward, name, done = maze.action(random(), random(), verbose = True)
+        reward, name, done, action_name = maze.action(random(), random(), verbose = True)
         rgbd, spe = maze.obs()
-        plt.imshow(rgbd[:,:,0:3])
+        rgbd = rgbd.squeeze(0)[:,:,0:3]
+        plt.imshow(rgbd)
         plt.show()
         plt.close()
         sleep(1)

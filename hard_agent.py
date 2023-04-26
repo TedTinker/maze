@@ -308,14 +308,14 @@ class Agent:
         h_qs.append(h_qs.pop(0)) ; h_qs = torch.cat(h_qs, dim = 1) ; next_hqs = h_qs[:, 1:] ; hqs = h_qs[:, :-1]
         zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
-        zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1) ; zq_pred_spe = (torch.cat(zq_pred_spe, dim = 1) - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
+        zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1) ; zq_pred_spe = torch.cat(zq_pred_spe, dim = 1)
         
         next_rgbd_tiled = torch.tile(next_rgbd, (1, 1, 1, 1, self.args.elbo_num)).flatten(2)
-        next_spe_tiled  = (torch.tile(next_spe, (1, 1, self.args.elbo_num))  - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
+        next_spe_tiled  = torch.tile(next_spe, (1, 1, self.args.elbo_num)) / (self.args.max_speed * self.args.steps_per_step)
         zq_preds        = torch.cat([zq_pred_rgbd.flatten(2), zq_pred_spe], dim = -1)
         next_obs_tiled  = torch.cat([next_rgbd_tiled, next_spe_tiled], dim = -1)
                 
-        accuracy_for_naive  = F.mse_loss(zq_preds, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        accuracy_for_naive  = F.binary_cross_entropy_with_logits(zq_preds, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         accuracy            = accuracy_for_naive.sum()
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
         complexity          = self.args.beta * complexity_for_free.mean()        

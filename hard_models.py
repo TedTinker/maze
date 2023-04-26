@@ -97,8 +97,7 @@ class Forward(nn.Module):
             ConstrainedConv2d(
                 in_channels = 4,
                 out_channels = 4,
-                kernel_size = (1,1)),
-            nn.Tanh())
+                kernel_size = (1,1)))
         
         self.spe = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
@@ -137,7 +136,7 @@ class Forward(nn.Module):
         h, _ = self.gru(z_mu, h_q_m1)        
         
         rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
-        rgbd_mu_pred = (rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2) + 1) / 2
+        rgbd_mu_pred = rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2)
         spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
                 
         pred_rgbd = [] ; pred_spe = []
@@ -145,7 +144,7 @@ class Forward(nn.Module):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
             rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
-            pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2) + 1) / 2)
+            pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2)))
             pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
 
