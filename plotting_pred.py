@@ -37,7 +37,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
-                        for row, (obs, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds) in enumerate(pred_list):
+                        for row, (action_name, obs, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
                                 if(row == 0 and column > 0): pass
@@ -45,7 +45,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                     # Actual obs
                                     if(column == 0):   
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = obs, norm = norm)
-                                        ax.set_title("Step {}".format(row))
+                                        ax.set_title("Step {}\nAction: {}".format(row, action_name))
                                     # ZP Mean
                                     elif(column == 1): 
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = zp_mu_pred, norm = norm)
@@ -91,7 +91,7 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 1.5))
                         title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
                         fig.suptitle(title, y = 1.1)
-                        for row, ((rgbd, spe), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))) in enumerate(pred_list):
+                        for row, (action_name, (rgbd, spe), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
                                 if(row == 0 and column > 0): pass
@@ -99,7 +99,7 @@ def hard_plotting_pred(complete_order, plot_dicts):
                                     # Actual obs
                                     if(column == 0):   
                                         ax.imshow(rgbd[:,:,0:3])
-                                        ax.set_title("Step {}\nSpeed {}".format(row, round(spe.item())))
+                                        ax.set_title("Step {}\nAction: {}\nSpeed {}".format(row, action_name, round(spe.item())))
                                     # ZP Mean
                                     elif(column == 1): 
                                         ax.imshow(rgbd_mu_pred_p[:,:,0:3]) # Still gotta add speeds in titles!

@@ -135,7 +135,7 @@ class Agent:
                 h_actor = torch.zeros((1, 1, self.args.hidden_size))
                 h_q     = torch.zeros((1, 1, self.args.hidden_size))
                 self.maze.begin()
-                pred_list = [(self.maze.obs(), None, None, None, None)]
+                pred_list = [(None, self.maze.obs(), None, None, None, None)]
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o = self.maze.obs()
@@ -143,7 +143,7 @@ class Agent:
                         (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, prev_a, h_q)
                         zp_mu_pred, zp_preds = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         zq_mu_pred, zq_preds = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
-                        pred_list.append((self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
+                        pred_list.append((action_name, self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a ; h_q = h_q_p1
                 pred_lists.append(pred_list)
             self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
@@ -158,7 +158,7 @@ class Agent:
                 done = False ; prev_a = torch.zeros((1, 1, action_size))
                 h_q     = torch.zeros((1, 1, self.args.hidden_size))
                 self.maze.begin()
-                pred_list = [(self.maze.obs(), None, None, None, None)]
+                pred_list = [(None, self.maze.obs(), None, None, None, None)]
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o = self.maze.obs()
@@ -166,7 +166,7 @@ class Agent:
                         (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, prev_a, h_q)
                         zp_mu_pred, zp_preds = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         zq_mu_pred, zq_preds = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
-                        pred_list.append((self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
+                        pred_list.append((action_name, self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a ; h_q = h_q_p1
                 pred_lists.append(pred_list)
             self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists

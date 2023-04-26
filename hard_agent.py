@@ -151,7 +151,7 @@ class Agent:
                 h_q     = torch.zeros((1, 1, self.args.hidden_size))
                 self.maze.begin()
                 o, s = self.maze.obs()
-                pred_list = [((o.squeeze(0), s.squeeze(0)), ((None, None), (None, None)), ((None, None), (None, None)))]
+                pred_list = [(None, (o.squeeze(0), s.squeeze(0)), ((None, None), (None, None)), ((None, None), (None, None)))]
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o, s = self.maze.obs()
@@ -163,7 +163,7 @@ class Agent:
                         pred_spe_p = [pred.squeeze(0).squeeze(0) for pred in pred_spe_p]   ; pred_spe_q = [pred.squeeze(0).squeeze(0) for pred in pred_spe_q]
                         o, s = self.maze.obs()
                         pred_list.append((
-                            (o.squeeze(0), s.squeeze(0)), 
+                            action_name, (o.squeeze(0), s.squeeze(0)), 
                             ((rgbd_mu_pred_p.squeeze(0).squeeze(0), pred_rgbd_p), (spe_mu_pred_p.squeeze(0).squeeze(0), pred_spe_p)), 
                             ((rgbd_mu_pred_q.squeeze(0).squeeze(0), pred_rgbd_q), (spe_mu_pred_q.squeeze(0).squeeze(0), pred_spe_q))))
                         prev_a = a ; h_q = h_q_p1
@@ -181,7 +181,7 @@ class Agent:
                 h_q = torch.zeros((1, 1, self.args.hidden_size))
                 self.maze.begin()
                 o, s = self.maze.obs()
-                pred_list = [((o.squeeze(0), s.squeeze(0)), ((None, None), (None, None)), ((None, None), (None, None)))]
+                pred_list = [(None, (o.squeeze(0), s.squeeze(0)), ((None, None), (None, None)), ((None, None), (None, None)))]
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o, s = self.maze.obs()
@@ -193,7 +193,7 @@ class Agent:
                         pred_spe_p = [pred.squeeze(0).squeeze(0) for pred in pred_spe_p]   ; pred_spe_q = [pred.squeeze(0).squeeze(0) for pred in pred_spe_q]
                         o, s = self.maze.obs()
                         pred_list.append((
-                            (o.squeeze(0), s.squeeze(0)), 
+                            action_name, (o.squeeze(0), s.squeeze(0)), 
                             ((rgbd_mu_pred_p.squeeze(0).squeeze(0), pred_rgbd_p), (spe_mu_pred_p.squeeze(0).squeeze(0), pred_spe_p)), 
                             ((rgbd_mu_pred_q.squeeze(0).squeeze(0), pred_rgbd_q), (spe_mu_pred_q.squeeze(0).squeeze(0), pred_spe_q))))
                         prev_a = a ; h_q = h_q_p1
