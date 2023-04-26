@@ -121,10 +121,10 @@ class Agent:
             o, s = self.maze.obs()
             a, _, h_actor = self.actor(o, s, prev_a, h_actor)
             action = torch.flatten(a).tolist()
-            r, spot_name, done = self.maze.action(action[0], action[1], verbose)
+            r, spot_name, done, action_name = self.maze.action(action[0], action[1], verbose)
             no, ns = self.maze.obs()
             if(push): self.memory.push(o, s, a, r, no, ns, done, done)
-        return(a, h_actor, r, spot_name, done)
+        return(a, h_actor, r, spot_name, done, action_name)
     
     
     
@@ -134,10 +134,10 @@ class Agent:
             _, _, h_q = self.forward(o, s, prev_a, h_q_m1)
             a, _, _ = self.actor(h_q)
             action = torch.flatten(a).tolist()
-            r, spot_name, done = self.maze.action(action[0], action[1], verbose)
+            r, spot_name, done, action_name = self.maze.action(action[0], action[1], verbose)
             no, ns = self.maze.obs()
             if(push): self.memory.push(o, s, a, r, no, ns, done, done)
-        return(a, h_q, r, spot_name, done)
+        return(a, h_q, r, spot_name, done, action_name)
     
     
     
@@ -155,7 +155,7 @@ class Agent:
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o, s = self.maze.obs()
-                        a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
+                        a, h_actor, _, _, done, action_name = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
                         (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, s, prev_a, h_q)
                         (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
@@ -185,7 +185,7 @@ class Agent:
                 for step in range(self.args.max_steps):
                     if(not done): 
                         o, s = self.maze.obs()
-                        a, h_q_p1, _, _, done = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
+                        a, h_q_p1, _, _, done, action_name = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
                         (zp_mu, zp_std), (zq_mu, zq_std), _ = self.forward(o, s, prev_a, h_q)
                         (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
@@ -211,7 +211,7 @@ class Agent:
             self.maze.begin()
             pos_list = [self.maze_name, self.maze.maze.get_pos_yaw_spe()[0]]
             for step in range(self.args.max_steps):
-                if(not done): prev_a, h_actor, _, _, done = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
+                if(not done): prev_a, h_actor, _, _, done, _ = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
                 pos_list.append(self.maze.maze.get_pos_yaw_spe()[0])
             pos_lists.append(pos_list)
         self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
@@ -227,7 +227,7 @@ class Agent:
             self.maze.begin()
             pos_list = [self.maze_name, self.maze.maze.get_pos_yaw_spe()[0]]
             for step in range(self.args.max_steps):
-                if(not done): prev_a, h_q, _, _, done = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
+                if(not done): prev_a, h_q, _, _, done, _ = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
                 pos_list.append(self.maze.maze.get_pos_yaw_spe()[0])
             pos_lists.append(pos_list)
         self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
@@ -243,7 +243,7 @@ class Agent:
         for step in range(self.args.max_steps):
             self.steps += 1
             if(not done):
-                prev_a, h, r, spot_name, done = self.step_in_episode_hq(prev_a, h, push, verbose) if self.args.actor_hq else self.step_in_episode(prev_a, h, push, verbose)
+                prev_a, h, r, spot_name, done, _ = self.step_in_episode_hq(prev_a, h, push, verbose) if self.args.actor_hq else self.step_in_episode(prev_a, h, push, verbose)
                 cumulative_r += r
                 
             if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):

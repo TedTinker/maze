@@ -76,12 +76,13 @@ class Easy_Maze:
             done = True
             
         #if(verbose): print("\n\nRaw Action: x {}, y {}.".format(x, y))
-        if(verbose): print("\n\nStep: {}. Action: {}.".format(self.steps, "Right" if x == 1 else "Left" if x == -1 else "Up" if y == 1 else "Down"))
+        action_name = "Right" if x == 1 else "Left" if x == -1 else "Up" if y == 1 else "Down"
+        if(verbose): print("\n\nStep: {}. Action: {}.".format(self.steps, action_name))
         if(verbose): print("\n{}\n".format(self))
         if(verbose): print("Reward: {}. Spot name: {}. Done: {}.".format(reward, spot_name, done))
         if(verbose): print(self.obs_str())
         if(verbose): print(self.obs())
-        return(reward, spot_name, done)    
+        return(reward, spot_name, done, action_name)    
     
     def __str__(self):
         to_print = ""

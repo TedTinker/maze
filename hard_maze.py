@@ -77,6 +77,7 @@ class Hard_Maze:
             (self.args.max_speed - self.args.min_speed)
         spe = [self.args.min_speed, self.args.max_speed, spe] ; spe.sort() ; spe = spe[1]
         if(verbose): print("updated: yaw {}, spe {}.".format(yaw, spe))
+        action_name = "Yaw: {}. Speed: {}.".format(round(degrees(yaw)), round(spe))
             
         self.change_velocity(yaw, spe, verbose = verbose)
         for _ in range(self.args.steps_per_step):
@@ -95,7 +96,7 @@ class Hard_Maze:
         if(end and not exit): reward = self.args.step_lim_punishment
         if(verbose): print("end {}, which {}, reward {}\n\n".format(end, which, reward))
 
-        return(reward, which, end)
+        return(reward, which, end, action_name)
     
     
     
