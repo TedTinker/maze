@@ -55,15 +55,15 @@ class Hard_Maze:
         self.maze.resetBasePositionAndOrientation((self.agent_pos[0], self.agent_pos[1], .5), orn)
         
         old_speed = self.agent_spe
-        x = -cos(new_yaw)*speed / self.args.steps_per_step
-        y = -sin(new_yaw)*speed / self.args.steps_per_step
+        x = -cos(new_yaw)*speed
+        y = -sin(new_yaw)*speed
         self.maze.resetBaseVelocity(x, y)
         _, self.agent_yaw, _ = self.maze.get_pos_yaw_spe()
                 
         if(verbose):
             print("\n\nOld yaw:\t{}\nChange:\t\t{}\nNew yaw:\t{}".format(
                 round(degrees(old_yaw)) % 360, round(degrees(yaw_change)), round(degrees(new_yaw))))
-            print("Old speed:\t{}\nNew speed:\t{}".format(old_speed, speed / self.args.steps_per_step))
+            print("Old speed:\t{}\nNew speed:\t{}".format(old_speed, speed))
             #self.render(view = "body")  
             print("\n")
         

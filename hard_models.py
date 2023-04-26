@@ -44,7 +44,7 @@ class Forward(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.MaxPool2d(
                 kernel_size = (3,3), 
                 stride = (2,2),
@@ -54,23 +54,23 @@ class Forward(nn.Module):
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zp_std = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
         self.zq_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size + rgbd_size + spe_size, args.hidden_size), 
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zq_std = nn.Sequential(
             nn.Linear(args.hidden_size + action_size + rgbd_size + spe_size, args.hidden_size), 
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
@@ -81,7 +81,7 @@ class Forward(nn.Module):
         
         self.rgbd_up = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, rgbd_size),
-            nn.LeakyReLU())
+            nn.PReLU())
         self.rgbd = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = 4,
@@ -89,7 +89,7 @@ class Forward(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Upsample(
                 scale_factor = 2, 
                 mode = "bilinear",
@@ -101,9 +101,9 @@ class Forward(nn.Module):
         
         self.spe = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size), 
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, spe_size))
         
         self.rgbd_in.apply(init_weights)
@@ -166,7 +166,7 @@ class Actor(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.MaxPool2d(
                 kernel_size = (3,3), 
                 stride = (2,2),
@@ -223,7 +223,7 @@ class Critic(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.MaxPool2d(
                 kernel_size = (3,3), 
                 stride = (2,2),
@@ -237,7 +237,7 @@ class Critic(nn.Module):
             batch_first = True)
         self.lin = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, 1))
 
         self.rgbd_in.apply(init_weights)
@@ -265,15 +265,15 @@ class Actor_HQ(nn.Module):
         self.args = args
         
         self.lin = nn.Sequential(
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU())
+            nn.PReLU())
         self.mu = nn.Sequential(
             nn.Linear(args.hidden_size, action_size))
         self.std = nn.Sequential(
@@ -305,15 +305,15 @@ class Critic_HQ(nn.Module):
         self.args = args
         
         self.lin = nn.Sequential(
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size + action_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size),
-            nn.LeakyReLU(),
+            nn.PReLU(),
             nn.Linear(args.hidden_size, 1))
 
         self.lin.apply(init_weights)

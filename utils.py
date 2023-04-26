@@ -63,8 +63,8 @@ parser.add_argument('--randomness',         type=int,        default = 0)
 parser.add_argument('--body_size',          type=float,      default = 2)    
 parser.add_argument('--image_size',         type=int,        default = 8)
 parser.add_argument('--max_yaw_change',     type=float,      default = pi/2)
-parser.add_argument('--min_speed',          type=float,      default = 50)
-parser.add_argument('--max_speed',          type=float,      default = 100)
+parser.add_argument('--min_speed',          type=float,      default = 10)
+parser.add_argument('--max_speed',          type=float,      default = 20)
 parser.add_argument('--steps_per_step',     type=int,        default = 5)
 parser.add_argument('--speed_scalar',       type=float,      default = .0001)
 
@@ -264,8 +264,8 @@ def load_dicts(args):
                     if(plot_dict["args"].hard_maze): complete_hard_order.append(arg_name) ; hard_plot_dicts.append(plot_dict) ; hard = True
                     else:                            complete_easy_order.append(arg_name) ; easy_plot_dicts.append(plot_dict) ; easy = True
                     
-    while len(complete_easy_order) > 0 and complete_easy_order[0] == "break": complete_easy_order.pop(0)
-    while len(complete_hard_order) > 0 and complete_hard_order[0] == "break": complete_hard_order.pop(0)              
+    while(len(complete_easy_order) > 0 and complete_easy_order[0] in ["break", "empty_space"]): complete_easy_order.pop(0)
+    while(len(complete_hard_order) > 0 and complete_hard_order[0] in ["break", "empty_space"]): complete_hard_order.pop(0)              
             
     return(plot_dicts, min_max_dict, (easy, complete_easy_order, easy_plot_dicts), (hard, complete_hard_order, hard_plot_dicts))
 # %%
