@@ -40,7 +40,14 @@ class Forward(nn.Module):
         self.rgbd_in = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = 4,
-                out_channels = 4,
+                out_channels = 16,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.PReLU(),
+            ConstrainedConv2d(
+                in_channels = 16,
+                out_channels = 16,
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
@@ -49,8 +56,10 @@ class Forward(nn.Module):
                 kernel_size = (3,3), 
                 stride = (2,2),
                 padding = (1,1)))
-        example = self.rgbd_in(example).flatten(1)
-        rgbd_size = example.shape[1]
+        example = self.rgbd_in(example)
+        
+        self.inner_rgbd_size = example.shape
+        self.flat_rgbd_size = example.flatten(1).shape[1]
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
@@ -64,12 +73,12 @@ class Forward(nn.Module):
             nn.Softplus())
         
         self.zq_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size + rgbd_size + spe_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + action_size + self.flat_rgbd_size + spe_size, args.hidden_size), 
             nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zq_std = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size + rgbd_size + spe_size, args.hidden_size), 
+            nn.Linear(args.hidden_size + action_size + self.flat_rgbd_size + spe_size, args.hidden_size), 
             nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
@@ -80,12 +89,12 @@ class Forward(nn.Module):
             batch_first = True)
         
         self.rgbd_up = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, rgbd_size),
+            nn.Linear(args.hidden_size + action_size, self.flat_rgbd_size),
             nn.PReLU())
         self.rgbd = nn.Sequential(
             ConstrainedConv2d(
-                in_channels = 4,
-                out_channels = 4,
+                in_channels = 16,
+                out_channels = 16,
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
@@ -95,7 +104,14 @@ class Forward(nn.Module):
                 mode = "bilinear",
                 align_corners = True),
             ConstrainedConv2d(
-                in_channels = 4,
+                in_channels = 16,
+                out_channels = 16,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.PReLU(),
+            ConstrainedConv2d(
+                in_channels = 16,
                 out_channels = 4,
                 kernel_size = (1,1)))
         
@@ -135,7 +151,7 @@ class Forward(nn.Module):
         h_q_m1 = h_q_m1.permute(1, 0, 2)
         h, _ = self.gru(z_mu, h_q_m1)        
         
-        rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
+        rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.inner_rgbd_size[1], self.inner_rgbd_size[2], self.inner_rgbd_size[3]))
         rgbd_mu_pred = rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2)
         spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
                 
@@ -143,7 +159,7 @@ class Forward(nn.Module):
         for _ in range(quantity):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
-            rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], 4, self.args.image_size//2, self.args.image_size//2))
+            rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.inner_rgbd_size[1], self.inner_rgbd_size[2], self.inner_rgbd_size[3]))
             pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2)))
             pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
