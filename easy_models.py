@@ -60,8 +60,8 @@ class Forward(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.LeakyReLU(),
-            nn.Linear(args.hidden_size, obs_size), 
-            nn.Tanh())
+            nn.Linear(args.hidden_size, obs_size),) 
+            #nn.Tanh())
         
         self.zp_mu.apply(init_weights)
         self.zp_std.apply(init_weights)

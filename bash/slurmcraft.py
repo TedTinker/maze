@@ -44,8 +44,10 @@ def expand_args(args = ""):
 slurm_dict = {
     "d"    : "", 
     "e"    : "--alpha None",
-    "en"   : "--alpha None --curiosity naive",
-    "ef"   : "--alpha None --curiosity free",
+    "en_"   : "--alpha None --curiosity naive --naive_eta 10 15 20",
+    "ef_"   : "--alpha None --curiosity free --free_eta 4 6 8",
+    "en_rand_"   : "--alpha None --curiosity naive --naive_eta 10 15 20 --randomness 10",
+    "ef_rand_"   : "--alpha None --curiosity free --free_eta 4 6 8 --randomness 10",
 }
 
 def add_this(name, this):
@@ -55,9 +57,9 @@ def add_this(name, this):
         this_this = this
         if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
         slurm_dict[key + "_" + name] = value + " " + this_this  
-add_this("hard_",     "--hard_maze True --max_steps 15 --agents_per_pos_list 10 --maze_list \"('t',)\" --elbo_num 1 3 5 10")
-add_this("log_prob", "--accuracy log_prob")
-add_this("rand",     "--randomness 10")
+#add_this("hard_",     "--hard_maze True --max_steps 15 --agents_per_pos_list 10 --maze_list \"('t',)\" --elbo_num 1 3 5 10")
+#add_this("log_prob", "--accuracy log_prob")
+#add_this("rand",     "--randomness 10")
 
 new_slurm_dict = {}
 for key, item in slurm_dict.items():

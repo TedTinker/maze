@@ -280,7 +280,7 @@ class Agent:
                 
         next_obs_tiled = torch.tile(next_obs, (1, 1, self.args.elbo_num))
                 
-        accuracy_for_naive  = F.mse_loss(zq_pred_obs, next_obs_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        accuracy_for_naive  = F.binary_cross_entropy_with_logits(zq_pred_obs, (next_obs_tiled+1)/2, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         accuracy            = accuracy_for_naive.sum()
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
         complexity          = self.args.beta * complexity_for_free.mean()        
