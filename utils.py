@@ -66,6 +66,7 @@ parser.add_argument('--max_yaw_change',     type=float,      default = pi/2)
 parser.add_argument('--min_speed',          type=float,      default = 50)
 parser.add_argument('--max_speed',          type=float,      default = 100)
 parser.add_argument('--steps_per_step',     type=int,        default = 5)
+parser.add_argument('--speed_scalar',       type=float,      default = .0001)
 
 # Module 
 parser.add_argument('--hidden_size',        type=int,        default = 32)   
