@@ -3,7 +3,7 @@ import argparse, ast, json
 parser = argparse.ArgumentParser()
 parser.add_argument("--comp",         type=str,  default = "deigo")
 parser.add_argument("--agents",       type=int,  default = 10)
-parser.add_argument("--arg_list",     type=str,  default = ["d"])
+parser.add_argument("--arg_list",     type=str,  default = [])
 try:    args = parser.parse_args()
 except: args, _ = parser.parse_known_args()
 
@@ -46,8 +46,6 @@ slurm_dict = {
     "e"    : "--alpha None",
     "en"   : "--alpha None --curiosity naive",
     "ef"   : "--alpha None --curiosity free",
-    "en_rand"   : "--alpha None --curiosity naive --randomness 10",
-    "ef_rand"   : "--alpha None --curiosity free --randomness 10",
 }
 
 def add_this(name, this):
@@ -58,11 +56,11 @@ def add_this(name, this):
         if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
         slurm_dict[key + "_" + name] = value + " " + this_this  
 add_this("hard",     "--hard_maze True --max_steps 15 --agents_per_pos_list 10 --maze_list \"('t',)\"")
-#add_this("rand",     "--randomness 10")
+add_this("rand",     "--randomness 10")
 
 new_slurm_dict = {}
-for key, item in slurm_dict.items():
-    combos = expand_args(item)
+for key, value in slurm_dict.items():
+    combos = expand_args(value)
     if(len(combos) == 1): new_slurm_dict[key] = combos[0] 
     else:
         for i, combo in enumerate(combos): new_slurm_dict[key + str(i+1)] = combo
@@ -77,8 +75,12 @@ def all_like_this(this):
             
 
 
+        
+if(__name__ == "__main__" and args.arg_list == []):
+    for key, value in slurm_dict.items(): print(key, ":", value)
+
 max_cpus = 36
-if(__name__ == "__main__"):
+if(__name__ == "__main__" and args.arg_list != []):
     
     if(args.comp == "deigo"):
         partition = """

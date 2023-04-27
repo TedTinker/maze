@@ -320,7 +320,7 @@ class Agent:
         accuracy_for_naive = image_loss + speed_loss
         #print("IMAGES:", image_loss.sum().item())
         #print("SPEEDS:", speed_loss.sum().item())
-        accuracy            = accuracy_for_naive.sum()
+        accuracy            = accuracy_for_naive.mean()
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
         complexity          = self.args.beta * complexity_for_free.mean()        
                         
