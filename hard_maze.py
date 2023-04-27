@@ -96,6 +96,7 @@ class Hard_Maze:
         exit = which != "NONE"
         if(end and not exit): reward = self.args.step_lim_punishment
         if(verbose): print("end {}, which {}, reward {}\n\n".format(end, which, reward))
+        if(self.args.randomness > 0): self.maze.randomize()
 
         return(reward, which, end, action_name)
     

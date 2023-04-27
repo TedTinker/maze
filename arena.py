@@ -14,17 +14,19 @@ class Exit:
         self.name = name ; self.pos = pos ; self.rew = rew
         
 class Arena_Dict:
-    def __init__(self, start, exits):
+    def __init__(self, start, exits, random_pos = []):
         self.start = start 
         self.exits = pd.DataFrame(
             data = [[exit.name, exit.pos, exit.rew] for exit in exits],
             columns = ["Name", "Position", "Reward"])
+        self.random_pos = random_pos
         
 arena_dict = {
     "t.png" : Arena_Dict(
         (3, 1),
         [Exit(  "L",    (2,0), args.default_reward),
-        Exit(   "R",    (2,4), args.better_reward)]),
+        Exit(   "R",    (2,4), args.better_reward)],
+        [(1, 1)]),
     "1.png" : Arena_Dict(
         (2,2), 
         [Exit(  "L",    (1,0), args.default_reward),
@@ -78,6 +80,7 @@ class Arena():
         self.args = args
         self.start = arena_dict[arena_name + ".png"].start
         self.exits = arena_dict[arena_name + ".png"].exits
+        self.random_pos = arena_dict[arena_name + ".png"].random_pos
         arena_map = cv2.imread("arenas/" + arena_name + ".png")
         w, h, _ = arena_map.shape
         self.physicsClient = get_physics(GUI, w, h)
@@ -133,6 +136,7 @@ class Arena():
         x, y = cos(yaw)*spe, sin(yaw)*spe
         self.resetBaseVelocity(x, y)
         self.resetBasePositionAndOrientation(pos, orn)
+        if(self.args.randomness > 0): self.randomize()
         
         
     def get_pos_yaw_spe(self):
@@ -176,6 +180,13 @@ class Arena():
                 col = True
         return(col)
     
+    def randomize(self):
+        for cube in self.colors.keys():
+            pos, _ = p.getBasePositionAndOrientation(cube, physicsClientId = self.physicsClient)
+            if(pos[:-1] in self.random_pos):
+                color = choices([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1], [0, 0, 0, 1]])[0]
+                p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)
+            
     def stop(self):
         p.disconnect(self.physicsClient)
 
