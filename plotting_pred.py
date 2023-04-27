@@ -75,23 +75,24 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                                 
         
 def hard_plotting_pred(complete_order, plot_dicts):
-    epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pred_lists"].keys()])) ; epochs.sort()
+    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs_maze_names.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pred_lists"]["1_0"])
+    first_arena_name = plot_dicts[0]["args"].maze_list[0] 
+    episodes = len(plot_dicts[0]["pred_lists"]["1_0_{}".format(first_arena_name)])
         
-    for epoch in epochs:
+    for epoch_maze_name in epochs_maze_names:
+        epoch, maze_name = epoch_maze_name.split("_")
         for agent in agents:
             for arg_name in complete_order:
                 if(arg_name in ["break", "empty_space"]): pass 
                 else:
                     for plot_dict in plot_dicts:
-                        if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}".format(agent, epoch)] ; break 
-                    steps_per_step = plot_dict["args"].steps_per_step
+                        if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}_{}".format(agent, epoch, maze_name)] ; break 
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
                         rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 1.5))
-                        title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
+                        title = "Agent {}: Epoch {} (Maze {}), Episode {}".format(agent, epoch, maze_name, episode)
                         fig.suptitle(title, y = 1.1)
                         for row, (action_name, (rgbd, spe), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))) in enumerate(pred_list):
                             for column in range(columns):

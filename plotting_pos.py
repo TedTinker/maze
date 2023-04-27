@@ -4,6 +4,7 @@ import imageio
 from io import BytesIO
 import os
 import numpy as np
+from skimage.transform import resize
 
 from utils import args, duration, load_dicts, print
 
@@ -83,7 +84,14 @@ def easy_plotting_pos(complete_order, plot_dicts):
             
         print("{}:\tDone with epoch {}.".format(duration(), epoch))
             
-    imageio.mimwrite("easy_video.mp4", images, fps = 3)
+    x_max = None ; y_max = None 
+    for image in images:
+        x, y = image.shape[0], image.shape[1]
+        x_max = x if x_max == None else max([x_max, x])
+        y_max = y if y_max == None else max([y_max, y])
+    resized = []
+    for image in images: resized.append(resize(image, (x_max, y_max, 4)))
+    imageio.mimwrite("easy_video.mp4", resized, fps = 3)
             
             
         
@@ -97,10 +105,10 @@ def hard_plotting_pos(complete_order, plot_dicts):
     columns = max(columns, current_count)
     if(complete_order[-1] != "break"): rows += 1
     
-    epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs.sort()
+    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs_maze_names.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pos_lists"]["1_0"])
-    maze_names = [plot_dicts[0]["pos_lists"]["1_{}".format(e)][0][0] for e in epochs]
+    first_arena_name = plot_dicts[0]["args"].maze_list[0] 
+    episodes = len(plot_dicts[0]["pos_lists"]["1_0_{}".format(first_arena_name)])
             
     cmap = plt.cm.get_cmap("hsv", len(agents))
     norm = Normalize(vmin = 0, vmax = len(agents))
@@ -110,9 +118,10 @@ def hard_plotting_pos(complete_order, plot_dicts):
         handles.append(handle)
     plt.close()
     
-    for epoch, maze_name in zip(epochs, maze_names):
+    for epoch_maze_name in epochs_maze_names:
+        epoch, maze_name = epoch_maze_name.split("_")
         fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
-        fig.suptitle("Epoch {}".format(epoch), y = 1.05)
+        fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
             if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
@@ -132,7 +141,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 ax.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
                 for c, agent in enumerate(agents):
                     for episode in range(episodes):
-                        path = plot_dict["pos_lists"]["{}_{}".format(agent, epoch)][episode][1:]
+                        path = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][1:]
                         xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
                         ax.plot(xs, ys, color=cmap(norm(c)))
                         
@@ -146,13 +155,21 @@ def hard_plotting_pos(complete_order, plot_dicts):
         plt.savefig(buf, format = "png", bbox_inches = "tight")
         buf.seek(0)
         im = imageio.imread(buf)
+        print(epoch, maze_name, im.shape)
         images.append(im)
         buf.close()
         plt.close()
             
         print("{}:\tDone with epoch {}.".format(duration(), epoch))
-                
-    imageio.mimwrite("saved/hard_video.mp4", images, fps = 1/3)
+    
+    x_max = None ; y_max = None 
+    for image in images:
+        x, y = image.shape[0], image.shape[1]
+        x_max = x if x_max == None else max([x_max, x])
+        y_max = y if y_max == None else max([y_max, y])
+    resized = []
+    for image in images: resized.append(resize(image, (x_max, y_max, 4)))
+    imageio.mimwrite("saved/hard_video.mp4", resized, fps = 1/3)
     
     
 

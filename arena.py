@@ -26,7 +26,7 @@ arena_dict = {
         (3, 1),
         [Exit(  "L",    (2,0), args.default_reward),
         Exit(   "R",    (2,4), args.better_reward)],
-        [(1, 1)]),
+        [(1, 1), (1, 0), (3, 0), (3, 2)]),
     "1.png" : Arena_Dict(
         (2,2), 
         [Exit(  "L",    (1,0), args.default_reward),
@@ -184,8 +184,7 @@ class Arena():
         for cube in self.colors.keys():
             pos, _ = p.getBasePositionAndOrientation(cube, physicsClientId = self.physicsClient)
             if(pos[:-1] in self.random_pos):
-                color = choices([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [1, 1, 0, 1], [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1], [0, 0, 0, 1]])[0]
-                p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)
+                p.changeVisualShape(cube, -1, rgbaColor = [choices([0,1])[0], choices([0,1])[0], choices([0,1])[0], 1], physicsClientId = self.physicsClient)
             
     def stop(self):
         p.disconnect(self.physicsClient)

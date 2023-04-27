@@ -56,6 +56,7 @@ def add_this(name, this):
         if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
         slurm_dict[key + "_" + name] = value + " " + this_this  
 add_this("hard", "--hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --maze_list \"('t',)\" --naive_eta 3 --free_eta 3")
+add_this("many", "--hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --maze_list \"('1','2','3')\" --epochs \"(100,100,100)\" --naive_eta 3 --free_eta 3")
 add_this("rand", "--randomness 10")
 
 new_slurm_dict = {}
@@ -77,7 +78,7 @@ def all_like_this(this):
 
         
 if(__name__ == "__main__" and args.arg_list == []):
-    for key, value in slurm_dict.items(): print(key, ":", value)
+    for key, value in slurm_dict.items(): print(key, ":", value,"\n")
 
 max_cpus = 36
 if(__name__ == "__main__" and args.arg_list != []):

@@ -15,6 +15,7 @@ class Hard_Maze:
     
     def __init__(self, arena_name, GUI = False, args = default_args):
         self.args = args
+        self.name = arena_name
         self.maze = Arena(arena_name, GUI, args)
         self.begin()
         
