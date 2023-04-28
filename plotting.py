@@ -13,10 +13,8 @@ print("name:\n{}\n".format(args.arg_name),)
 
 
 def divide_arenas(epochs, here = plt):
-    sums = list(accumulate(args.epochs))
-    x = [e for e in epochs if e in sums]
-    for x_ in x:
-        here.axvline(x=x_, color = (0,0,0,.2))
+    sums = list(accumulate(epochs))
+    for x in sums: here.axvline(x=x, color = (0,0,0,.2))
 
 
 
