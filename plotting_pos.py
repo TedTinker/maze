@@ -23,8 +23,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
     if(complete_order[-1] != "break"): rows += 1
         
     epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
-    print(epochs_maze_names) # Must sort correctly!
-    epochs_maze_names.sort()
+    epochs_maze_names.sort(key=lambda x: (int(x.split('_')[0]), x.split('_')[1]))
     first_arena_name = plot_dicts[0]["args"].maze_list[0] 
     steps = len(plot_dicts[0]["pos_lists"]["1_0_{}".format(first_arena_name)][0])
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
@@ -112,8 +111,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
     if(complete_order[-1] != "break"): rows += 1
     
     epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
-    print(epochs_maze_names) # Must sort correctly!
-    epochs_maze_names.sort()
+    epochs_maze_names.sort(key=lambda x: (int(x.split('_')[0]), x.split('_')[1]))
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
     first_arena_name = plot_dicts[0]["args"].maze_list[0] 
     episodes = len(plot_dicts[0]["pos_lists"]["1_0_{}".format(first_arena_name)])
