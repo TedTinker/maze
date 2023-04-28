@@ -13,7 +13,7 @@ class Exit:
     def __init__(self, name, pos, rew):     # Position (Y, X)
         self.name = name ; self.pos = pos ; self.rew = rew
         
-class Arena_Dict:
+class Arena_Description:
     def __init__(self, start, exits, random_pos = []):
         self.start = start 
         self.exits = pd.DataFrame(
@@ -22,22 +22,22 @@ class Arena_Dict:
         self.random_pos = random_pos
         
 arena_dict = {
-    "t.png" : Arena_Dict(
+    "t.png" : Arena_Description(
         (3, 1),
         [Exit(  "L",    (2,0), args.default_reward),
         Exit(   "R",    (2,4), args.better_reward)],
         [(1, 1), (1, 0), (3, 0), (3, 2)]),
-    "1.png" : Arena_Dict(
+    "1.png" : Arena_Description(
         (2,2), 
         [Exit(  "L",    (1,0), args.default_reward),
         Exit(   "R",    (1,4), args.better_reward)]),
-    "2.png" : Arena_Dict(
+    "2.png" : Arena_Description(
         (3,3), 
         [Exit(  "LL",   (4,1), args.better_reward),
         Exit(   "LR",   (0,1), args.default_reward),
         Exit(   "RL",   (0,5), args.default_reward),
         Exit(   "RR",   (4,5), args.default_reward)]),
-    "3.png" : Arena_Dict(
+    "3.png" : Arena_Description(
         (4,4), 
         [Exit(  "LLL",  (6,3), args.default_reward),
         Exit(   "LLR",  (6,1), args.default_reward),

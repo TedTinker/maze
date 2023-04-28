@@ -26,7 +26,7 @@ class Agent:
         self.agent_num = i
         self.args = args
         self.episodes = 0 ; self.epochs = 0 ; self.steps = 0
-        self.maze = Easy_Maze(args)
+        self.maze = Easy_Maze("t", args)
         
         self.target_entropy = args.target_entropy # -dim(A)
         self.alpha = 1

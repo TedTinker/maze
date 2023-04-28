@@ -50,7 +50,7 @@ parser.add_argument('--device',             type=str,        default = "cpu")
 
 # Maze 
 parser.add_argument('--hard_maze',          type=bool,       default = False)
-parser.add_argument('--maze_list',          type=tuple_type, default = ("easy",))
+parser.add_argument('--maze_list',          type=tuple_type, default = ("t",))
 parser.add_argument('--max_steps',          type=int,        default = 10)
 parser.add_argument('--step_lim_punishment',type=int,        default = -1)
 parser.add_argument('--wall_punishment',    type=int,        default = -1)

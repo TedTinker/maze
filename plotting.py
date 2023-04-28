@@ -4,10 +4,19 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE" # Without this, pyplot crashes the ker
 
 import numpy as np
 from math import log
+from itertools import accumulate
 
 from utils import args, duration, load_dicts, print
 
 print("name:\n{}\n".format(args.arg_name),)
+
+
+
+def divide_arenas(epochs, here = plt):
+    sums = list(accumulate(args.epochs))
+    x = [e for e in epochs if e in sums]
+    for x_ in x:
+        here.axvline(x=x_, color = (0,0,0,.2))
 
 
 

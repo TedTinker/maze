@@ -75,7 +75,9 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                                 
         
 def hard_plotting_pred(complete_order, plot_dicts):
-    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs_maze_names.sort()
+    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
+    print(epochs_maze_names) # Must sort correctly!
+    epochs_maze_names.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()
     first_arena_name = plot_dicts[0]["args"].maze_list[0] 
     episodes = len(plot_dicts[0]["pred_lists"]["1_0_{}".format(first_arena_name)])

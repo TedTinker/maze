@@ -1,5 +1,6 @@
 #%%
 from random import choice, choices
+import pandas as pd
 import torch
 
 from utils import default_args, args, print
@@ -8,36 +9,52 @@ from utils import default_args, args, print
 
 class Spot:
     
-    def __init__(self, pos, exit_reward = None, name = "NONE", random_spot = False):
-        self.pos = pos ; self.exit_reward = exit_reward
-        self.name = name ; self.random_spot = random_spot
+    def __init__(self, pos, exit_reward = None, name = "NONE"):
+        self.pos = pos ; self.exit_reward = exit_reward ; self.name = name
+        
+        
+        
+class Arena_Description:
+    def __init__(self, start, spots, random_pos = []):
+        self.start = start ; self.spots = spots ; self.random_pos = random_pos
+        self.xs = list(set([spot.pos[0] for spot in spots])) ; self.xs.sort()
+        self.ys = list(set([spot.pos[1] for spot in spots])) ; self.ys.sort() ; self.ys.reverse()
+        print(self.xs, self.ys)
+        
+        
+        
+arena_dict = {
+    "t" : Arena_Description(
+        (0, 0), 
+        [Spot((0, 0)), Spot((0, 1)), 
+         Spot((-1, 1), args.default_reward, "BAD"), Spot((1, 1)), Spot((1, 2)), 
+         Spot((2, 2)), Spot((3, 2)), Spot((3, 1), args.better_reward, "GOOD")],
+        [(0, 1)])
+}
             
         
 
 class Easy_Maze:
     
-    def __init__(self, args = default_args):
+    def __init__(self, maze_name, args = default_args):
         self.args = args
-        self.maze = [
-            Spot((0, 0)), Spot((0, 1), random_spot = self.args.randomness != 0), 
-            Spot((-1, 1), self.args.default_reward, "BAD"), Spot((1, 1)), Spot((1, 2)), 
-            Spot((2, 2)), Spot((3, 2)), Spot((3, 1), self.args.better_reward, "GOOD")]
+        self.maze = arena_dict[maze_name]
         self.begin()
         
     def begin(self):
         self.steps = 0 
-        self.agent_pos = (0, 0)
+        self.agent_pos = self.maze.start
         
     def obs(self):
-        pos = [1 if spot.pos == self.agent_pos else self.args.non_one for spot in self.maze]
+        pos = [1 if spot.pos == self.agent_pos else self.args.non_one for spot in self.maze.spots]
         random_spot = False
         right = self.args.non_one ; left = self.args.non_one ; up = self.args.non_one ; down = self.args.non_one
-        for spot in self.maze:
-            if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])): right = 1 
-            if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])): left = 1  
-            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]+1)): up = 1    
-            if(spot.pos == (self.agent_pos[0], self.agent_pos[1]-1)): down = 1  
-            if(spot.pos == self.agent_pos): random_spot = spot.random_spot
+        for spot in self.maze.spots:
+            if(spot.pos == (self.agent_pos[0]+1, self.agent_pos[1])):   right = 1 
+            if(spot.pos == (self.agent_pos[0]-1, self.agent_pos[1])):   left = 1  
+            if(spot.pos == (self.agent_pos[0],   self.agent_pos[1]+1)): up = 1    
+            if(spot.pos == (self.agent_pos[0],   self.agent_pos[1]-1)): down = 1  
+            if(spot.pos == self.agent_pos): random_spot = spot.pos in self.maze.random_pos
         pos += [right, left, up, down]
         for _ in range(self.args.randomness): pos += [choice([-1,1]) if random_spot else 0]
         return(torch.tensor(pos).unsqueeze(0).float())
@@ -60,7 +77,7 @@ class Easy_Maze:
         self.steps += 1
         wall = True ; exit = False ; reward = 0 ; spot_name = "NONE" ; done = False
         
-        for spot in self.maze:
+        for spot in self.maze.spots:
             if(spot.pos == new_pos):
                 wall = False
                 self.agent_pos = new_pos ; reward = 0 ; spot_name = spot.name
@@ -86,19 +103,19 @@ class Easy_Maze:
     
     def __str__(self):
         to_print = ""
-        for y in [2, 1, 0]:
-            for x in [-1, 0, 1, 2, 3]:
+        for y in self.maze.ys:
+            for x in self.maze.xs:
                 portrayal = " "
-                for spot in self.maze:
+                for spot in self.maze.spots:
                     if(spot.pos == (x, y)): portrayal = "\u25A1"
                 if(self.agent_pos == (x, y)): portrayal = "@"
                 to_print += portrayal 
-            if(y != 0): to_print += "\n"
+            if(y != self.maze.ys[-1]): to_print += "\n"
         return(to_print)
     
     
     
-maze = Easy_Maze(args)
+maze = Easy_Maze("t", args)
 obs_size = maze.obs().shape[-1]
 action_size = 2
     
@@ -108,7 +125,7 @@ if __name__ == "__main__":
     
     actions = [[1,0], [0,1], [-1,0]]
     for action in actions:
-        reward, name, done = maze.action(action[0], action[1], verbose = True)
+        reward, name, done, action_name = maze.action(action[0], action[1], verbose = True)
 
 
 # %%
