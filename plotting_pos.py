@@ -7,6 +7,7 @@ import numpy as np
 from skimage.transform import resize
 
 from utils import args, duration, load_dicts, print
+from easy_maze import Easy_Maze
 
 print("name:\n{}".format(args.arg_name))
 
@@ -21,10 +22,13 @@ def easy_plotting_pos(complete_order, plot_dicts):
     columns = max(columns, current_count)
     if(complete_order[-1] != "break"): rows += 1
         
-    epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs.sort()
-    steps = len(plot_dicts[0]["pos_lists"]["1_0"][0])
+    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
+    print(epochs_maze_names) # Must sort correctly!
+    epochs_maze_names.sort()
+    first_arena_name = plot_dicts[0]["args"].maze_list[0] 
+    steps = len(plot_dicts[0]["pos_lists"]["1_0_{}".format(first_arena_name)][0])
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pos_lists"]["1_0"])
+    episodes = len(plot_dicts[0]["pred_lists"]["1_0_{}".format(first_arena_name)])
     
     cmap = plt.cm.get_cmap("gray_r")
     norm = Normalize(vmin = 0, vmax = 1)
@@ -34,10 +38,11 @@ def easy_plotting_pos(complete_order, plot_dicts):
         handles.append(handle)
     plt.close()
     
-    for epoch in epochs:
+    for epoch_maze_name in epochs_maze_names:
+        epoch, maze_name = epoch_maze_name.split("_")
         for step in range(steps):
             fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
-            fig.suptitle("Epoch {} Step {}".format(epoch, step), y = 1.1)
+            fig.suptitle("Epoch {} (Maze {}) Step {}".format(epoch, maze_name, step), y = 1.1)
             plot_position = (0, 0)
             for arg_name in complete_order:
                 if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
@@ -50,12 +55,13 @@ def easy_plotting_pos(complete_order, plot_dicts):
                         if(plot_dict["arg_name"] == arg_name): break
 
                     ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
-                    for spot in [(0, 0), (0, 1), (-1, 1), (1, 1), (1, 2), (2, 2), (3, 2), (3, 1)]:
+                    positions = [spot.pos for spot in Easy_Maze(maze_name, plot_dict["args"]).maze.spots]
+                    for spot in positions:
                         ax.text(spot[0], spot[1], "\u25A1", fontsize = 30, ha = "center", va = "center")
                     to_plot = {}
                     for agent in agents:
                         for episode in range(episodes):
-                            coordinate = plot_dict["pos_lists"]["{}_{}".format(agent, epoch)][episode][step]
+                            coordinate = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][step]
                             if(not coordinate in to_plot): to_plot[coordinate] = 0
                             to_plot[coordinate] += 1
                             
@@ -82,7 +88,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             buf.close()
             plt.close()
             
-        print("{}:\tDone with epoch {}.".format(duration(), epoch))
+        print("{}:\tDone with epoch {} (maze {}).".format(duration(), epoch, maze_name))
             
     x_max = None ; y_max = None 
     for image in images:
@@ -105,7 +111,9 @@ def hard_plotting_pos(complete_order, plot_dicts):
     columns = max(columns, current_count)
     if(complete_order[-1] != "break"): rows += 1
     
-    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()])) ; epochs_maze_names.sort()
+    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
+    print(epochs_maze_names) # Must sort correctly!
+    epochs_maze_names.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pos_lists"].keys()])) ; agents.sort()
     first_arena_name = plot_dicts[0]["args"].maze_list[0] 
     episodes = len(plot_dicts[0]["pos_lists"]["1_0_{}".format(first_arena_name)])
@@ -160,7 +168,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         buf.close()
         plt.close()
             
-        print("{}:\tDone with epoch {}.".format(duration(), epoch))
+        print("{}:\tDone with epoch {} (maze {}).".format(duration(), epoch, maze_name))
     
     x_max = None ; y_max = None 
     for image in images:

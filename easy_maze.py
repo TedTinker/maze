@@ -19,7 +19,6 @@ class Arena_Description:
         self.start = start ; self.spots = spots ; self.random_pos = random_pos
         self.xs = list(set([spot.pos[0] for spot in spots])) ; self.xs.sort()
         self.ys = list(set([spot.pos[1] for spot in spots])) ; self.ys.sort() ; self.ys.reverse()
-        print(self.xs, self.ys)
         
         
         
@@ -38,6 +37,7 @@ class Easy_Maze:
     
     def __init__(self, maze_name, args = default_args):
         self.args = args
+        self.name = maze_name
         self.maze = arena_dict[maze_name]
         self.begin()
         

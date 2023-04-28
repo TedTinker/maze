@@ -159,7 +159,7 @@ class Agent:
                         pred_list.append((action_name, self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a ; h_q = h_q_p1
                 pred_lists.append(pred_list)
-            self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
+            self.plot_dict["pred_lists"]["{}_{}_{}".format(self.agent_num, self.epochs, self.maze.name)] = pred_lists
             
             
             
@@ -182,7 +182,7 @@ class Agent:
                         pred_list.append((action_name, self.maze.obs(), zp_mu_pred, zp_preds, zq_mu_pred, zq_preds))
                         prev_a = a ; h_q = h_q_p1
                 pred_lists.append(pred_list)
-            self.plot_dict["pred_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pred_lists
+            self.plot_dict["pred_lists"]["{}_{}_{}".format(self.agent_num, self.epochs, self.maze.name)] = pred_lists
     
     
     
@@ -198,7 +198,7 @@ class Agent:
                 if(not done): prev_a, h_actor, _, _, done, _ = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
                 pos_list.append(self.maze.agent_pos)
             pos_lists.append(pos_list)
-        self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
+        self.plot_dict["pos_lists"]["{}_{}_{}".format(self.agent_num, self.epochs, self.maze.name)] = pos_lists
         
         
         
@@ -214,7 +214,7 @@ class Agent:
                 if(not done): prev_a, h_q, _, _, done, _ = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
                 pos_list.append(self.maze.agent_pos)
             pos_lists.append(pos_list)
-        self.plot_dict["pos_lists"]["{}_{}".format(self.agent_num, self.epochs)] = pos_lists
+        self.plot_dict["pos_lists"]["{}_{}_{}".format(self.agent_num, self.epochs, self.maze.name)] = pos_lists
     
     
     

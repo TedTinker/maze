@@ -12,9 +12,12 @@ print("name:\n{}".format(args.arg_name))
 
 
 def easy_plotting_pred(complete_order, plot_dicts):
-    epochs = list(set([int(key.split("_")[1]) for key in plot_dicts[0]["pred_lists"].keys()])) ; epochs.sort()
+    epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
+    print(epochs_maze_names) # Must sort correctly!
+    epochs_maze_names.sort()
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()
-    episodes = len(plot_dicts[0]["pred_lists"]["1_0"])
+    first_arena_name = plot_dicts[0]["args"].maze_list[0] 
+    episodes = len(plot_dicts[0]["pred_lists"]["1_0_{}".format(first_arena_name)])
     
     cmap = plt.cm.get_cmap("gray_r")
     norm = Normalize(vmin = -1, vmax = 1)
@@ -24,19 +27,20 @@ def easy_plotting_pred(complete_order, plot_dicts):
         handles.append(handle)
     plt.close()
         
-    for epoch in epochs:
+    for epoch_maze_name in epochs_maze_names:
+        epoch, maze_name = epoch_maze_name.split("_")
         for agent in agents:
             for arg_name in complete_order:
                 if(arg_name in ["break", "empty_space"]): pass 
                 else:
                     for plot_dict in plot_dicts:
-                        if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}".format(agent, epoch)] ; break 
+                        if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}_{}".format(agent, epoch, maze_name)] ; break 
                     obs_size = 12 + plot_dict["args"].randomness
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
                         rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
-                        title = "Agent {}: Epoch {}, Episode {}".format(agent, epoch, episode)
+                        title = "Agent {}: Epoch {} (Maze {}), Episode {}".format(agent, epoch, maze_name, episode)
                         fig.suptitle(title, y = 1.1)
                         for row, (action_name, obs, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds) in enumerate(pred_list):
                             for column in range(columns):
