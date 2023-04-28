@@ -56,7 +56,7 @@ def add_this(name, this):
         if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
         slurm_dict[key + "_" + name] = value + " " + this_this  
 add_this("hard", "--hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --maze_list \"('t',)\" --naive_eta 3 --free_eta 3")
-add_this("many", "--hard_maze True --max_steps 15 --steps_per_epoch 25 --agents_per_pos_list 10 --maze_list \"('1','2','3')\" --epochs \"(200,200,200)\" --naive_eta 3 --free_eta 3")
+add_this("many", "--hard_maze True --max_steps 20 --steps_per_epoch 20 --agents_per_pos_list 10 --maze_list \"('1','2','3')\" --epochs \"(500,500,500)\" --naive_eta 3 --free_eta 3")
 add_this("rand", "--randomness 10")
 
 new_slurm_dict = {}
