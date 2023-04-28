@@ -26,7 +26,8 @@ class Agent:
         self.agent_num = i
         self.args = args
         self.episodes = 0 ; self.epochs = 0 ; self.steps = 0
-        self.maze = Easy_Maze("t", args)
+        self.maze_name = self.args.maze_list[0]
+        self.maze = Easy_Maze(self.maze_name, args = args)
         
         self.target_entropy = args.target_entropy # -dim(A)
         self.alpha = 1
@@ -75,12 +76,24 @@ class Agent:
         self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
         self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
         while(True):
+            cumulative_epochs = 0
+            prev_maze_name = self.maze_name
+            for j, epochs in enumerate(self.args.epochs): 
+                cumulative_epochs += epochs
+                if(self.epochs < cumulative_epochs): self.maze_name = self.args.maze_list[j] ; break
+            if(prev_maze_name != self.maze_name): 
+                self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
+                self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
+                self.maze.maze.stop()
+                self.maze = Easy_Maze(self.maze_name, args = self.args)
+                self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
+                self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
             self.training_episode()
             percent_done = str(self.epochs / sum(self.args.epochs))
             q.put((self.agent_num, percent_done))
             if(self.epochs >= sum(self.args.epochs)): break
             if(self.epochs % self.args.epochs_per_pred_list == 0): self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
-            if(self.epochs % self.args.epochs_per_pos_list == 0):  self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
+            if(self.epochs % self.args.epochs_per_pos_list == 0): self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
         self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
