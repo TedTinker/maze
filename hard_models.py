@@ -40,14 +40,14 @@ class Forward(nn.Module):
         self.rgbd_in = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = 4,
-                out_channels = 16,
+                out_channels = 4,
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
             nn.PReLU(),
             ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 16,
+                in_channels = 4,
+                out_channels = 4,
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
@@ -93,8 +93,8 @@ class Forward(nn.Module):
             nn.PReLU())
         self.rgbd = nn.Sequential(
             ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 16,
+                in_channels = 4,
+                out_channels = 4,
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
@@ -104,14 +104,14 @@ class Forward(nn.Module):
                 mode = "bilinear",
                 align_corners = True),
             ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 16,
+                in_channels = 4,
+                out_channels = 4,
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
             nn.PReLU(),
             ConstrainedConv2d(
-                in_channels = 16,
+                in_channels = 4,
                 out_channels = 4,
                 kernel_size = (1,1)))
         

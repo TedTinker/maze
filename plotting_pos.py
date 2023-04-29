@@ -161,7 +161,6 @@ def hard_plotting_pos(complete_order, plot_dicts):
         plt.savefig(buf, format = "png", bbox_inches = "tight")
         buf.seek(0)
         im = imageio.imread(buf)
-        print(epoch, maze_name, im.shape)
         images.append(im)
         buf.close()
         plt.close()

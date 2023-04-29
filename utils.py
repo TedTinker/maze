@@ -116,6 +116,8 @@ parser.add_argument('--samples_per_pred',    type=int,        default = 2)
 parser.add_argument('--epochs_per_pos_list', type=int,        default = 100)
 parser.add_argument('--agents_per_pos_list', type=int,        default = -1)
 parser.add_argument('--episodes_in_pos_list',type=int,        default = 3)
+parser.add_argument('--epochs_per_agent_list',type=int,        default = 100)
+parser.add_argument('--agents_per_agent_list',type=int,        default = 1)
 
 
 
@@ -239,7 +241,7 @@ def load_dicts(args):
     
     min_max_dict = {}
     for key in plot_dicts[0].keys():
-        if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "spot_names"]):
+        if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "agents_lists", "spot_names"]):
             minimum = None ; maximum = None
             for mm_dict in min_max_dicts:
                 if(mm_dict[key] != (None, None)):

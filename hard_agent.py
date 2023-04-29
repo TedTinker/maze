@@ -62,7 +62,7 @@ class Agent:
             "args" : args,
             "arg_title" : args.arg_title,
             "arg_name" : args.arg_name,
-            "pred_lists" : {}, "pos_lists" : {},
+            "pred_lists" : {}, "pos_lists" : {}, "agent_lists" : {},
             "rewards" : [], "spot_names" : [], 
             "accuracy" : [], "complexity" : [],
             "alpha" : [], "actor" : [], 
@@ -77,6 +77,7 @@ class Agent:
         
         self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
         self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
+        self.save_agent()
         while(True):
             cumulative_epochs = 0
             prev_maze_name = self.maze_name
@@ -96,13 +97,15 @@ class Agent:
             if(self.epochs >= sum(self.args.epochs)): break
             if(self.epochs % self.args.epochs_per_pred_list == 0): self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
             if(self.epochs % self.args.epochs_per_pos_list == 0): self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
+            if(self.epochs % self.args.epochs_per_agent_list == 0): self.save_agent()
         self.plot_dict["rewards"] = list(accumulate(self.plot_dict["rewards"]))
         self.pred_episodes_hq() if self.args.actor_hq else self.pred_episodes()
         self.pos_episodes_hq() if self.args.actor_hq else self.pos_episodes()
+        self.save_agent()
         
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in self.min_max_dict.keys():
-            if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "spot_names"]):
+            if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "agent_lists", "spot_names"]):
                 minimum = None ; maximum = None 
                 l = self.plot_dict[key]
                 l = deepcopy(l)
@@ -113,6 +116,12 @@ class Agent:
                     if(  maximum == None):  maximum = max(l) 
                     elif(maximum < max(l)): maximum = max(l)
                 self.min_max_dict[key] = (minimum, maximum)
+                
+                
+                
+    def save_agent(self):
+        if(self.args.agents_per_agent_list != -1 and self.agent_num > self.args.agents_per_agent_list): return
+        self.plot_dict["agent_lists"]["{}_{}".format(self.agent_num, self.epochs)] = self.state_dict
                 
                 
                 

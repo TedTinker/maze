@@ -70,9 +70,7 @@ def plots(plot_dicts, min_max_dict):
         
         def divide_arenas(xs, here = plt):
             if(type(xs) == dict): xs = xs["xs"]
-            print(percentages, xs)
             xs = [xs[int(round(len(xs)*p))] for p in percentages]
-            print(xs)
             for x in xs: here.axvline(x=x, color = (0,0,0,.2))
     
         # Cumulative rewards

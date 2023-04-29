@@ -23,16 +23,20 @@ for folder in folders:
             if(key in ["args", "arg_title", "arg_name"]): d[key] = saved_d[key]
             else:  d[key].append(saved_d[key])
             
-    pred_dict = {}
-    for d in plot_dict["pred_lists"]: pred_dict.update(d)
-    plot_dict["pred_lists"] = pred_dict
+    pred_lists = {}
+    for d in plot_dict["pred_lists"]: pred_lists.update(d)
+    plot_dict["pred_lists"] = pred_lists
             
-    pos_dict = {}
-    for d in plot_dict["pos_lists"]: pos_dict.update(d)
-    plot_dict["pos_lists"] = pos_dict
+    pos_lists = {}
+    for d in plot_dict["pos_lists"]: pos_lists.update(d)
+    plot_dict["pos_lists"] = pos_lists
+    
+    agent_lists = {}
+    for d in plot_dict["agent_lists"]: agent_lists.update(d)
+    plot_dict["agent_lists"] = agent_lists
         
     for key in min_max_dict.keys():
-        if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "spot_names"]):
+        if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "agent_lists", "spot_names"]):
             minimum = None ; maximum = None
             for min_max in min_max_dict[key]:
                 if(  minimum == None):      minimum = min_max[0]
