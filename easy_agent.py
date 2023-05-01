@@ -120,7 +120,7 @@ class Agent:
                 
     def save_agent(self):
         if(self.args.agents_per_agent_list != -1 and self.agent_num > self.args.agents_per_agent_list): return
-        self.plot_dict["agent_lists"]["{}_{}".format(self.agent_num, self.epochs)] = self.state_dict
+        self.plot_dict["agent_lists"]["{}_{}".format(self.agent_num, self.epochs)] = self.state_dict()
                        
        
                 
