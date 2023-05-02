@@ -39,11 +39,13 @@ class Easy_Maze:
         self.args = args
         self.name = maze_name
         self.maze = arena_dict[maze_name]
+        self.zeros = [0 for _ in range(self.args.randomness)]
         self.begin()
         
     def begin(self):
         self.steps = 0 
         self.agent_pos = self.maze.start
+        self.randomness = [choice([-1,1]) for _ in range(self.args.randomness)]
         
     def obs(self):
         pos = [1 if spot.pos == self.agent_pos else self.args.non_one for spot in self.maze.spots]
@@ -56,7 +58,7 @@ class Easy_Maze:
             if(spot.pos == (self.agent_pos[0],   self.agent_pos[1]-1)): down = 1  
             if(spot.pos == self.agent_pos): random_spot = spot.pos in self.maze.random_pos
         pos += [right, left, up, down]
-        for _ in range(self.args.randomness): pos += [choice([-1,1]) if random_spot else 0]
+        pos += self.randomness if random_spot else self.zeros
         return(torch.tensor(pos).unsqueeze(0).float())
     
     def obs_str(self):
@@ -75,6 +77,7 @@ class Easy_Maze:
         new_pos = (self.agent_pos[0] + x, self.agent_pos[1] + y)
         
         self.steps += 1
+        if(self.steps % self.args.random_steps == 0): self.randomness = [choice([-1,1]) for _ in range(self.args.randomness)]
         wall = True ; exit = False ; reward = 0 ; spot_name = "NONE" ; done = False
         
         for spot in self.maze.spots:

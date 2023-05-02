@@ -277,10 +277,10 @@ class Agent:
         actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions], dim = 1)
         episodes = rewards.shape[0] ; steps = rewards.shape[1]
         
-        print("\n\n")
-        print("obs: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
-            obs.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
-        print("\n\n")
+        #print("\n\n")
+        #print("obs: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
+        #    obs.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
+        #print("\n\n")
         
         
 
@@ -288,7 +288,7 @@ class Agent:
         h_qs = [torch.zeros((episodes, 1, self.args.hidden_size)).to(obs.device)]
         zp_mus = [] ; zp_stds = []
         zq_mus = [] ; zq_stds = [] ; zq_pred_obs = []
-        for step in range(steps): # Clearly an off-by-one error; we're applying the GRU twice! 
+        for step in range(steps): 
             (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(obs[:, step], actions[:, step], h_qs[-1])
             _, zq_preds = self.forward.get_preds(actions[:,step+1], zq_mu, zq_std, h_qs[-1], quantity = self.args.elbo_num)
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)

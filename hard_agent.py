@@ -291,10 +291,10 @@ class Agent:
         actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions], dim = 1)
         episodes = rewards.shape[0] ; steps = rewards.shape[1]
         
-        print("\n\n")
-        print("rgbd: {}. spe: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
-            rgbd.shape, spe.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
-        print("\n\n")
+        #print("\n\n")
+        #print("rgbd: {}. spe: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
+        #    rgbd.shape, spe.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
+        #print("\n\n")
         
         
 
@@ -317,8 +317,6 @@ class Agent:
         
         next_rgbd_tiled = torch.tile(rgbd[:,1:], (1, 1, 1, 1, self.args.elbo_num)).flatten(2)
         next_spe_tiled  = torch.tile(spe[:,1:], (1, 1, self.args.elbo_num))
-        zq_preds        = torch.cat([zq_pred_rgbd.flatten(2), zq_pred_spe], dim = -1)
-        next_obs_tiled  = torch.cat([next_rgbd_tiled, next_spe_tiled], dim = -1)
 
         image_loss = F.binary_cross_entropy_with_logits(zq_pred_rgbd, next_rgbd_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         speed_loss = self.args.speed_scalar * F.mse_loss(zq_pred_spe, next_spe_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
