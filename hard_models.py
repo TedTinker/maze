@@ -55,7 +55,8 @@ class Forward(nn.Module):
             nn.MaxPool2d(
                 kernel_size = (3,3), 
                 stride = (2,2),
-                padding = (1,1)))
+                padding = (1,1)),
+            )
         example = self.rgbd_in(example)
         
         self.inner_rgbd_size = example.shape
