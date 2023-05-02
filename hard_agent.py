@@ -287,19 +287,14 @@ class Agent:
         
         self.epochs += 1
 
-        all_rgbd, all_spe, actions, rewards, dones, masks = batch
-        next_rgbd = all_rgbd[:,1:]
-        rgbd = all_rgbd[:,:-1]
-        next_spe = all_spe[:,1:]
-        spe = all_spe[:,:-1]
-        all_actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions], dim = 1)
-        prev_actions = all_actions[:,:-1]
+        rgbd, spe, actions, rewards, dones, masks = batch
+        actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions], dim = 1)
         episodes = rewards.shape[0] ; steps = rewards.shape[1]
         
-        #print("\n\n")
-        #print("all rgbd: {}. next rgbd: {}. rgbd: {}. all spe: {}. next spe: {}. spe: {}. all actions: {}. prev actions: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
-        #    all_rgbd.shape, next_rgbd.shape, rgbd.shape, all_spe.shape, next_spe.shape, spe.shape, all_actions.shape, prev_actions.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
-        #print("\n\n")
+        print("\n\n")
+        print("rgbd: {}. spe: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
+            rgbd.shape, spe.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
+        print("\n\n")
         
         
 
@@ -309,8 +304,8 @@ class Agent:
         zq_mus = []       ; zq_stds = []
         zq_pred_rgbd = [] ; zq_pred_spe = []
         for step in range(steps):
-            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(rgbd[:, step], spe[:, step], prev_actions[:, step], h_qs[-1])
-            (_, zq_preds_rgbd), (_, zq_preds_spe) = self.forward.get_preds(actions[:, step], zq_mu, zq_std, h_qs[-1], quantity = self.args.elbo_num)
+            (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(rgbd[:, step], spe[:, step], actions[:, step], h_qs[-1])
+            (_, zq_preds_rgbd), (_, zq_preds_spe) = self.forward.get_preds(actions[:, step+1], zq_mu, zq_std, h_qs[-1], quantity = self.args.elbo_num)
             zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
             zq_pred_rgbd.append(torch.cat(zq_preds_rgbd, -1)) ; zq_pred_spe.append(torch.cat(zq_preds_spe, -1))
@@ -320,8 +315,8 @@ class Agent:
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
         zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1).flatten(2) ; zq_pred_spe = torch.cat(zq_pred_spe, dim = 1)
         
-        next_rgbd_tiled = torch.tile(next_rgbd, (1, 1, 1, 1, self.args.elbo_num)).flatten(2)
-        next_spe_tiled  = torch.tile(next_spe, (1, 1, self.args.elbo_num))
+        next_rgbd_tiled = torch.tile(rgbd[:,1:], (1, 1, 1, 1, self.args.elbo_num)).flatten(2)
+        next_spe_tiled  = torch.tile(spe[:,1:], (1, 1, self.args.elbo_num))
         zq_preds        = torch.cat([zq_pred_rgbd.flatten(2), zq_pred_spe], dim = -1)
         next_obs_tiled  = torch.cat([next_rgbd_tiled, next_spe_tiled], dim = -1)
 
@@ -358,20 +353,20 @@ class Agent:
                 
         # Train critics
         with torch.no_grad():
-            next_action, log_pis_next, _ = self.actor(next_hqs) if self.args.actor_hq else self.actor(next_rgbd, next_spe, actions)
-            Q_target1_next = self.critic1_target(next_hqs, next_action) if self.args.critic_hq else self.critic1_target(next_rgbd, next_spe, next_action)
-            Q_target2_next = self.critic2_target(next_hqs, next_action) if self.args.critic_hq else self.critic2_target(next_rgbd, next_spe, next_action)
+            next_action, log_pis_next, _ = self.actor(next_hqs) if self.args.actor_hq else self.actor(rgbd[:,1:], spe[:,1:], actions[:,1:])
+            Q_target1_next = self.critic1_target(next_hqs, next_action) if self.args.critic_hq else self.critic1_target(rgbd[:,1:], spe[:,1:], next_action)
+            Q_target2_next = self.critic2_target(next_hqs, next_action) if self.args.critic_hq else self.critic2_target(rgbd[:,1:], spe[:,1:], next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(hqs.detach(), actions) if self.args.critic_hq else self.critic1(rgbd, spe, actions)
+        Q_1 = self.critic1(hqs.detach(), actions) if self.args.critic_hq else self.critic1(rgbd[:,:-1], spe[:,:-1], actions[:,1:])
         critic1_loss = 0.5*F.mse_loss(Q_1*masks, Q_targets*masks)
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(hqs.detach(), actions) if self.args.critic_hq else self.critic2(rgbd, spe, actions)
+        Q_2 = self.critic2(hqs.detach(), actions) if self.args.critic_hq else self.critic2(rgbd[:,:-1], spe[:,:-1], actions[:,1:])
         critic2_loss = 0.5*F.mse_loss(Q_2*masks, Q_targets*masks)
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
@@ -381,7 +376,7 @@ class Agent:
         
         # Train alpha
         if self.args.alpha == None:
-            _, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(rgbd, spe, prev_actions)
+            _, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(rgbd[:,:-1], spe[:,:-1], actions[:,:-1])
             alpha_loss = -(self.log_alpha * (log_pis + self.target_entropy))*masks
             alpha_loss = alpha_loss.mean() / masks.mean()
             self.alpha_opt.zero_grad()
@@ -398,7 +393,7 @@ class Agent:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       
                 alpha = self.args.alpha
-            actions_pred, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(rgbd, spe, prev_actions)
+            actions_pred, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(rgbd[:,:-1], spe[:,:-1], actions[:,:-1])
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
@@ -408,8 +403,8 @@ class Agent:
             elif self.args.action_prior == "uniform":
                 policy_prior_log_prrgbd = 0.0
             Q = torch.min(
-                self.critic1(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic1(rgbd, spe, actions_pred),
-                self.critic2(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic2(rgbd, spe, actions_pred)).mean(-1).unsqueeze(-1)
+                self.critic1(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic1(rgbd[:,:-1], spe[:,:-1], actions_pred),
+                self.critic2(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic2(rgbd[:,:-1], spe[:,:-1], actions_pred)).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_prrgbd - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()

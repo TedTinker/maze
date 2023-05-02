@@ -21,6 +21,7 @@ def try_agent(which_args, which_epoch, which_agent, maze):
     actor.load_state_dict(state_dict[1])
     
     maze = Hard_Maze(maze, True, args)
+    sleep(2)
     done = False
     prev_a = torch.zeros((1, 1, 2))
     h_actor = torch.zeros((1, 1, args.hidden_size))
