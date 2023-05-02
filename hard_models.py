@@ -4,8 +4,9 @@ import torch
 from torch import nn 
 from torch.distributions import Normal
 from torchinfo import summary as torch_summary
+from torchgan.layers import SelfAttention2d
 
-from utils import default_args, init_weights, ConstrainedConv2d, print
+from utils import default_args, init_weights, ConstrainedConv2d, ConstrainedConvTranspose2d, print
 spe_size = 1 ; action_size = 2
 
 
@@ -51,12 +52,7 @@ class Forward(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.PReLU(),
-            nn.MaxPool2d(
-                kernel_size = (3,3), 
-                stride = (2,2),
-                padding = (1,1)),
-            )
+            nn.PReLU())
         example = self.rgbd_in(example)
         
         self.inner_rgbd_size = example.shape
@@ -100,10 +96,6 @@ class Forward(nn.Module):
                 padding = (1,1),
                 padding_mode = "reflect"),
             nn.PReLU(),
-            nn.Upsample(
-                scale_factor = 2, 
-                mode = "bilinear",
-                align_corners = True),
             ConstrainedConv2d(
                 in_channels = 16,
                 out_channels = 16,
