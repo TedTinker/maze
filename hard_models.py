@@ -53,12 +53,15 @@ class Forward(nn.Module):
                 padding = (1,1),
                 padding_mode = "reflect"),
             nn.PReLU(),
-            SelfAttention2d(input_dims = 16),
+            SelfAttention2d(
+                input_dims = 16,
+                output_dims = None),  # If None, input_dims // 8
             nn.PReLU())
         example = self.rgbd_in(example)
         
         self.inner_rgbd_size = example.shape
         self.flat_rgbd_size = example.flatten(1).shape[1]
+        print(self.inner_rgbd_size)
         
         self.zp_mu = nn.Sequential(
             nn.Linear(args.hidden_size + action_size, args.hidden_size), 
@@ -92,7 +95,7 @@ class Forward(nn.Module):
             nn.PReLU())
         self.rgbd = nn.Sequential(
             ConstrainedConv2d(
-                in_channels = 16,
+                in_channels = self.inner_rgbd_size[1],
                 out_channels = 16,
                 kernel_size = (3,3),
                 padding = (1,1),
