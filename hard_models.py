@@ -52,6 +52,8 @@ class Forward(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
+            nn.PReLU(),
+            SelfAttention2d(input_dims = 16),
             nn.PReLU())
         example = self.rgbd_in(example)
         
