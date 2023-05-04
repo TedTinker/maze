@@ -78,10 +78,11 @@ class Arena():
     def __init__(self, arena_name, GUI = False, args = default_args):
         #enable_opengl()
         self.args = args
-        self.start = arena_dict[arena_name + ".png"].start
-        self.exits = arena_dict[arena_name + ".png"].exits
-        self.random_pos = arena_dict[arena_name + ".png"].random_pos
-        arena_map = cv2.imread("arenas/" + arena_name + ".png")
+        if(not arena_name.endswith(".png")): arena_name += ".png"
+        self.start = arena_dict[arena_name].start
+        self.exits = arena_dict[arena_name].exits
+        self.random_pos = arena_dict[arena_name].random_pos
+        arena_map = cv2.imread("arenas/" + arena_name)
         w, h, _ = arena_map.shape
         self.physicsClient = get_physics(GUI, w, h)
 
