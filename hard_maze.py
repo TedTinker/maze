@@ -85,7 +85,7 @@ class Hard_Maze:
         for _ in range(self.args.steps_per_step):
             p.stepSimulation(physicsClientId = self.maze.physicsClient)
             self.agent_pos, self.agent_yaw, self.agent_spe = self.maze.get_pos_yaw_spe()
-            self.change_velocity(0, spe, verbose = verbose)
+            self.change_velocity(0, spe)
             
         if(verbose): print("agent: pos {}, yaw {}, spe {}.".format(self.agent_pos, self.agent_yaw, self.agent_spe))
         

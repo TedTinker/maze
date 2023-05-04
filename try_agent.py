@@ -7,14 +7,22 @@ from tkinter import ttk
 
 from hard_maze import Hard_Maze
 
-
+# To do:
+#   Better selection of agent_num and epoch
+#   Pause and let user change action
+#   Make agent predictions
 
 class GUI(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         
-        saved_args = [f for f in os.listdir("saved") if os.path.isdir("saved/" + f)]
+        self.plot_dict_dict = {}
+        for name in [f for f in os.listdir("saved") if os.path.isdir("saved/" + f)]:
+            file = "saved/{}/plot_dict.pickle".format(name)
+            with open(file, "rb") as handle: plot_dict = pickle.load(handle)
+            if(plot_dict["args"].hard_maze): self.plot_dict_dict[name] = plot_dict 
+        saved_args = list(self.plot_dict_dict.keys())
         saved_args.sort()
         default_args = saved_args[0]
         self.argname_var = tk.StringVar()
@@ -43,9 +51,7 @@ class GUI(tk.Frame):
         self.update_epoch_agent_num()
         
     def update_plot_dict(self):
-        file = "saved/{}/plot_dict.pickle".format(self.argname_var.get())
-        with open(file, "rb") as handle: 
-            self.plot_dict = pickle.load(handle)
+        self.plot_dict = self.plot_dict_dict[self.argname_var.get()]
         
     def update_epoch_agent_num(self, *args):
         self.update_plot_dict()
@@ -91,18 +97,13 @@ class GUI(tk.Frame):
         critic1_target.load_state_dict(state_dict[3])
         critic2.load_state_dict(       state_dict[4])
         critic2_target.load_state_dict(state_dict[5])
-        
-        print(forward)
-        print(actor)
-        print(critic1)
-        
+                
         maze = Hard_Maze(self.maze_var.get(), True, actor.args)
         done = False
         prev_a = torch.zeros((1, 1, 2))
         h_actor = torch.zeros((1, 1, actor.args.hidden_size))
         while(not done):
             o, s = maze.obs()
-            print("HERE")
             a, _, h_actor = actor(rgbd = o, spe = s, prev_action = prev_a, h = h_actor)
             action = torch.flatten(a).tolist()
             _, _, done, _ = maze.action(action[0], action[1], True)
