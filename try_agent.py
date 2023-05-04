@@ -31,12 +31,12 @@ class GUI(tk.Frame):
         argname_menu.pack()
         
         self.epoch_var = tk.StringVar(value='0')
-        epoch_menu = ttk.OptionMenu(self, self.epoch_var, '0')
-        epoch_menu.pack()
+        self.epoch_menu = ttk.OptionMenu(self, self.epoch_var, '0', *["0"])
+        self.epoch_menu.pack()
         
         self.agent_num_var = tk.StringVar(value='1')
-        agent_num_menu = ttk.OptionMenu(self, self.agent_num_var, '1')
-        agent_num_menu.pack()
+        self.agent_num_menu = ttk.OptionMenu(self, self.agent_num_var, '1', *["1"])
+        self.agent_num_menu.pack()
         
         maze_files = os.listdir("arenas")
         default_maze = 't.png'
@@ -56,25 +56,18 @@ class GUI(tk.Frame):
     def update_epoch_agent_num(self, *args):
         self.update_plot_dict()
         agent_names = list(self.plot_dict["agent_lists"].keys())[3:]
-        agent_nums = sorted(set([s.split('_')[0] for s in agent_names]))
-        epochs = sorted(set([s.split('_')[1] for s in agent_names]))
-                
-        if self.agent_num_var.trace_vinfo():
-            agent_num_menu = self.nametowidget(self.agent_num_var.trace_vinfo()[0][0])
-            agent_num_menu['menu'].delete(0, 'end')
-            for agent_num in agent_nums:
-                agent_num_menu['menu'].add_command(label=agent_num, command=lambda num=agent_num: self.agent_num_var.set(num))
-            agent_num_menu.update()
-            
-        if self.epoch_var.trace_vinfo():
-            epoch_menu = self.nametowidget(self.epoch_var.trace_vinfo()[0][0])
-            epoch_menu['menu'].delete(0, 'end')
-            for epoch in epochs:
-                epoch_menu['menu'].add_command(label=epoch, command=lambda ep=epoch: self.epoch_var.set(ep))
-            epoch_menu.update()
-            
-            
+        agent_nums = sorted(set([s.split('_')[0] for s in agent_names]), key = int)
+        epochs = sorted(set([s.split('_')[1] for s in agent_names]), key = int)
+                        
+        self.agent_num_menu['menu'].delete(0, 'end')
+        for agent_num in agent_nums:
+            self.agent_num_menu['menu'].add_command(label=agent_num, command=lambda num=agent_num: self.agent_num_var.set(num))
         
+        self.epoch_menu['menu'].delete(0, 'end')
+        for epoch in epochs:
+            self.epoch_menu['menu'].add_command(label=epoch, command=lambda ep=epoch: self.epoch_var.set(ep))
+            
+            
         
     def run(self):
         agent_name = "{}_{}".format(self.agent_num_var.get(), self.epoch_var.get())
@@ -110,6 +103,7 @@ class GUI(tk.Frame):
             prev_a = a
         maze.maze.stop()
         
+
 
 if __name__ == "__main__":
     root = tk.Tk()
