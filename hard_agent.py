@@ -325,6 +325,8 @@ class Agent:
         #print("SPEEDS:", speed_loss.sum().item())
         accuracy            = accuracy_for_naive.mean()
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
+        if(self.args.dkl_max != None):
+            complexity_for_free = torch.clamp(complexity_for_free, min = 0, max = self.args.dkl_max)
         complexity          = self.args.beta * complexity_for_free.mean()        
                         
         self.forward_opt.zero_grad()
@@ -337,8 +339,6 @@ class Agent:
         
         # Get curiosity                  
         naive_curiosity = self.args.naive_eta * accuracy_for_naive  
-        if(self.args.dkl_max != None):
-            complexity_for_free = torch.clamp(complexity_for_free, min = 0, max = self.args.dkl_max)
         free_curiosity = self.args.free_eta * complexity_for_free
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
         elif(self.args.curiosity == "free"): curiosity = free_curiosity
