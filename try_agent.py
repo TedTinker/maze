@@ -5,12 +5,13 @@ import torch
 import tkinter as tk
 from tkinter import ttk
 from math import degrees, radians
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from hard_maze import Hard_Maze
 
 # To do:
 #   Only saving last epoch?
-#   Make agent predictions
 
 class GUI(tk.Frame):
     def __init__(self, parent):
@@ -57,6 +58,14 @@ class GUI(tk.Frame):
         self.speed_var = tk.StringVar()
         self.speed_entry = tk.Entry(self, textvariable=self.speed_var)
         
+        predict_button = tk.Button(self, text="Predict", command=self.predict)
+        
+        self.fig, self.ax = plt.subplots(figsize=(5, 4))
+        self.ax.plot([0], [0])
+        self.ax.axis("off")
+        self.plot_canvas = FigureCanvasTkAgg(self.fig, master=self)
+        self.plot_canvas.draw()
+                
         self.epoch_label.grid(      row=1, column=0, sticky="e")
         self.epoch_menu.grid(       row=1, column=1)
         self.agent_num_label.grid(  row=2, column=0, sticky="e")
@@ -68,6 +77,8 @@ class GUI(tk.Frame):
         self.yaw_entry.grid(        row=5, column=1)
         self.speed_entry.grid(      row=6, column=1)
         self.speed_label.grid(      row=6, column=0, sticky="e")
+        predict_button.grid(        row=7, column=0, columnspan=2)
+        self.plot_canvas.get_tk_widget().grid(row=8, column=0, columnspan=2, padx=5, pady=5)
         
         self.update_epoch_agent_num()
         
@@ -94,7 +105,7 @@ class GUI(tk.Frame):
             
 
     def add_agent_action(self, yaw, spe):
-        yaw = -yaw * self.actor.args.max_yaw_change
+        yaw = yaw * self.actor.args.max_yaw_change
         yaw = [-self.actor.args.max_yaw_change, self.actor.args.max_yaw_change, yaw] ; yaw.sort() ; yaw = yaw[1]
         yaw = round(degrees(yaw))
         spe = self.actor.args.min_speed + ((spe + 1)/2) * \
@@ -106,7 +117,7 @@ class GUI(tk.Frame):
     def get_real_action(self):
         yaw = float(self.yaw_var.get())
         spe = float(self.speed_var.get())
-        yaw = -radians(yaw) / self.actor.args.max_yaw_change
+        yaw = radians(yaw) / self.actor.args.max_yaw_change
         speed = (((spe - self.actor.args.min_speed) / (self.actor.args.max_speed - self.actor.args.min_speed)) * 2) - 1
         return(yaw, speed)
             
@@ -144,15 +155,34 @@ class GUI(tk.Frame):
             a, _, self.h_actor = self.actor(o, s, self.prev_a, self.h_actor)
             yaw, speed = torch.flatten(a).tolist()
             self.add_agent_action(yaw, speed)
+            
+            self.h_q = torch.zeros((1, 1, self.actor.args.hidden_size))
+            _, (self.zq_mu, self.zq_std), self.h_q = self.forward(o, s, self.prev_a, self.h_q)
+            
         else:
             yaw, speed = self.get_real_action()
             _, _, self.done, _ = self.maze.action(yaw, speed, True)
             self.prev_a = torch.tensor([[[yaw, speed]]])
             o, s = self.maze.obs()
             a, _, self.h_actor = self.actor(o, s, self.prev_a, self.h_actor)
+            _, (self.zq_mu, self.zq_std), self.h_q = self.forward(o, s, self.prev_a, self.h_q)
             yaw, speed = torch.flatten(a).tolist()
             self.add_agent_action(yaw, speed)
             if(self.done): self.maze.maze.stop()
+            
+    def predict(self):
+        yaw, speed = self.get_real_action()
+        action = torch.tensor([[[yaw, speed]]])
+        with(torch.no_grad()):
+            (_, zq_preds_rgbd), (_, zq_preds_spe) = self.forward.get_preds(action, self.zq_mu, self.zq_std, self.h_q, quantity = 1)
+        pred_rgbd = zq_preds_rgbd[0].squeeze(0).squeeze(0)
+        pred_spe  = zq_preds_spe[0].squeeze(0).squeeze(0)
+        
+        self.ax.clear()
+        self.ax.axis("off")
+        self.ax.set_title("Speed {}".format(round(pred_spe.item())))
+        self.ax.imshow(torch.sigmoid(pred_rgbd[:,:,0:3])) 
+        self.plot_canvas.draw()
         
 
 
