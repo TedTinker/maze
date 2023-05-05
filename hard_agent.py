@@ -444,12 +444,12 @@ class Agent:
 
     def state_dict(self):
         return(
-            self.forward.state_dict(),
-            self.actor.state_dict(),
-            self.critic1.state_dict(),
-            self.critic1_target.state_dict(),
-            self.critic2.state_dict(),
-            self.critic2_target.state_dict())
+            self.forward.state_dict().copy(),
+            self.actor.state_dict().copy(),
+            self.critic1.state_dict().copy(),
+            self.critic1_target.state_dict().copy(),
+            self.critic2.state_dict().copy(),
+            self.critic2_target.state_dict().copy())
 
     def load_state_dict(self, state_dict):
         self.forward.load_state_dict(state_dict[0])
