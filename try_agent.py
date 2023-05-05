@@ -12,7 +12,6 @@ from hard_maze import Hard_Maze
 
 # To do:
 #   Only saving last epoch?
-#   Make predictions for rewards, too
 
 class GUI(tk.Frame):
     def __init__(self, parent):
