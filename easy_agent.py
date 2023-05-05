@@ -330,19 +330,19 @@ class Agent:
         # Train critics
         with torch.no_grad():
             next_action, log_pis_next, _ = self.actor(next_hqs) if self.args.actor_hq else self.actor(obs[:,1:], actions[:,1:])
-            Q_target1_next = self.critic1_target(next_hqs, next_action) if self.args.critic_hq else self.critic1_target(obs[:,1:], next_action)
-            Q_target2_next = self.critic2_target(next_hqs, next_action) if self.args.critic_hq else self.critic2_target(obs[:,1:], next_action)
+            Q_target1_next, _ = self.critic1_target(next_hqs, next_action) if self.args.critic_hq else self.critic1_target(obs[:,1:], next_action)
+            Q_target2_next, _ = self.critic2_target(next_hqs, next_action) if self.args.critic_hq else self.critic2_target(obs[:,1:], next_action)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
         
-        Q_1 = self.critic1(hqs.detach(), actions[:,1:]) if self.args.critic_hq else self.critic1(obs[:,:-1], actions[:,1:])
+        Q_1, _ = self.critic1(hqs.detach(), actions[:,1:]) if self.args.critic_hq else self.critic1(obs[:,:-1], actions[:,1:])
         critic1_loss = 0.5*F.mse_loss(Q_1*masks, Q_targets*masks)
         self.critic1_opt.zero_grad()
         critic1_loss.backward()
         self.critic1_opt.step()
         
-        Q_2 = self.critic2(hqs.detach(), actions[:,1:]) if self.args.critic_hq else self.critic2(obs[:,:-1], actions[:,1:])
+        Q_2, _ = self.critic2(hqs.detach(), actions[:,1:]) if self.args.critic_hq else self.critic2(obs[:,:-1], actions[:,1:])
         critic2_loss = 0.5*F.mse_loss(Q_2*masks, Q_targets*masks)
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
@@ -378,9 +378,9 @@ class Agent:
                 policy_prior_log_probs = policy_prior.log_prob(actions_pred).unsqueeze(-1)
             elif self.args.action_prior == "uniform":
                 policy_prior_log_probs = 0.0
-            Q = torch.min(
-                self.critic1(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic1(obs[:,:-1], actions_pred), 
-                self.critic2(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic2(obs[:,:-1], actions_pred)).mean(-1).unsqueeze(-1)
+            Q_1, _ = self.critic1(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic1(obs[:,:-1], actions_pred)
+            Q_2, _ = self.critic2(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic2(obs[:,:-1], actions_pred)
+            Q = torch.min(Q_1, Q_2).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_probs - Q)*masks
             actor_loss = actor_loss.mean() / masks.mean()

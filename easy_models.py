@@ -151,7 +151,7 @@ class Critic(nn.Module):
     def forward(self, obs, action, h = None):
         h, _ = self.gru(torch.cat((obs, action), dim=-1), h)
         Q = self.lin(h)
-        return(Q)
+        return(Q, h)
     
     
     
@@ -218,7 +218,7 @@ class Critic_HQ(nn.Module):
 
     def forward(self, h, action):
         Q = self.lin(torch.cat((h, action), dim=-1))
-        return(Q)
+        return(Q, None)
     
 
 

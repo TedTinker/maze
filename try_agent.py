@@ -12,6 +12,7 @@ from hard_maze import Hard_Maze
 
 # To do:
 #   Only saving last epoch?
+#   Make predictions for rewards, too
 
 class GUI(tk.Frame):
     def __init__(self, parent):
@@ -60,11 +61,17 @@ class GUI(tk.Frame):
         
         predict_button = tk.Button(self, text="Predict", command=self.predict)
         
-        self.fig, self.ax = plt.subplots(figsize=(5, 4))
-        self.ax.plot([0], [0])
-        self.ax.axis("off")
-        self.plot_canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.plot_canvas.draw()
+        self.fig_1, self.ax_1 = plt.subplots(figsize=(5, 4))
+        self.ax_1.plot([0], [0])
+        self.ax_1.axis("off")
+        self.plot_canvas_1 = FigureCanvasTkAgg(self.fig_1, master=self)
+        self.plot_canvas_1.draw()
+        
+        self.fig_2, self.ax_2 = plt.subplots(figsize=(5, 4))
+        self.ax_2.plot([0], [0])
+        self.ax_2.axis("off")
+        self.plot_canvas_2 = FigureCanvasTkAgg(self.fig_2, master=self)
+        self.plot_canvas_2.draw()
                 
         self.epoch_label.grid(      row=1, column=0, sticky="e")
         self.epoch_menu.grid(       row=1, column=1)
@@ -78,7 +85,8 @@ class GUI(tk.Frame):
         self.speed_entry.grid(      row=6, column=1)
         self.speed_label.grid(      row=6, column=0, sticky="e")
         predict_button.grid(        row=7, column=0, columnspan=2)
-        self.plot_canvas.get_tk_widget().grid(row=8, column=0, columnspan=2, padx=5, pady=5)
+        self.plot_canvas_1.get_tk_widget().grid(row=8, column=0, columnspan=2, padx=5, pady=5)
+        self.plot_canvas_2.get_tk_widget().grid(row=8, column=6, columnspan=2, padx=5, pady=5)
         
         self.update_epoch_agent_num()
         
@@ -147,25 +155,31 @@ class GUI(tk.Frame):
             self.critic2_target.load_state_dict(state_dict[5])
                     
             self.maze = Hard_Maze(self.maze_var.get(), True, self.actor.args)
-            self.done = False
-            self.prev_a = torch.zeros((1, 1, 2))
-            self.h_actor = torch.zeros((1, 1, self.actor.args.hidden_size))
-            
             o, s = self.maze.obs()
+            self.done = False
+            self.prev_a   = torch.zeros((1, 1, 2))
+            self.h_q      = torch.zeros((1, 1, self.actor.args.hidden_size))
+            self.h_actor  = torch.zeros((1, 1, self.actor.args.hidden_size))
+            self.h_critic = torch.zeros((1, 1, self.actor.args.hidden_size))
+            
+            _, (self.zq_mu, self.zq_std), self.h_q = self.forward(o, s, self.prev_a, self.h_q)
+            
             a, _, self.h_actor = self.actor(o, s, self.prev_a, self.h_actor)
             yaw, speed = torch.flatten(a).tolist()
             self.add_agent_action(yaw, speed)
             
-            self.h_q = torch.zeros((1, 1, self.actor.args.hidden_size))
-            _, (self.zq_mu, self.zq_std), self.h_q = self.forward(o, s, self.prev_a, self.h_q)
-            
+            self.Qs = []
+                        
         else:
             yaw, speed = self.get_real_action()
             _, _, self.done, _ = self.maze.action(yaw, speed, True)
             self.prev_a = torch.tensor([[[yaw, speed]]])
             o, s = self.maze.obs()
-            a, _, self.h_actor = self.actor(o, s, self.prev_a, self.h_actor)
             _, (self.zq_mu, self.zq_std), self.h_q = self.forward(o, s, self.prev_a, self.h_q)
+            a, _, self.h_actor = self.actor(o, s, self.prev_a, self.h_actor)
+            Q, self.h_critic = self.critic1(o, s, a, self.h_critic)
+            self.Qs.append(Q.item())
+            self.plot_Qs()
             yaw, speed = torch.flatten(a).tolist()
             self.add_agent_action(yaw, speed)
             if(self.done): self.maze.maze.stop()
@@ -178,11 +192,17 @@ class GUI(tk.Frame):
         pred_rgbd = zq_preds_rgbd[0].squeeze(0).squeeze(0)
         pred_spe  = zq_preds_spe[0].squeeze(0).squeeze(0)
         
-        self.ax.clear()
-        self.ax.axis("off")
-        self.ax.set_title("Speed {}".format(round(pred_spe.item())))
-        self.ax.imshow(torch.sigmoid(pred_rgbd[:,:,0:3])) 
-        self.plot_canvas.draw()
+        self.ax_1.clear()
+        self.ax_1.axis("off")
+        self.ax_1.set_title("Speed {}".format(round(pred_spe.item())))
+        self.ax_1.imshow(torch.sigmoid(pred_rgbd[:,:,0:3])) 
+        self.plot_canvas_1.draw()
+        
+    def plot_Qs(self):
+        self.ax_2.clear() 
+        self.ax_2.plot([i for i in range(len(self.Qs))], self.Qs)
+        self.ax_2.set_title("Qs")
+        self.plot_canvas_2.draw()
         
 
 
