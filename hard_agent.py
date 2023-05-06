@@ -122,7 +122,7 @@ class Agent:
                 
     def save_agent(self):
         if(self.args.agents_per_agent_list != -1 and self.agent_num > self.args.agents_per_agent_list): return
-        self.plot_dict["agent_lists"]["{}_{}".format(self.agent_num, self.epochs)] = self.state_dict()
+        self.plot_dict["agent_lists"]["{}_{}".format(self.agent_num, self.epochs)] = deepcopy(self.state_dict())
                 
                 
                 
@@ -444,12 +444,12 @@ class Agent:
 
     def state_dict(self):
         return(
-            self.forward.state_dict().copy(),
-            self.actor.state_dict().copy(),
-            self.critic1.state_dict().copy(),
-            self.critic1_target.state_dict().copy(),
-            self.critic2.state_dict().copy(),
-            self.critic2_target.state_dict().copy())
+            self.forward.state_dict(),
+            self.actor.state_dict(),
+            self.critic1.state_dict(),
+            self.critic1_target.state_dict(),
+            self.critic2.state_dict(),
+            self.critic2_target.state_dict())
 
     def load_state_dict(self, state_dict):
         self.forward.load_state_dict(state_dict[0])
