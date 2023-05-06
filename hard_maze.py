@@ -44,9 +44,14 @@ class Hard_Maze:
         else: d = (d.max() - d)/(d.max()-d.min())
         rgbd = np.concatenate([rgb, d], axis = -1)
         rgbd = torch.from_numpy(rgbd).float()
-        rgbd = resize(rgbd.permute(-1,0,1), (self.args.image_size, self.args.image_size)).permute(1,2,0)
-        spe = torch.tensor(self.agent_spe).unsqueeze(0)
-        return(rgbd.unsqueeze(0), spe.unsqueeze(0))
+        rgbd = resize(rgbd.permute(-1,0,1), (self.args.image_size, self.args.image_size)).permute(1,2,0).unsqueeze(0)
+        spe = torch.tensor(self.agent_spe).unsqueeze(0).unsqueeze(0)
+        
+        #if(self.maze.in_random() and self.args.randomness > 0):
+        #    rgbd = torch.randint(2, size = rgbd.size(), dtype = rgbd.dtype)
+        #    spe = torch.randint(2, size = spe.size(), dtype = spe.dtype)
+        #    spe[spe == 0] = 0 ; spe[spe == 1] = self.args.max_speed
+        return(rgbd, spe)
     
     def change_velocity(self, yaw_change, speed, verbose = False):
         old_yaw = self.agent_yaw

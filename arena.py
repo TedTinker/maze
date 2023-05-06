@@ -26,7 +26,7 @@ arena_dict = {
         (3, 1),
         [Exit(  "L",    (2,0), args.default_reward),
         Exit(   "R",    (2,4), args.better_reward)],
-        [(1, 1), (1, 0), (3, 0), (3, 2)]),
+        [(1, 1), (1, 0), (3, 0), (3, 2), (2, 1)]),
     "1.png" : Arena_Description(
         (2,2), 
         [Exit(  "L",    (1,0), args.default_reward),
@@ -181,6 +181,13 @@ class Arena():
                 col = True
         return(col)
     
+    def in_random(self):
+        random = False
+        for x, y in self.random_pos:
+            box = ((x - .5, x + .5), (y - .5, y + .5))
+            if(self.pos_in_box(box)): random = True 
+        return(random)
+                
     def randomize(self):
         for cube in self.colors.keys():
             pos, _ = p.getBasePositionAndOrientation(cube, physicsClientId = self.physicsClient)
