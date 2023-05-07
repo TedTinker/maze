@@ -39,14 +39,13 @@ class Forward(nn.Module):
         example = torch.zeros(rgbd_size)
         
         self.rgbd_in = nn.Sequential(
-            #ConstrainedConv2d(
-            #    in_channels = 4,
-            #    out_channels = 16,
-            #    kernel_size = (3,3),
-            #    padding = (1,1),
-            #    padding_mode = "reflect"),
-            #nn.PReLU(),
-            Ted_Conv2d(in_channels = 4, out_channels = (4, 8, 4), kernels = ((1,1), (3,3), (5,5))),
+            ConstrainedConv2d(
+                in_channels = 4,
+                out_channels = 16,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.PReLU(),
             ConstrainedConv2d(
                 in_channels = 16,
                 out_channels = 16,
