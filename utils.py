@@ -56,7 +56,7 @@ parser.add_argument('--step_lim_punishment',type=int,        default = -1)
 parser.add_argument('--wall_punishment',    type=int,        default = -1)
 parser.add_argument('--non_one',            type=int,        default = -1)
 parser.add_argument('--default_reward',     type=tuple_type, default = ((1, 1),))  # ((weight, reward), (weight, reward))
-parser.add_argument('--better_reward',      type=tuple_type, default = ((1, 10),))
+parser.add_argument('--better_reward',      type=tuple_type, default = ((1, .5), (1, 9.5),))
 parser.add_argument('--randomness',         type=int,        default = 0)
 parser.add_argument('--random_steps',       type=int,        default = 1)
 
@@ -93,7 +93,7 @@ parser.add_argument("--target_entropy",     type=float,      default = -2)      
 # Curiosity
 parser.add_argument("--curiosity",          type=str,        default = "none")     # Which kind of curiosity
 parser.add_argument("--naive_eta",          type=float,      default = 15)        # Scale curiosity
-parser.add_argument("--free_eta",           type=float,      default = 15)        # Scale curiosity
+parser.add_argument("--free_eta",           type=float,      default = 10)        # Scale curiosity
 parser.add_argument("--dkl_max",            type=float,      default = 1)        
 
 # Memory buffer
