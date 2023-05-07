@@ -189,11 +189,15 @@ class Actor(nn.Module):
                 kernel_size = (3,3), 
                 stride = (2,2),
                 padding = (1,1)))
-        example = self.rgbd_in(example).flatten(1)
-        rgbd_size = example.shape[1]
+        example = self.rgbd_in(example)
+        rgbd_latent_size = example.flatten(1).shape[1]
+        
+        self.rgbd_in_lin = nn.Sequential(
+            nn.Linear(rgbd_latent_size, args.hidden_size),
+            nn.PReLU())
         
         self.gru = nn.GRU(
-            input_size =  rgbd_size + spe_size + action_size,
+            input_size =  args.hidden_size + spe_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         self.mu = nn.Sequential(
@@ -214,6 +218,7 @@ class Actor(nn.Module):
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
+        rgbd = self.rgbd_in_lin(rgbd)
         h, _ = self.gru(torch.cat((rgbd, spe, prev_action), dim=-1), h)
         mu, std = var(h, self.mu, self.std, self.args)
         x = sample(mu, std)
@@ -246,11 +251,15 @@ class Critic(nn.Module):
                 kernel_size = (3,3), 
                 stride = (2,2),
                 padding = (1,1)))
-        example = self.rgbd_in(example).flatten(1)
-        rgbd_size = example.shape[1]
+        example = self.rgbd_in(example)
+        rgbd_latent_size = example.flatten(1).shape[1]
+        
+        self.rgbd_in_lin = nn.Sequential(
+            nn.Linear(rgbd_latent_size, args.hidden_size),
+            nn.PReLU())
         
         self.gru = nn.GRU(
-            input_size =  rgbd_size + spe_size + action_size,
+            input_size =  args.hidden_size + spe_size + action_size,
             hidden_size = args.hidden_size,
             batch_first = True)
         self.lin = nn.Sequential(
@@ -269,6 +278,7 @@ class Critic(nn.Module):
         rgbd = (rgbd * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
+        rgbd = self.rgbd_in_lin(rgbd)
         h, _ = self.gru(torch.cat((rgbd, spe, action), dim=-1), h)
         Q = self.lin(h)
         return(Q, h)
