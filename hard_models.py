@@ -6,7 +6,7 @@ from torch.distributions import Normal
 from torchinfo import summary as torch_summary
 from torchgan.layers import SelfAttention2d
 
-from utils import default_args, init_weights, ConstrainedConv2d, ConstrainedConvTranspose2d, print
+from utils import default_args, init_weights, ConstrainedConv2d, ConstrainedConvTranspose2d, Ted_Conv2d, print
 spe_size = 1 ; action_size = 2
 
 
@@ -39,13 +39,14 @@ class Forward(nn.Module):
         example = torch.zeros(rgbd_size)
         
         self.rgbd_in = nn.Sequential(
-            ConstrainedConv2d(
-                in_channels = 4,
-                out_channels = 16,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
+            #ConstrainedConv2d(
+            #    in_channels = 4,
+            #    out_channels = 16,
+            #    kernel_size = (3,3),
+            #    padding = (1,1),
+            #    padding_mode = "reflect"),
+            #nn.PReLU(),
+            Ted_Conv2d(in_channels = 4, out_channels = (4, 8, 4), kernels = ((1,1), (3,3), (5,5))),
             ConstrainedConv2d(
                 in_channels = 16,
                 out_channels = 16,
