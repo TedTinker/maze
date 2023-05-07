@@ -138,9 +138,9 @@ class Forward(nn.Module):
         if(len(rgbd.shape) == 4):    rgbd   = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2):     spe    = spe.unsqueeze(1)
         if(len(prev_a.shape) == 2):  prev_a = prev_a.unsqueeze(1)
-        rgbd = (rgbd * 2) - 1
+        rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
+        rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
         rgbd = self.rgbd_in_lin(rgbd)
         zp_mu, zp_std = var(torch.cat((h_q_m1, prev_a),            dim=-1), self.zp_mu, self.zp_std, self.args)
         zq_mu, zq_std = var(torch.cat((h_q_m1, prev_a, rgbd, spe), dim=-1), self.zq_mu, self.zq_std, self.args)        
@@ -215,9 +215,9 @@ class Actor(nn.Module):
     def forward(self, rgbd, spe, prev_action, h = None):
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
-        rgbd = (rgbd * 2) - 1
+        rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
+        rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
         rgbd = self.rgbd_in_lin(rgbd)
         h, _ = self.gru(torch.cat((rgbd, spe, prev_action), dim=-1), h)
         mu, std = var(h, self.mu, self.std, self.args)
@@ -275,9 +275,9 @@ class Critic(nn.Module):
     def forward(self, rgbd, spe, action, h = None):
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
-        rgbd = (rgbd * 2) - 1
+        rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd.permute(0, 1, 4, 2, 3)).flatten(2)
+        rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
         rgbd = self.rgbd_in_lin(rgbd)
         h, _ = self.gru(torch.cat((rgbd, spe, action), dim=-1), h)
         Q = self.lin(h)
