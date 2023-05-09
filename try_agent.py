@@ -41,17 +41,19 @@ class Agent_and_Episode:
         self.h_critic2  = [torch.zeros((1, 1, args.hidden_size))]
         self.h_critict1 = [torch.zeros((1, 1, args.hidden_size))]
         self.h_critict2 = [torch.zeros((1, 1, args.hidden_size))]
+        self.zq_mu = [] ; self.zq_std = []
         self.Qs = []
         
         self.maze = Hard_Maze(maze_var, True, args)
         o, s = self.maze.obs()
-        self.o = [o] ; self.s = [s]
+        self.o = [o] ; self.s = [s] 
+        self.positions = [self.maze.maze.get_pos_yaw_spe()]
         self.done = False
         self.args = args
         
     def act(self):
         _, (zq_mu, zq_std), h_q = self.forward(self.o[-1], self.s[-1], self.a[-1], self.h_q[-1])
-        self.zq_mu = [zq_mu] ; self.zq_std = [zq_std] ; self.h_q.append(h_q)
+        self.zq_mu.append(zq_mu) ; self.zq_std.append(zq_std) ; self.h_q.append(h_q)
         a, _, h_actor = self.actor(self.o[-1], self.s[-1], self.a[-1], self.h_actor[-1])
         yaw, speed = torch.flatten(a).tolist()
         self.h_actor.append(h_actor)
@@ -62,6 +64,7 @@ class Agent_and_Episode:
         self.a.append(torch.tensor([[[yaw, speed]]]))
         o, s = self.maze.obs()
         self.o.append(o) ; self.s.append(s)
+        self.positions.append(self.maze.maze.get_pos_yaw_spe())
         
         Q1, h_critic1 = self.critic1(self.o[-1], self.s[-1], self.a[-1], self.h_critic1[-1])
         Q2, h_critic2 = self.critic2(self.o[-1], self.s[-1], self.a[-1], self.h_critic2[-1])
@@ -71,6 +74,26 @@ class Agent_and_Episode:
         self.h_critict1.append(h_critict1) ; self.h_critict2.append(h_critict2)
         self.Qs.append([Q1.item(), Q2.item(), Qt1.item(), Qt2.item()])
         return(self.Qs, self.done)
+    
+    def undo(self):
+        step = len(self.a) - 1
+        if(step == 0): return
+        self.a.pop(-1)
+        self.h_q.pop(-1)
+        self.h_actor.pop(-1)
+        self.h_critic1.pop(-1)
+        self.h_critic2.pop(-1)
+        self.h_critict1.pop(-1)
+        self.h_critict2.pop(-1)
+        self.Qs.pop(-1)
+        self.zq_mu.pop(-1)
+        self.zq_std.pop(-1)
+        self.o.pop(-1)
+        self.s.pop(-1)
+        self.positions.pop(-1)
+        pos, yaw, spe = self.positions[-1]
+        self.maze.put_agent_here(step, pos, yaw, spe)
+        return(self.Qs)
     
     def predict(self, yaw, speed):
         action = torch.tensor([[[yaw, speed]]])
@@ -148,15 +171,15 @@ class GUI(tk.Frame):
         self.agent_num_menu.grid(   row=2, column=1)
         self.maze_label.grid(       row=3, column=0, sticky="e")
         maze_menu.grid(             row=3, column=1)
-        step_button.grid(           row=4, column=0)
-        undo_button.grid(           row=4, column=1)
+        step_button.grid(           row=4, column=0, columnspan=2)
         self.yaw_label.grid(        row=5, column=0, sticky="e")
         self.yaw_entry.grid(        row=5, column=1)
         self.speed_entry.grid(      row=6, column=1)
         self.speed_label.grid(      row=6, column=0, sticky="e")
-        predict_button.grid(        row=7, column=0, columnspan=2)
-        self.plot_canvas_1.get_tk_widget().grid(row=8, column=0, columnspan=2, padx=5, pady=5)
-        self.plot_canvas_2.get_tk_widget().grid(row=8, column=6, columnspan=2, padx=5, pady=5)
+        undo_button.grid(           row=7, column=0, columnspan=2)
+        predict_button.grid(        row=8, column=0, columnspan=2)
+        self.plot_canvas_1.get_tk_widget().grid(row=9, column=0, columnspan=2, padx=5, pady=5)
+        self.plot_canvas_2.get_tk_widget().grid(row=9, column=6, columnspan=2, padx=5, pady=5)
         
         self.update_epoch_agent_num()
         
@@ -220,7 +243,8 @@ class GUI(tk.Frame):
             self.plot_Qs(Qs)
             
     def undo(self):
-        pass
+        Qs = self.agent_and_episode.undo()
+        self.plot_Qs(Qs)
             
     def predict(self):
         yaw, speed = self.get_real_action()
@@ -233,8 +257,11 @@ class GUI(tk.Frame):
         
     def plot_Qs(self, Qs):
         self.ax_2.clear() 
+        if(Qs == None): return
         Q1 = [Q[0] for Q in Qs]
+        Q2 = [Q[1] for Q in Qs]
         self.ax_2.plot([i for i in range(len(Q1))], Q1)
+        self.ax_2.plot([i for i in range(len(Q2))], Q2)
         self.ax_2.set_title("Qs")
         self.plot_canvas_2.draw()
         

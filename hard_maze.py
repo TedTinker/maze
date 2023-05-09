@@ -24,6 +24,13 @@ class Hard_Maze:
         self.maze.begin()
         self.agent_pos, self.agent_yaw, self.agent_spe = self.maze.get_pos_yaw_spe()
         
+    def put_agent_here(self, step, pos, yaw, spe):
+        self.steps = step
+        self.agent_pos = pos ; self.agent_yaw = yaw ; self.agent_spe = spe
+        x, y = cos(yaw)*spe, sin(yaw)*spe
+        self.maze.resetBaseVelocity(x, y)
+        self.maze.resetBasePositionAndOrientation(pos, yaw)
+        
     def obs(self):
         x, y = cos(self.agent_yaw), sin(self.agent_yaw)
         view_matrix = p.computeViewMatrix(
@@ -57,8 +64,7 @@ class Hard_Maze:
         old_yaw = self.agent_yaw
         new_yaw = old_yaw + yaw_change
         new_yaw %= 2*pi
-        orn = p.getQuaternionFromEuler([pi/2, 0, new_yaw])
-        self.maze.resetBasePositionAndOrientation((self.agent_pos[0], self.agent_pos[1], .5), orn)
+        self.maze.resetBasePositionAndOrientation((self.agent_pos[0], self.agent_pos[1], .5), new_yaw)
         
         old_speed = self.agent_spe
         x = -cos(new_yaw)*speed

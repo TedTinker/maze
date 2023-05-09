@@ -115,7 +115,6 @@ class Arena():
         inherent_pitch = 0
         yaw = 0
         spe = self.args.min_speed
-        color = [1,0,0,1]
         file = "ted_duck.urdf"
         pos = (self.start[0], self.start[1], .5)
         orn = p.getQuaternionFromEuler([inherent_roll, inherent_pitch, yaw])
@@ -125,18 +124,15 @@ class Arena():
         p.changeDynamics(self.body_num, 0, maxJointVelocity=10000)
         x, y = cos(yaw)*spe, sin(yaw)*spe
         self.resetBaseVelocity(x, y)
-        p.changeVisualShape(self.body_num, -1, rgbaColor = color, physicsClientId = self.physicsClient)
+        p.changeVisualShape(self.body_num, -1, rgbaColor = [1,0,0,1], physicsClientId = self.physicsClient)
         
     def begin(self):
-        inherent_roll = pi/2
-        inherent_pitch = 0
         yaw = 0
         spe = self.args.min_speed
         pos = (self.start[0], self.start[1], .5)
-        orn = p.getQuaternionFromEuler([inherent_roll, inherent_pitch, yaw])
         x, y = cos(yaw)*spe, sin(yaw)*spe
         self.resetBaseVelocity(x, y)
-        self.resetBasePositionAndOrientation(pos, orn)
+        self.resetBasePositionAndOrientation(pos, yaw)
         if(self.args.randomness > 0): self.randomize()
         
         
@@ -147,7 +143,10 @@ class Arena():
         spe = (x**2 + y**2)**.5
         return(pos, yaw, spe)
     
-    def resetBasePositionAndOrientation(self, pos, orn):
+    def resetBasePositionAndOrientation(self, pos, yaw):
+        inherent_roll = pi/2
+        inherent_pitch = 0
+        orn = p.getQuaternionFromEuler([inherent_roll, inherent_pitch, yaw])
         p.resetBasePositionAndOrientation(self.body_num, pos, orn, physicsClientId = self.physicsClient)
         
     def resetBaseVelocity(self, x, y):    
