@@ -319,7 +319,7 @@ class Agent:
         next_spe_tiled  = torch.tile(spe[:,1:], (1, 1, self.args.elbo_num))
 
         image_loss = F.binary_cross_entropy_with_logits(zq_pred_rgbd, next_rgbd_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
-        speed_loss = self.args.speed_scalar * F.mse_loss(zq_pred_spe, next_spe_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        speed_loss = self.args.speed_scalar * F.mse_loss(zq_pred_spe, next_spe_tiled,  reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         accuracy_for_naive = image_loss + speed_loss
         #print("IMAGES:", image_loss.sum().item())
         #print("SPEEDS:", speed_loss.sum().item())

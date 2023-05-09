@@ -45,18 +45,11 @@ class Forward(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.PReLU(),
-            ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 16,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            SelfAttention2d(
-                input_dims = 16,
-                output_dims = None),  # If None, input_dims // 8
-            nn.PReLU())
+            nn.PReLU(),)
+            #SelfAttention2d(
+            #    input_dims = 16,
+            #    output_dims = None),  # If None, input_dims // 8
+            #nn.PReLU())
         example = self.rgbd_in(example)
         rgbd_latent_size = example.flatten(1).shape[1]
         

@@ -10,8 +10,77 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from hard_maze import Hard_Maze
 
-# To do:
-#   Only saving last epoch?
+
+
+class Agent_and_Episode:
+    
+    def __init__(self, plot_dict, agent_name, maze_var):
+        
+        args = plot_dict["args"]
+        agent_lists = plot_dict["agent_lists"]
+        state_dict = agent_lists[agent_name]
+    
+        self.forward        = agent_lists["forward"](args)
+        self.actor          = agent_lists["actor"](args)
+        self.critic1        = agent_lists["critic"](args)
+        self.critic1_target = agent_lists["critic"](args)
+        self.critic2        = agent_lists["critic"](args)
+        self.critic2_target = agent_lists["critic"](args)
+        
+        self.forward.load_state_dict(       state_dict[0])
+        self.actor.load_state_dict(         state_dict[1])
+        self.critic1.load_state_dict(       state_dict[2])
+        self.critic1_target.load_state_dict(state_dict[3])
+        self.critic2.load_state_dict(       state_dict[4])
+        self.critic2_target.load_state_dict(state_dict[5])
+        
+        self.a          = [torch.zeros((1, 1, 2))]
+        self.h_q        = [torch.zeros((1, 1, args.hidden_size))]
+        self.h_actor    = [torch.zeros((1, 1, args.hidden_size))]
+        self.h_critic1  = [torch.zeros((1, 1, args.hidden_size))]
+        self.h_critic2  = [torch.zeros((1, 1, args.hidden_size))]
+        self.h_critict1 = [torch.zeros((1, 1, args.hidden_size))]
+        self.h_critict2 = [torch.zeros((1, 1, args.hidden_size))]
+        self.Qs = []
+        
+        self.maze = Hard_Maze(maze_var, True, args)
+        o, s = self.maze.obs()
+        self.o = [o] ; self.s = [s]
+        self.done = False
+        self.args = args
+        
+    def act(self):
+        _, (zq_mu, zq_std), h_q = self.forward(self.o[-1], self.s[-1], self.a[-1], self.h_q[-1])
+        self.zq_mu = [zq_mu] ; self.zq_std = [zq_std] ; self.h_q.append(h_q)
+        a, _, h_actor = self.actor(self.o[-1], self.s[-1], self.a[-1], self.h_actor[-1])
+        yaw, speed = torch.flatten(a).tolist()
+        self.h_actor.append(h_actor)
+        return((yaw, speed))
+        
+    def step(self, yaw, speed):
+        _, _, self.done, _ = self.maze.action(yaw, speed, True)
+        self.a.append(torch.tensor([[[yaw, speed]]]))
+        o, s = self.maze.obs()
+        self.o.append(o) ; self.s.append(s)
+        
+        Q1, h_critic1 = self.critic1(self.o[-1], self.s[-1], self.a[-1], self.h_critic1[-1])
+        Q2, h_critic2 = self.critic2(self.o[-1], self.s[-1], self.a[-1], self.h_critic2[-1])
+        Qt1, h_critict1 = self.critic1_target(self.o[-1], self.s[-1], self.a[-1], self.h_critict1[-1])
+        Qt2, h_critict2 = self.critic2_target(self.o[-1], self.s[-1], self.a[-1], self.h_critict2[-1])
+        self.h_critic1.append(h_critic1)   ; self.h_critic2.append(h_critic2)
+        self.h_critict1.append(h_critict1) ; self.h_critict2.append(h_critict2)
+        self.Qs.append([Q1.item(), Q2.item(), Qt1.item(), Qt2.item()])
+        return(self.Qs, self.done)
+    
+    def predict(self, yaw, speed):
+        action = torch.tensor([[[yaw, speed]]])
+        with(torch.no_grad()):
+            (_, zq_preds_rgbd), (_, zq_preds_spe) = self.forward.get_preds(action, self.zq_mu[-1], self.zq_std[-1], self.h_q[-1], quantity = 1)
+        pred_rgbd = zq_preds_rgbd[0].squeeze(0).squeeze(0)
+        pred_spe  = zq_preds_spe[0].squeeze(0).squeeze(0)
+        return(pred_rgbd, pred_spe)
+
+
 
 class GUI(tk.Frame):
     def __init__(self, parent):
@@ -49,6 +118,7 @@ class GUI(tk.Frame):
         self.maze_label = tk.Label(self, text="Maze:")
         
         step_button = tk.Button(self, text="Step", command=self.step)
+        undo_button = tk.Button(self, text="Undo", command=self.undo)
         
         self.yaw_label = tk.Label(self, text="Yaw:")
         self.yaw_var = tk.StringVar()
@@ -78,7 +148,8 @@ class GUI(tk.Frame):
         self.agent_num_menu.grid(   row=2, column=1)
         self.maze_label.grid(       row=3, column=0, sticky="e")
         maze_menu.grid(             row=3, column=1)
-        step_button.grid(           row=4, column=0, columnspan=2)
+        step_button.grid(           row=4, column=0)
+        undo_button.grid(           row=4, column=1)
         self.yaw_label.grid(        row=5, column=0, sticky="e")
         self.yaw_entry.grid(        row=5, column=1)
         self.speed_entry.grid(      row=6, column=1)
@@ -89,7 +160,9 @@ class GUI(tk.Frame):
         
         self.update_epoch_agent_num()
         
-        self.done = True
+        self.agent_and_episode = None
+        
+        
         
     def update_plot_dict(self):
         self.plot_dict = self.plot_dict_dict[self.argname_var.get()]
@@ -109,97 +182,59 @@ class GUI(tk.Frame):
             self.epoch_menu['menu'].add_command(label=epoch, command=lambda ep=epoch: self.epoch_var.set(ep))
             
             
-            
-
+        
     def add_agent_action(self, yaw, spe):
-        yaw = yaw * self.actor.args.max_yaw_change
-        yaw = [-self.actor.args.max_yaw_change, self.actor.args.max_yaw_change, yaw] ; yaw.sort() ; yaw = yaw[1]
+        yaw = yaw * self.args.max_yaw_change
+        yaw = [-self.args.max_yaw_change, self.args.max_yaw_change, yaw] ; yaw.sort() ; yaw = yaw[1]
         yaw = round(degrees(yaw))
-        spe = self.actor.args.min_speed + ((spe + 1)/2) * \
-            (self.actor.args.max_speed - self.actor.args.min_speed)
-        spe = [self.actor.args.min_speed, self.actor.args.max_speed, round(spe)] ; spe.sort() ; spe = spe[1]
+        spe = self.args.min_speed + ((spe + 1)/2) * \
+            (self.args.max_speed - self.args.min_speed)
+        spe = [self.args.min_speed, self.args.max_speed, round(spe)] ; spe.sort() ; spe = spe[1]
         self.yaw_var.set(str(yaw))
         self.speed_var.set(str(spe))
         
     def get_real_action(self):
         yaw = float(self.yaw_var.get())
         spe = float(self.speed_var.get())
-        yaw = radians(yaw) / self.actor.args.max_yaw_change
-        speed = (((spe - self.actor.args.min_speed) / (self.actor.args.max_speed - self.actor.args.min_speed)) * 2) - 1
+        yaw = radians(yaw) / self.args.max_yaw_change
+        speed = (((spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)) * 2) - 1
         return(yaw, speed)
             
             
         
     def step(self):
-        if(self.done):
+        if(self.agent_and_episode == None):
             agent_name = "{}_{}".format(self.agent_num_var.get(), self.epoch_var.get())
             print("\narg name: {}.\nAgent num: {}. Epoch: {}.\nMaze: {}.\n".format(
                 self.plot_dict["arg_name"], self.agent_num_var.get(), self.epoch_var.get(), self.maze_var.get()))
-            args = self.plot_dict["args"]
-            agent_lists = self.plot_dict["agent_lists"]
-            state_dict = agent_lists[agent_name]
-            
-            self.forward        = agent_lists["forward"](args)
-            self.actor          = agent_lists["actor"](args)
-            self.critic1        = agent_lists["critic"](args)
-            self.critic1_target = agent_lists["critic"](args)
-            self.critic2        = agent_lists["critic"](args)
-            self.critic2_target = agent_lists["critic"](args)
-            
-            self.forward.load_state_dict(       state_dict[0])
-            self.actor.load_state_dict(         state_dict[1])
-            self.critic1.load_state_dict(       state_dict[2])
-            self.critic1_target.load_state_dict(state_dict[3])
-            self.critic2.load_state_dict(       state_dict[4])
-            self.critic2_target.load_state_dict(state_dict[5])
-                    
-            self.maze = Hard_Maze(self.maze_var.get(), True, self.actor.args)
-            o, s = self.maze.obs()
-            self.done = False
-            self.prev_a   = torch.zeros((1, 1, 2))
-            self.h_q      = torch.zeros((1, 1, self.actor.args.hidden_size))
-            self.h_actor  = torch.zeros((1, 1, self.actor.args.hidden_size))
-            self.h_critic = torch.zeros((1, 1, self.actor.args.hidden_size))
-            
-            _, (self.zq_mu, self.zq_std), self.h_q = self.forward(o, s, self.prev_a, self.h_q)
-            
-            a, _, self.h_actor = self.actor(o, s, self.prev_a, self.h_actor)
-            yaw, speed = torch.flatten(a).tolist()
-            self.add_agent_action(yaw, speed)
-            
-            self.Qs = []
-                        
+            self.agent_and_episode = Agent_and_Episode(self.plot_dict, agent_name, self.maze_var.get())      
+            self.args = self.agent_and_episode.args   
+            yaw, speed = self.agent_and_episode.act()      
+            self.add_agent_action(yaw, speed)    
         else:
             yaw, speed = self.get_real_action()
-            _, _, self.done, _ = self.maze.action(yaw, speed, True)
-            self.prev_a = torch.tensor([[[yaw, speed]]])
-            o, s = self.maze.obs()
-            _, (self.zq_mu, self.zq_std), self.h_q = self.forward(o, s, self.prev_a, self.h_q)
-            a, _, self.h_actor = self.actor(o, s, self.prev_a, self.h_actor)
-            Q, self.h_critic = self.critic1(o, s, a, self.h_critic)
-            self.Qs.append(Q.item())
-            self.plot_Qs()
-            yaw, speed = torch.flatten(a).tolist()
-            self.add_agent_action(yaw, speed)
-            if(self.done): self.maze.maze.stop()
+            Qs, done = self.agent_and_episode.step(yaw, speed)
+            if(done): self.agent_and_episode.maze.maze.stop() ; self.agent_and_episode = None
+            else:     yaw, speed = self.agent_and_episode.act()      
+            self.add_agent_action(yaw, speed)   
+            self.plot_Qs(Qs)
+            
+    def undo(self):
+        pass
             
     def predict(self):
         yaw, speed = self.get_real_action()
-        action = torch.tensor([[[yaw, speed]]])
-        with(torch.no_grad()):
-            (_, zq_preds_rgbd), (_, zq_preds_spe) = self.forward.get_preds(action, self.zq_mu, self.zq_std, self.h_q, quantity = 1)
-        pred_rgbd = zq_preds_rgbd[0].squeeze(0).squeeze(0)
-        pred_spe  = zq_preds_spe[0].squeeze(0).squeeze(0)
-        
+        pred_rgbd, pred_spe = self.agent_and_episode.predict(yaw, speed)
         self.ax_1.clear()
         self.ax_1.axis("off")
         self.ax_1.set_title("Speed {}".format(round(pred_spe.item())))
         self.ax_1.imshow(torch.sigmoid(pred_rgbd[:,:,0:3])) 
         self.plot_canvas_1.draw()
         
-    def plot_Qs(self):
+    def plot_Qs(self, Qs):
         self.ax_2.clear() 
-        self.ax_2.plot([i for i in range(len(self.Qs))], self.Qs)
+        Q1 = [Q[0] for Q in Qs]
+        self.ax_2.plot([i for i in range(len(Q1))], Q1)
         self.ax_2.set_title("Qs")
         self.plot_canvas_2.draw()
         
