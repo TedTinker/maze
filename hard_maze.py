@@ -107,7 +107,7 @@ class Hard_Maze:
         if(col): reward += self.args.wall_punishment
         if(not end): end = self.steps >= self.args.max_steps
         exit = which != "NONE"
-        if(end and not exit): reward = self.args.step_lim_punishment
+        if(end and not exit): reward += self.args.step_lim_punishment
         if(verbose): print("end {}, which {}, reward {}\n\n".format(end, which, reward))
 
         return(reward, which, end, action_name)

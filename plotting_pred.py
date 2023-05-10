@@ -73,7 +73,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
-        print("{}:\tDone with epoch {}.".format(duration(), epoch))
+        print("{}:\tDone with easy epoch {}.".format(duration(), epoch))
                                 
                                                 
         
@@ -130,7 +130,7 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
-        print("{}:\tDone with epoch {}.".format(duration(), epoch))
+        print("{}:\tDone with hard epoch {}.".format(duration(), epoch))
     
 
 

@@ -87,7 +87,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             buf.close()
             plt.close()
             
-        print("{}:\tDone with epoch {} (maze {}).".format(duration(), epoch, maze_name))
+        print("{}:\tDone with easy epoch {} (maze {}).".format(duration(), epoch, maze_name))
             
     x_max = None ; y_max = None 
     for image in images:
@@ -165,7 +165,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         buf.close()
         plt.close()
             
-        print("{}:\tDone with epoch {} (maze {}).".format(duration(), epoch, maze_name))
+        print("{}:\tDone with hard epoch {} (maze {}).".format(duration(), epoch, maze_name))
     
     x_max = None ; y_max = None 
     for image in images:

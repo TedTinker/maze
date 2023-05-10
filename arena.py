@@ -21,32 +21,34 @@ class Arena_Description:
             columns = ["Name", "Position", "Reward"])
         self.random_pos = random_pos
         
+        
+        
 arena_dict = {
     "t.png" : Arena_Description(
         (3, 1),
-        [Exit(  "L",    (2,0), args.default_reward),
-        Exit(   "R",    (2,4), args.better_reward)],
+        [Exit(  "L",    (2,0), "default"),
+        Exit(   "R",    (2,4), "better")],
         [(1, 1), (1, 0), (3, 0), (3, 2), (2, 1)]),
     "1.png" : Arena_Description(
         (2,2), 
-        [Exit(  "L",    (1,0), args.default_reward),
-        Exit(   "R",    (1,4), args.better_reward)]),
+        [Exit(  "L",    (1,0), "default"),
+        Exit(   "R",    (1,4), "better")]),
     "2.png" : Arena_Description(
         (3,3), 
-        [Exit(  "LL",   (4,1), args.better_reward),
-        Exit(   "LR",   (0,1), args.default_reward),
-        Exit(   "RL",   (0,5), args.default_reward),
-        Exit(   "RR",   (4,5), args.default_reward)]),
+        [Exit(  "LL",   (4,1), "better"),
+        Exit(   "LR",   (0,1), "default"),
+        Exit(   "RL",   (0,5), "default"),
+        Exit(   "RR",   (4,5), "default")]),
     "3.png" : Arena_Description(
         (4,4), 
-        [Exit(  "LLL",  (6,3), args.default_reward),
-        Exit(   "LLR",  (6,1), args.default_reward),
-        Exit(   "LRL",  (0,1), args.default_reward),
-        Exit(   "LRR",  (0,3), args.default_reward),
-        Exit(   "RLL",  (0,5), args.better_reward),
-        Exit(   "RLR",  (0,7), args.default_reward),
-        Exit(   "RRL",  (6,7), args.default_reward),
-        Exit(   "RRR",  (6,5), args.default_reward)])}
+        [Exit(  "LLL",  (6,3), "default"),
+        Exit(   "LLR",  (6,1), "default"),
+        Exit(   "LRL",  (0,1), "default"),
+        Exit(   "LRR",  (0,3), "default"),
+        Exit(   "RLL",  (0,5), "better"),
+        Exit(   "RLR",  (0,7), "default"),
+        Exit(   "RRL",  (6,7), "default"),
+        Exit(   "RRR",  (6,5), "default")])}
 
 
 
@@ -167,7 +169,7 @@ class Arena():
             if self.pos_in_box(end):
                 col = True
                 which = end_name
-                reward = end_reward
+                reward = self.args.better_reward if end_reward == "better" else self.args.default_reward
         weights = [w for w, r in reward]
         rewards = [r for w, r in reward]
         reward = choices(rewards, weights = weights, k = 1)[0]
