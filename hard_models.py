@@ -61,11 +61,15 @@ class Forward(nn.Module):
             nn.Linear(1, args.hidden_size),
             nn.PReLU())
         
+        self.prev_action_in = nn.Sequential(
+            nn.Linear(action_size, args.hidden_size),
+            nn.PReLU())
+        
         self.action_in = nn.Sequential(
             nn.Linear(action_size, args.hidden_size),
             nn.PReLU())
         
-        self.hq_in = nn.Sequential(
+        self.h_in = nn.Sequential(
             nn.PReLU())
         
         self.zp_mu = nn.Sequential(
@@ -129,8 +133,9 @@ class Forward(nn.Module):
         self.rgbd_in.apply(init_weights)
         self.rgbd_in_lin.apply(init_weights)
         self.spe_in.apply(init_weights)
+        self.prev_action_in.apply(init_weights)
         self.action_in.apply(init_weights)
-        self.hq_in.apply(init_weights)
+        self.h_in.apply(init_weights)
         self.zp_mu.apply(init_weights)
         self.zp_std.apply(init_weights)
         self.zq_mu.apply(init_weights)
@@ -150,8 +155,8 @@ class Forward(nn.Module):
         rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
         rgbd = self.rgbd_in_lin(rgbd)
         spe = self.spe_in(spe)
-        prev_a = self.action_in(prev_a)
-        relu_h_q_m1 = self.hq_in(h_q_m1)
+        prev_a = self.prev_action_in(prev_a)
+        relu_h_q_m1 = self.h_in(h_q_m1)
         zp_mu, zp_std = var(torch.cat((relu_h_q_m1, prev_a),            dim=-1), self.zp_mu, self.zp_std, self.args)
         zq_mu, zq_std = var(torch.cat((relu_h_q_m1, prev_a, rgbd, spe), dim=-1), self.zq_mu, self.zq_std, self.args)        
         zq = sample(zq_mu, zq_std)
@@ -207,10 +212,22 @@ class Actor(nn.Module):
             nn.Linear(rgbd_latent_size, args.hidden_size),
             nn.PReLU())
         
+        self.spe_in = nn.Sequential(
+            nn.Linear(1, args.hidden_size),
+            nn.PReLU())
+        
+        self.action_in = nn.Sequential(
+            nn.Linear(action_size, args.hidden_size),
+            nn.PReLU())
+        
+        self.h_in = nn.Sequential(
+            nn.PReLU())
+        
         self.gru = nn.GRU(
-            input_size =  args.hidden_size + spe_size + action_size,
+            input_size =  3 * args.hidden_size,
             hidden_size = args.hidden_size,
             batch_first = True)
+        
         self.mu = nn.Sequential(
             nn.Linear(args.hidden_size, action_size))
         self.std = nn.Sequential(
@@ -218,6 +235,9 @@ class Actor(nn.Module):
             nn.Softplus())
 
         self.rgbd_in.apply(init_weights)
+        self.spe_in.apply(init_weights)
+        self.action_in.apply(init_weights)
+        self.h_in.apply(init_weights)
         self.gru.apply(init_weights)
         self.mu.apply(init_weights)
         self.std.apply(init_weights)
@@ -230,8 +250,11 @@ class Actor(nn.Module):
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
         rgbd = self.rgbd_in_lin(rgbd)
+        spe = self.spe_in(spe)
+        prev_action = self.action_in(prev_action)
         h, _ = self.gru(torch.cat((rgbd, spe, prev_action), dim=-1), h)
-        mu, std = var(h, self.mu, self.std, self.args)
+        relu_h = self.h_in(h)
+        mu, std = var(relu_h, self.mu, self.std, self.args)
         x = sample(mu, std)
         #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
@@ -269,16 +292,31 @@ class Critic(nn.Module):
             nn.Linear(rgbd_latent_size, args.hidden_size),
             nn.PReLU())
         
+        self.spe_in = nn.Sequential(
+            nn.Linear(1, args.hidden_size),
+            nn.PReLU())
+        
+        self.action_in = nn.Sequential(
+            nn.Linear(action_size, args.hidden_size),
+            nn.PReLU())
+        
+        self.h_in = nn.Sequential(
+            nn.PReLU())
+        
         self.gru = nn.GRU(
-            input_size =  args.hidden_size + spe_size + action_size,
+            input_size =  3 * args.hidden_size,
             hidden_size = args.hidden_size,
             batch_first = True)
+        
         self.lin = nn.Sequential(
             nn.Linear(args.hidden_size, args.hidden_size),
             nn.PReLU(),
             nn.Linear(args.hidden_size, 1))
 
         self.rgbd_in.apply(init_weights)
+        self.spe_in.apply(init_weights)
+        self.action_in.apply(init_weights)
+        self.h_in.apply(init_weights)
         self.gru.apply(init_weights)
         self.lin.apply(init_weights)
         self.to(args.device)
@@ -290,8 +328,10 @@ class Critic(nn.Module):
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
         rgbd = self.rgbd_in_lin(rgbd)
+        spe = self.spe_in(spe)
+        action = self.action_in(action)
         h, _ = self.gru(torch.cat((rgbd, spe, action), dim=-1), h)
-        Q = self.lin(h)
+        Q = self.lin(self.h_in(h))
         return(Q, h)
     
     
