@@ -389,8 +389,7 @@ class Agent:
         # Train actor
         if self.epochs % self.args.d == 0:
             if self.args.alpha == None: alpha = self.alpha 
-            else:                       
-                alpha = self.args.alpha
+            else:                       alpha = self.args.alpha
             actions_pred, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(rgbd[:,:-1], spe[:,:-1], actions[:,:-1])
 
             if self.args.action_prior == "normal":

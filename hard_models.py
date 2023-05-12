@@ -57,24 +57,35 @@ class Forward(nn.Module):
             nn.Linear(rgbd_latent_size, args.hidden_size),
             nn.PReLU())
         
+        self.spe_in = nn.Sequential(
+            nn.Linear(1, args.hidden_size),
+            nn.PReLU())
+        
+        self.action_in = nn.Sequential(
+            nn.Linear(action_size, args.hidden_size),
+            nn.PReLU())
+        
+        self.hq_in = nn.Sequential(
+            nn.PReLU())
+        
         self.zp_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(2 * args.hidden_size, args.hidden_size), 
             nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zp_std = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+            nn.Linear(2 * args.hidden_size, args.hidden_size), 
             nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
         
         self.zq_mu = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size + args.hidden_size + spe_size, args.hidden_size), 
+            nn.Linear(4 * args.hidden_size, args.hidden_size), 
             nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Tanh())
         self.zq_std = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size + args.hidden_size + spe_size, args.hidden_size), 
+            nn.Linear(4 * args.hidden_size, args.hidden_size), 
             nn.PReLU(),
             nn.Linear(args.hidden_size, args.state_size),
             nn.Softplus())
@@ -85,10 +96,10 @@ class Forward(nn.Module):
             batch_first = True)
         
         self.gen_channels = 4
-        self.rgbd_up = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, self.gen_channels * args.image_size * args.image_size),
+        self.rgbd_out_lin = nn.Sequential(
+            nn.Linear(2 * args.hidden_size, self.gen_channels * args.image_size * args.image_size),
             nn.PReLU())
-        self.rgbd = nn.Sequential(
+        self.rgbd_out = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = self.gen_channels,
                 out_channels = 16,
@@ -108,8 +119,8 @@ class Forward(nn.Module):
                 out_channels = 4,
                 kernel_size = (1,1)))
         
-        self.spe = nn.Sequential(
-            nn.Linear(args.hidden_size + action_size, args.hidden_size), 
+        self.spe_out = nn.Sequential(
+            nn.Linear(2 * args.hidden_size, args.hidden_size), 
             nn.PReLU(),
             nn.Linear(args.hidden_size, args.hidden_size), 
             nn.PReLU(),
@@ -117,14 +128,17 @@ class Forward(nn.Module):
         
         self.rgbd_in.apply(init_weights)
         self.rgbd_in_lin.apply(init_weights)
+        self.spe_in.apply(init_weights)
+        self.action_in.apply(init_weights)
+        self.hq_in.apply(init_weights)
         self.zp_mu.apply(init_weights)
         self.zp_std.apply(init_weights)
         self.zq_mu.apply(init_weights)
         self.zq_std.apply(init_weights)
         self.gru.apply(init_weights)
-        self.rgbd_up.apply(init_weights)
-        self.rgbd.apply(init_weights)
-        self.spe.apply(init_weights)
+        self.rgbd_out_lin.apply(init_weights)
+        self.rgbd_out.apply(init_weights)
+        self.spe_out.apply(init_weights)
         self.to(args.device)
         
     def forward(self, rgbd, spe, prev_a, h_q_m1):
@@ -135,8 +149,11 @@ class Forward(nn.Module):
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
         rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
         rgbd = self.rgbd_in_lin(rgbd)
-        zp_mu, zp_std = var(torch.cat((h_q_m1, prev_a),            dim=-1), self.zp_mu, self.zp_std, self.args)
-        zq_mu, zq_std = var(torch.cat((h_q_m1, prev_a, rgbd, spe), dim=-1), self.zq_mu, self.zq_std, self.args)        
+        spe = self.spe_in(spe)
+        prev_a = self.action_in(prev_a)
+        relu_h_q_m1 = self.hq_in(h_q_m1)
+        zp_mu, zp_std = var(torch.cat((relu_h_q_m1, prev_a),            dim=-1), self.zp_mu, self.zp_std, self.args)
+        zq_mu, zq_std = var(torch.cat((relu_h_q_m1, prev_a, rgbd, spe), dim=-1), self.zq_mu, self.zq_std, self.args)        
         zq = sample(zq_mu, zq_std)
         h_q, _ = self.gru(zq, h_q_m1.permute(1, 0, 2))
         return((zp_mu, zp_std), (zq_mu, zq_std), h_q)
@@ -145,18 +162,19 @@ class Forward(nn.Module):
         if(len(action.shape) == 2): action = action.unsqueeze(1)
         h_q_m1 = h_q_m1.permute(1, 0, 2)
         h, _ = self.gru(z_mu, h_q_m1)        
+        action = self.action_in(action)
         
-        rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_channels, self.args.image_size, self.args.image_size))
-        rgbd_mu_pred = rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2)
-        spe_mu_pred  = self.spe(torch.cat((h, action), dim=-1))
+        rgbd = self.rgbd_out_lin(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_channels, self.args.image_size, self.args.image_size))
+        rgbd_mu_pred = rnn_cnn(self.rgbd_out, rgbd).permute(0, 1, 3, 4, 2)
+        spe_mu_pred  = self.spe_out(torch.cat((h, action), dim=-1))
                 
         pred_rgbd = [] ; pred_spe = []
         for _ in range(quantity):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
-            rgbd = self.rgbd_up(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_channels, self.args.image_size, self.args.image_size))
-            pred_rgbd.append((rnn_cnn(self.rgbd, rgbd).permute(0, 1, 3, 4, 2)))
-            pred_spe.append(self.spe(torch.cat((h, action), dim=-1)))
+            rgbd = self.rgbd_out_lin(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_channels, self.args.image_size, self.args.image_size))
+            pred_rgbd.append((rnn_cnn(self.rgbd_out, rgbd).permute(0, 1, 3, 4, 2)))
+            pred_spe.append(self.spe_out(torch.cat((h, action), dim=-1)))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
 
 
