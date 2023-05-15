@@ -242,10 +242,10 @@ class Agent:
                 else:                   prev_a, h, r, spot_name, done, _ = self.step_in_episode(   prev_a, h, push, verbose)
                 cumulative_r += r
                 
-            if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
+            if(self.steps % self.args.steps_per_epoch == 0):
                 #print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))
                 plot_data = self.epoch(batch_size = self.args.batch_size)
-                if(plot_data == False): print("Not getting an epoch!")
+                if(plot_data == False): pass
                 else:
                     l, e, ic, ie, naive, free = plot_data
                     if(self.epochs == 1 or self.epochs >= sum(self.args.epochs) or self.epochs % self.args.keep_data == 0):

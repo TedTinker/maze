@@ -14,9 +14,6 @@ from easy_maze import obs_size, action_size
 
 
 
-RecurrentBatch = namedtuple('RecurrentBatch', 'o a r d m')
-
-
 def as_probas(positive_values: np.array) -> np.array:
     return positive_values / np.sum(positive_values)
 
@@ -153,7 +150,7 @@ class RecurrentReplayBuffer:
             d = as_tensor_on_device(d).view(batch_size, max_ep_len_in_batch, 1)
             m = as_tensor_on_device(m).view(batch_size, max_ep_len_in_batch, 1)
 
-            return RecurrentBatch(o, a, r, d, m)
+            return((o, a, r, d, m))
 
         else:
 
@@ -185,4 +182,4 @@ class RecurrentReplayBuffer:
             d_seg = as_tensor_on_device(d_seg)
             m_seg = as_tensor_on_device(m_seg)
 
-            return RecurrentBatch(o_seg, a_seg, r_seg, d_seg, m_seg)
+            return((o_seg, a_seg, r_seg, d_seg, m_seg))

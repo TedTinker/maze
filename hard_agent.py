@@ -4,13 +4,11 @@ import torch
 import torch.nn.functional as F
 from torch.distributions import MultivariateNormal
 import torch.optim as optim
-from torch.distributions import Normal
 
 import numpy as np
 from math import log
 from itertools import accumulate
 from copy import deepcopy
-from math import exp
 
 from utils import default_args, dkl, print
 from hard_maze import Hard_Maze
@@ -24,6 +22,8 @@ action_size = 2
 class Agent:
     
     def __init__(self, i, args = default_args):
+        
+        self.start_time = None
         
         self.agent_num = i
         self.args = args
@@ -256,10 +256,10 @@ class Agent:
                 prev_a, h, r, spot_name, done, _ = self.step_in_episode_hq(prev_a, h, push, verbose) if self.args.actor_hq else self.step_in_episode(prev_a, h, push, verbose)
                 cumulative_r += r
                 
-            if(self.steps % self.args.steps_per_epoch == 0 and self.episodes != 0):
+            if(self.steps % self.args.steps_per_epoch == 0):
                 #print("episodes: {}. epochs: {}. steps: {}.".format(self.episodes, self.epochs, self.steps))
                 plot_data = self.epoch(batch_size = self.args.batch_size)
-                if(plot_data == False): print("Not getting an epoch!")
+                if(plot_data == False): pass
                 else:
                     l, e, ic, ie, naive, free = plot_data
                     if(self.epochs == 1 or self.epochs >= sum(self.args.epochs) or self.epochs % self.args.keep_data == 0):
@@ -281,10 +281,10 @@ class Agent:
     
     
     def epoch(self, batch_size):
-                        
+                                
         batch = self.memory.sample(batch_size)
         if(batch == False): return(False)
-        
+                
         self.epochs += 1
 
         rgbd, spe, actions, rewards, dones, masks = batch
@@ -292,10 +292,10 @@ class Agent:
         episodes = rewards.shape[0] ; steps = rewards.shape[1]
         
         #print("\n\n")
-        #print("rgbd: {}. spe: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
-        #    rgbd.shape, spe.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
+        #print("{}. rgbd: {}. spe: {}. actions: {}. rewards: {}. dones: {}. masks: {}.".format(
+        #    self.agent_num, rgbd.shape, spe.shape, actions.shape, rewards.shape, dones.shape, masks.shape))
         #print("\n\n")
-        
+                
         
 
         # Train forward
@@ -313,12 +313,12 @@ class Agent:
         h_qs.append(h_qs.pop(0)) ; h_qs = torch.cat(h_qs, dim = 1) ; next_hqs = h_qs[:, 1:] ; hqs = h_qs[:, :-1]
         zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
-        zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1).flatten(2) ; zq_pred_spe = torch.cat(zq_pred_spe, dim = 1)
+        zq_pred_rgbd = torch.cat(zq_pred_rgbd, dim = 1) ; zq_pred_spe = torch.cat(zq_pred_spe, dim = 1)
         
-        next_rgbd_tiled = torch.tile(rgbd[:,1:], (1, 1, 1, 1, self.args.elbo_num)).flatten(2)
+        next_rgbd_tiled = torch.tile(rgbd[:,1:], (1, 1, 1, 1, self.args.elbo_num))
         next_spe_tiled  = torch.tile(spe[:,1:], (1, 1, self.args.elbo_num))
 
-        image_loss = F.binary_cross_entropy_with_logits(zq_pred_rgbd, next_rgbd_tiled, reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
+        image_loss = F.binary_cross_entropy_with_logits(zq_pred_rgbd, next_rgbd_tiled, reduction = "none").mean((-1,-2,-3)).unsqueeze(-1) * masks / self.args.elbo_num
         speed_loss = self.args.speed_scalar * F.mse_loss(zq_pred_spe, next_spe_tiled,  reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         accuracy_for_naive = image_loss + speed_loss
         #print("IMAGES:", image_loss.sum().item())
@@ -334,7 +334,7 @@ class Agent:
         self.forward_opt.step()
         
         if(self.args.beta == 0): complexity = None
-        
+                        
                         
         
         # Get curiosity                  
@@ -346,7 +346,7 @@ class Agent:
         extrinsic = torch.mean(rewards).item()
         intrinsic_curiosity = curiosity.mean().item()
         rewards += curiosity
-        
+                
         
                 
         # Train critics
@@ -369,7 +369,7 @@ class Agent:
         self.critic2_opt.zero_grad()
         critic2_loss.backward()
         self.critic2_opt.step()
-        
+                        
         
         
         # Train alpha
@@ -383,7 +383,7 @@ class Agent:
             self.alpha = torch.exp(self.log_alpha) 
         else:
             alpha_loss = None
-            
+                                    
             
         
         # Train actor
@@ -416,7 +416,9 @@ class Agent:
         else:
             intrinsic_entropy = None
             actor_loss = None
-        
+                                
+                                
+                                
         if(accuracy != None):   accuracy = accuracy.item()
         if(complexity != None): complexity = complexity.item()
         if(alpha_loss != None): alpha_loss = alpha_loss.item()

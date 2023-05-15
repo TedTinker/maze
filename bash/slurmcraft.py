@@ -55,8 +55,8 @@ def add_this(name, this):
         this_this = this
         if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
         slurm_dict[key + "_" + name] = value + " " + this_this  
-add_this("hard", "--batch_size 16 --elbo_num 3 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('t',)\"")
-add_this("many", "--elbo_num 3 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('1','2','3')\" --epochs \"(500,1000,2000)\" --default_reward \"((1,-1),)\" --better_reward \"((1,10),)\"")
+add_this("hard", "--elbo_num 5 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('t',)\"")
+add_this("many", "--elbo_num 5 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('1','2','3')\" --epochs \"(500,1000,2000)\" --default_reward \"((1,-1),)\" --better_reward \"((1,10),)\"")
 add_this("rand", "--randomness 10")
 
 new_slurm_dict = {}
@@ -84,17 +84,23 @@ max_cpus = 36
 if(__name__ == "__main__" and args.arg_list != []):
     
     if(args.comp == "deigo"):
-        partition = """
-#SBATCH --partition=short
+        partition = \
+"""
+#!/bin/bash -l
+#SBATCH --partition=compute
 #SBATCH --cpus-per-task=1
 #SBATCH --time 2:00:00
+#SBATCH --mem=50G
 """
 
     if(args.comp == "saion"):
-        partition = """
+        partition = \
+"""
+#!/bin/bash -l
 #SBATCH --partition=taniu
 #SBATCH --gres=gpu:1
 #SBATCH --time 48:00:00
+#SBATCH --mem=50G
 """
 
 
@@ -105,59 +111,44 @@ if(__name__ == "__main__" and args.arg_list != []):
             with open("main_{}.slurm".format(name), "w") as f:
                 f.write(
 """
-#!/bin/bash -l
 {}
 #SBATCH --ntasks={}
-#SBATCH --mem=2G
-
 module load singularity
 singularity exec maze.sif python maze/main.py --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
-""".format(partition, max_cpus, name, slurm_dict[name])[1:])
+""".format(partition, max_cpus, name, slurm_dict[name])[2:])
             
 
 
     with open("finish_dicts.slurm", "w") as f:
         f.write(
 """
-#!/bin/bash -l
 {}
-#SBATCH --mem=2G
-
 module load singularity
 singularity exec maze.sif python maze/finish_dicts.py --arg_title {} --arg_name finishing_dictionaries
-""".format(partition, combined)[1:])
+""".format(partition, combined)[2:])
         
     with open("plotting.slurm", "w") as f:
         f.write(
 """
-#!/bin/bash -l
 {}
-#SBATCH --mem=2G
-
 module load singularity
 singularity exec maze.sif python maze/plotting.py --arg_title {} --arg_name plotting
-""".format(partition, combined)[1:])
+""".format(partition, combined)[2:])
         
     with open("plotting_pred.slurm", "w") as f:
         f.write(
 """
-#!/bin/bash -l
 {}
-#SBATCH --mem=2G
-
 module load singularity
 singularity exec maze.sif python maze/plotting_pred.py --arg_title {} --arg_name plotting_predictions
-""".format(partition, combined)[1:])
+""".format(partition, combined)[2:])
         
     with open("plotting_pos.slurm", "w") as f:
         f.write(
 """
-#!/bin/bash -l
 {}
-#SBATCH --mem=2G
-
 module load singularity
 singularity exec maze.sif python maze/plotting_pos.py --arg_title {} --arg_name plotting_positions
-""".format(partition, combined)[1:])
+""".format(partition, combined)[2:])
 # %%
 

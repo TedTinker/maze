@@ -13,8 +13,6 @@ from utils import default_args
 
         
 
-RecurrentBatch = namedtuple('RecurrentBatch', 'o s a r d m')
-
 def as_probas(positive_values: np.array) -> np.array:
     return positive_values / np.sum(positive_values)
 
@@ -121,6 +119,7 @@ class RecurrentReplayBuffer:
             self.time_ptr += 1
 
     def sample(self, batch_size):
+
         if(self.num_episodes == 0): return(False)
         if(self.num_episodes < batch_size): return self.sample(self.num_episodes)
 
@@ -156,7 +155,7 @@ class RecurrentReplayBuffer:
             d = as_tensor_on_device(d).view(batch_size, max_ep_len_in_batch, 1)
             m = as_tensor_on_device(m).view(batch_size, max_ep_len_in_batch, 1)
 
-            return RecurrentBatch(o, s, a, r, d, m)
+            return((o, s, a, r, d, m))
 
         else:
 
@@ -192,4 +191,4 @@ class RecurrentReplayBuffer:
             d_seg = as_tensor_on_device(d_seg)
             m_seg = as_tensor_on_device(m_seg)
 
-            return RecurrentBatch(o_seg, s_seg, a_seg, r_seg, d_seg, m_seg)
+            return((o_seg, s_seg, a_seg, r_seg, d_seg, m_seg))

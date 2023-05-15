@@ -48,7 +48,19 @@ class RGBD_IN(nn.Module):
             nn.AvgPool2d(
                 kernel_size = (3,3),
                 stride = (2,2),
-                padding = (1,1)))
+                padding = (1,1)),
+            #ConstrainedConv2d(
+            #    in_channels = 16,
+            #    out_channels = 16,
+            #    kernel_size = (3,3),
+            #    padding = (1,1),
+            #    padding_mode = "reflect"),
+            #nn.PReLU(),
+            #nn.AvgPool2d(
+            #    kernel_size = (3,3),
+            #    stride = (2,2),
+            #    padding = (1,1)),
+            )
         example = self.rgbd_in(example)
         rgbd_latent_size = example.flatten(1).shape[1]
         
