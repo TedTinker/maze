@@ -27,14 +27,13 @@ def rnn_cnn(do_this, to_this):
     this = this.view((episodes, steps, this.shape[1], this.shape[2], this.shape[3]))
     return(this)
 
-        
 
-class Forward(nn.Module):
-    
+
+class RGBD_IN(nn.Module):
+
     def __init__(self, args = default_args):
-        super(Forward, self).__init__()
+        super(RGBD_IN, self).__init__()  
         
-        self.args = args
         rgbd_size = (1, 4, args.image_size, args.image_size)
         example = torch.zeros(rgbd_size)
         
@@ -45,17 +44,37 @@ class Forward(nn.Module):
                 kernel_size = (3,3),
                 padding = (1,1),
                 padding_mode = "reflect"),
-            nn.PReLU(),)
-            #SelfAttention2d(
-            #    input_dims = 16,
-            #    output_dims = None),  # If None, input_dims // 8
-            #nn.PReLU())
+            nn.PReLU(),
+            nn.AvgPool2d(
+                kernel_size = (3,3),
+                stride = (2,2),
+                padding = (1,1)))
         example = self.rgbd_in(example)
         rgbd_latent_size = example.flatten(1).shape[1]
         
         self.rgbd_in_lin = nn.Sequential(
             nn.Linear(rgbd_latent_size, args.hidden_size),
             nn.PReLU())
+        
+        self.rgbd_in.apply(init_weights)
+        self.rgbd_in_lin.apply(init_weights)
+        
+    def forward(self, rgbd):
+        rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
+        rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
+        rgbd = self.rgbd_in_lin(rgbd)
+        return(rgbd)
+        
+        
+
+class Forward(nn.Module):
+    
+    def __init__(self, args = default_args):
+        super(Forward, self).__init__()
+        
+        self.args = args
+        
+        self.rgbd_in = RGBD_IN(args)
         
         self.spe_in = nn.Sequential(
             nn.Linear(1, args.hidden_size),
@@ -99,13 +118,13 @@ class Forward(nn.Module):
             hidden_size = args.hidden_size,
             batch_first = True)
         
-        self.gen_channels = 4
+        self.gen_shape = (4, args.image_size, args.image_size)
         self.rgbd_out_lin = nn.Sequential(
-            nn.Linear(2 * args.hidden_size, self.gen_channels * args.image_size * args.image_size),
+            nn.Linear(2 * args.hidden_size, self.gen_shape[0] * self.gen_shape[1] * self.gen_shape[2]),
             nn.PReLU())
         self.rgbd_out = nn.Sequential(
             ConstrainedConv2d(
-                in_channels = self.gen_channels,
+                in_channels = self.gen_shape[0],
                 out_channels = 16,
                 kernel_size = (3,3),
                 padding = (1,1),
@@ -131,7 +150,6 @@ class Forward(nn.Module):
             nn.Linear(args.hidden_size, spe_size))
         
         self.rgbd_in.apply(init_weights)
-        self.rgbd_in_lin.apply(init_weights)
         self.spe_in.apply(init_weights)
         self.prev_action_in.apply(init_weights)
         self.action_in.apply(init_weights)
@@ -150,10 +168,8 @@ class Forward(nn.Module):
         if(len(rgbd.shape) == 4):    rgbd   = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2):     spe    = spe.unsqueeze(1)
         if(len(prev_a.shape) == 2):  prev_a = prev_a.unsqueeze(1)
-        rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
+        rgbd = self.rgbd_in(rgbd)
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
-        rgbd = self.rgbd_in_lin(rgbd)
         spe = self.spe_in(spe)
         prev_a = self.prev_action_in(prev_a)
         relu_h_q_m1 = self.h_in(h_q_m1)
@@ -169,7 +185,7 @@ class Forward(nn.Module):
         h, _ = self.gru(z_mu, h_q_m1)        
         action = self.action_in(action)
         
-        rgbd = self.rgbd_out_lin(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_channels, self.args.image_size, self.args.image_size))
+        rgbd = self.rgbd_out_lin(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_shape[0], self.gen_shape[1], self.gen_shape[2]))
         rgbd_mu_pred = rnn_cnn(self.rgbd_out, rgbd).permute(0, 1, 3, 4, 2)
         spe_mu_pred  = self.spe_out(torch.cat((h, action), dim=-1))
                 
@@ -177,7 +193,7 @@ class Forward(nn.Module):
         for _ in range(quantity):
             z = sample(z_mu, z_std)
             h, _ = self.gru(z, h_q_m1)
-            rgbd = self.rgbd_out_lin(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_channels, self.args.image_size, self.args.image_size))
+            rgbd = self.rgbd_out_lin(torch.cat((h, action), dim=-1)).view((z_mu.shape[0], z_mu.shape[1], self.gen_shape[0], self.gen_shape[1], self.gen_shape[2]))
             pred_rgbd.append((rnn_cnn(self.rgbd_out, rgbd).permute(0, 1, 3, 4, 2)))
             pred_spe.append(self.spe_out(torch.cat((h, action), dim=-1)))
         return((rgbd_mu_pred, pred_rgbd), (spe_mu_pred, pred_spe))
@@ -193,24 +209,7 @@ class Actor(nn.Module):
         rgbd_size = (1, 4, args.image_size, args.image_size)
         example = torch.zeros(rgbd_size)
         
-        self.rgbd_in = nn.Sequential(
-            ConstrainedConv2d(
-                in_channels = 4,
-                out_channels = 4,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            nn.MaxPool2d(
-                kernel_size = (3,3), 
-                stride = (2,2),
-                padding = (1,1)))
-        example = self.rgbd_in(example)
-        rgbd_latent_size = example.flatten(1).shape[1]
-        
-        self.rgbd_in_lin = nn.Sequential(
-            nn.Linear(rgbd_latent_size, args.hidden_size),
-            nn.PReLU())
+        self.rgbd_in = RGBD_IN(args)
         
         self.spe_in = nn.Sequential(
             nn.Linear(1, args.hidden_size),
@@ -246,10 +245,8 @@ class Actor(nn.Module):
     def forward(self, rgbd, spe, prev_action, h = None):
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
-        rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
-        rgbd = self.rgbd_in_lin(rgbd)
+        rgbd = self.rgbd_in(rgbd)
         spe = self.spe_in(spe)
         prev_action = self.action_in(prev_action)
         h, _ = self.gru(torch.cat((rgbd, spe, prev_action), dim=-1), h)
@@ -273,24 +270,7 @@ class Critic(nn.Module):
         rgbd_size = (1, 4, args.image_size, args.image_size)
         example = torch.zeros(rgbd_size)
         
-        self.rgbd_in = nn.Sequential(
-            ConstrainedConv2d(
-                in_channels = 4,
-                out_channels = 4,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            nn.MaxPool2d(
-                kernel_size = (3,3), 
-                stride = (2,2),
-                padding = (1,1)))
-        example = self.rgbd_in(example)
-        rgbd_latent_size = example.flatten(1).shape[1]
-        
-        self.rgbd_in_lin = nn.Sequential(
-            nn.Linear(rgbd_latent_size, args.hidden_size),
-            nn.PReLU())
+        self.rgbd_in = RGBD_IN(args)
         
         self.spe_in = nn.Sequential(
             nn.Linear(1, args.hidden_size),
@@ -324,10 +304,8 @@ class Critic(nn.Module):
     def forward(self, rgbd, spe, action, h = None):
         if(len(rgbd.shape) == 4): rgbd = rgbd.unsqueeze(1)
         if(len(spe.shape) == 2):  spe =  spe.unsqueeze(1)
-        rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
         spe = (spe - self.args.min_speed) / (self.args.max_speed - self.args.min_speed)
-        rgbd = rnn_cnn(self.rgbd_in, rgbd).flatten(2)
-        rgbd = self.rgbd_in_lin(rgbd)
+        rgbd = self.rgbd_in(rgbd)
         spe = self.spe_in(spe)
         action = self.action_in(action)
         h, _ = self.gru(torch.cat((rgbd, spe, action), dim=-1), h)
