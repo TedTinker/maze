@@ -41,7 +41,7 @@ class Hard_Maze:
             fov = 90, aspect = 1, nearVal = .01, 
             farVal = 10, physicsClientId = self.maze.physicsClient)
         _, _, rgba, depth, _ = p.getCameraImage(
-            width=32, height=32,
+            width=self.args.image_size, height=self.args.image_size,
             projectionMatrix=proj_matrix, viewMatrix=view_matrix, shadow = 0,
             physicsClientId = self.maze.physicsClient)
         
@@ -50,8 +50,7 @@ class Hard_Maze:
         if(d.max() == d.min()): pass
         else: d = (d.max() - d)/(d.max()-d.min())
         rgbd = np.concatenate([rgb, d], axis = -1)
-        rgbd = torch.from_numpy(rgbd).float()
-        rgbd = resize(rgbd.permute(-1,0,1), (self.args.image_size, self.args.image_size)).permute(1,2,0).unsqueeze(0)
+        rgbd = torch.from_numpy(rgbd).float().unsqueeze(0)
         spe = torch.tensor(self.agent_spe).unsqueeze(0).unsqueeze(0)
         
         #if(self.maze.in_random() and self.args.randomness > 0):

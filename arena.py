@@ -137,7 +137,6 @@ class Arena():
         self.resetBasePositionAndOrientation(pos, yaw)
         if(self.args.randomness > 0): self.randomize()
         
-        
     def get_pos_yaw_spe(self):
         pos, ors = p.getBasePositionAndOrientation(self.body_num, physicsClientId = self.physicsClient)
         yaw = p.getEulerFromQuaternion(ors)[-1]

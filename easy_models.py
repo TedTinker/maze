@@ -62,12 +62,7 @@ class Forward(nn.Module):
             nn.PReLU(),
             nn.Linear(args.hidden_size, obs_size)) 
         
-        self.zp_mu.apply(init_weights)
-        self.zp_std.apply(init_weights)
-        self.zq_mu.apply(init_weights)
-        self.zq_std.apply(init_weights)
-        self.gru.apply(init_weights)
-        self.obs.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
         
     def forward(self, obs, prev_a, h_q_m1):
@@ -112,9 +107,7 @@ class Actor(nn.Module):
             nn.Linear(args.hidden_size, action_size),
             nn.Softplus())
 
-        self.gru.apply(init_weights)
-        self.mu.apply(init_weights)
-        self.std.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, obs, prev_action, h = None):
@@ -144,8 +137,7 @@ class Critic(nn.Module):
             nn.PReLU(),
             nn.Linear(args.hidden_size, 1))
 
-        self.gru.apply(init_weights)
-        self.lin.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, obs, action, h = None):
@@ -178,9 +170,7 @@ class Actor_HQ(nn.Module):
             nn.Linear(args.hidden_size, action_size),
             nn.Softplus())
 
-        self.lin.apply(init_weights)
-        self.mu.apply(init_weights)
-        self.std.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, h):
@@ -213,7 +203,7 @@ class Critic_HQ(nn.Module):
             nn.PReLU(),
             nn.Linear(args.hidden_size, 1))
 
-        self.lin.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, h, action):
@@ -225,7 +215,6 @@ class Critic_HQ(nn.Module):
 if __name__ == "__main__":
     
     args = default_args
-    args.device = "cpu"
     args.dkl_rate = 1
     
     

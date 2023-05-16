@@ -11,7 +11,8 @@ do
     temp_file=$(mktemp)
     singularity exec maze.sif python -c "from maze.bash.slurmcraft import all_like_this; result = all_like_this('$arg'); print(result, file=open('${temp_file}', 'w'))"
     returned_value=$(cat ${temp_file})
-    real_arg_list=$(echo "${real_arg_list}${returned_value}" | jq -s 'add')
+    #real_arg_list=$(echo "${real_arg_list}${returned_value}" | jq -s 'add')
+    real_arg_list=$(python -c "import json; a = json.loads('""$real_arg_list""') if '""$real_arg_list""' else []; b = json.loads('""$returned_value""') if '""$returned_value""' else []; print(json.dumps(a+b))")
     rm ${temp_file}
 done
 

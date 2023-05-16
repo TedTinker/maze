@@ -114,8 +114,8 @@ if(__name__ == "__main__" and args.arg_list != []):
 {}
 #SBATCH --ntasks={}
 module load singularity
-singularity exec maze.sif python maze/main.py --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
-""".format(partition, max_cpus, name, slurm_dict[name])[2:])
+singularity exec maze.sif python maze/main.py --comp {} --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
+""".format(partition, max_cpus, args.comp, name, slurm_dict[name])[2:])
             
 
 
@@ -124,31 +124,31 @@ singularity exec maze.sif python maze/main.py --arg_name {} {} --agents $agents_
 """
 {}
 module load singularity
-singularity exec maze.sif python maze/finish_dicts.py --arg_title {} --arg_name finishing_dictionaries
-""".format(partition, combined)[2:])
+singularity exec maze.sif python maze/finish_dicts.py --comp {} --arg_title {} --arg_name finishing_dictionaries
+""".format(partition, args.comp, combined)[2:])
         
     with open("plotting.slurm", "w") as f:
         f.write(
 """
 {}
 module load singularity
-singularity exec maze.sif python maze/plotting.py --arg_title {} --arg_name plotting
-""".format(partition, combined)[2:])
+singularity exec maze.sif python maze/plotting.py --comp {} --arg_title {} --arg_name plotting
+""".format(partition, args.comp, combined)[2:])
         
     with open("plotting_pred.slurm", "w") as f:
         f.write(
 """
 {}
 module load singularity
-singularity exec maze.sif python maze/plotting_pred.py --arg_title {} --arg_name plotting_predictions
-""".format(partition, combined)[2:])
+singularity exec maze.sif python maze/plotting_pred.py --comp {} --arg_title {} --arg_name plotting_predictions
+""".format(partition, args.comp, combined)[2:])
         
     with open("plotting_pos.slurm", "w") as f:
         f.write(
 """
 {}
 module load singularity
-singularity exec maze.sif python maze/plotting_pos.py --arg_title {} --arg_name plotting_positions
-""".format(partition, combined)[2:])
+singularity exec maze.sif python maze/plotting_pos.py --comp {} --arg_title {} --arg_name plotting_positions
+""".format(partition, args.comp, combined)[2:])
 # %%
 

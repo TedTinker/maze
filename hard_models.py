@@ -49,17 +49,17 @@ class RGBD_IN(nn.Module):
                 kernel_size = (3,3),
                 stride = (2,2),
                 padding = (1,1)),
-            #ConstrainedConv2d(
-            #    in_channels = 16,
-            #    out_channels = 16,
-            #    kernel_size = (3,3),
-            #    padding = (1,1),
-            #    padding_mode = "reflect"),
-            #nn.PReLU(),
-            #nn.AvgPool2d(
-            #    kernel_size = (3,3),
-            #    stride = (2,2),
-            #    padding = (1,1)),
+            ConstrainedConv2d(
+                in_channels = 16,
+                out_channels = 16,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.PReLU(),
+            nn.AvgPool2d(
+                kernel_size = (3,3),
+                stride = (2,2),
+                padding = (1,1)),
             )
         example = self.rgbd_in(example)
         rgbd_latent_size = example.flatten(1).shape[1]
@@ -68,8 +68,8 @@ class RGBD_IN(nn.Module):
             nn.Linear(rgbd_latent_size, args.hidden_size),
             nn.PReLU())
         
-        self.rgbd_in.apply(init_weights)
-        self.rgbd_in_lin.apply(init_weights)
+        self.apply(init_weights)
+        self.to(args.device)
         
     def forward(self, rgbd):
         rgbd = (rgbd.permute(0, 1, 4, 2, 3) * 2) - 1
@@ -130,10 +130,11 @@ class Forward(nn.Module):
             hidden_size = args.hidden_size,
             batch_first = True)
         
-        self.gen_shape = (4, args.image_size, args.image_size)
+        self.gen_shape = (4, args.image_size//4, args.image_size//4)
         self.rgbd_out_lin = nn.Sequential(
             nn.Linear(2 * args.hidden_size, self.gen_shape[0] * self.gen_shape[1] * self.gen_shape[2]),
             nn.PReLU())
+        
         self.rgbd_out = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = self.gen_shape[0],
@@ -142,6 +143,15 @@ class Forward(nn.Module):
                 padding = (1,1),
                 padding_mode = "reflect"),
             nn.PReLU(),
+            nn.Upsample(scale_factor = 2, mode = "bilinear", align_corners = True),
+            ConstrainedConv2d(
+                in_channels = 16,
+                out_channels = 16,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.PReLU(),
+            nn.Upsample(scale_factor = 2, mode = "bilinear", align_corners = True),
             ConstrainedConv2d(
                 in_channels = 16,
                 out_channels = 16,
@@ -161,19 +171,7 @@ class Forward(nn.Module):
             nn.PReLU(),
             nn.Linear(args.hidden_size, spe_size))
         
-        self.rgbd_in.apply(init_weights)
-        self.spe_in.apply(init_weights)
-        self.prev_action_in.apply(init_weights)
-        self.action_in.apply(init_weights)
-        self.h_in.apply(init_weights)
-        self.zp_mu.apply(init_weights)
-        self.zp_std.apply(init_weights)
-        self.zq_mu.apply(init_weights)
-        self.zq_std.apply(init_weights)
-        self.gru.apply(init_weights)
-        self.rgbd_out_lin.apply(init_weights)
-        self.rgbd_out.apply(init_weights)
-        self.spe_out.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
         
     def forward(self, rgbd, spe, prev_a, h_q_m1):
@@ -218,8 +216,6 @@ class Actor(nn.Module):
         super(Actor, self).__init__()
         
         self.args = args
-        rgbd_size = (1, 4, args.image_size, args.image_size)
-        example = torch.zeros(rgbd_size)
         
         self.rgbd_in = RGBD_IN(args)
         
@@ -245,13 +241,7 @@ class Actor(nn.Module):
             nn.Linear(args.hidden_size, action_size),
             nn.Softplus())
 
-        self.rgbd_in.apply(init_weights)
-        self.spe_in.apply(init_weights)
-        self.action_in.apply(init_weights)
-        self.h_in.apply(init_weights)
-        self.gru.apply(init_weights)
-        self.mu.apply(init_weights)
-        self.std.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, rgbd, spe, prev_action, h = None):
@@ -265,7 +255,6 @@ class Actor(nn.Module):
         relu_h = self.h_in(h)
         mu, std = var(relu_h, self.mu, self.std, self.args)
         x = sample(mu, std)
-        #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
@@ -279,8 +268,6 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
         
         self.args = args
-        rgbd_size = (1, 4, args.image_size, args.image_size)
-        example = torch.zeros(rgbd_size)
         
         self.rgbd_in = RGBD_IN(args)
         
@@ -305,12 +292,7 @@ class Critic(nn.Module):
             nn.PReLU(),
             nn.Linear(args.hidden_size, 1))
 
-        self.rgbd_in.apply(init_weights)
-        self.spe_in.apply(init_weights)
-        self.action_in.apply(init_weights)
-        self.h_in.apply(init_weights)
-        self.gru.apply(init_weights)
-        self.lin.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, rgbd, spe, action, h = None):
@@ -349,16 +331,13 @@ class Actor_HQ(nn.Module):
             nn.Linear(args.hidden_size, action_size),
             nn.Softplus())
 
-        self.lin.apply(init_weights)
-        self.mu.apply(init_weights)
-        self.std.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, h):
         x = self.lin(h)
         mu, std = var(x, self.mu, self.std, self.args)
         x = sample(mu, std)
-        #action = torch.clamp(x, min = -1, max = 1)
         action = torch.tanh(x)
         log_prob = Normal(mu, std).log_prob(x) - torch.log(1 - action.pow(2) + 1e-6)
         log_prob = torch.mean(log_prob, -1).unsqueeze(-1)
@@ -385,7 +364,7 @@ class Critic_HQ(nn.Module):
             nn.PReLU(),
             nn.Linear(args.hidden_size, 1))
 
-        self.lin.apply(init_weights)
+        self.apply(init_weights)
         self.to(args.device)
 
     def forward(self, h, action):
@@ -397,7 +376,6 @@ class Critic_HQ(nn.Module):
 if __name__ == "__main__":
     
     args = default_args
-    args.device = "cpu"
     args.dkl_rate = 1
     
     
