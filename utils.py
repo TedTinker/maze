@@ -85,7 +85,7 @@ parser.add_argument("--tau",                type=float,      default = .05)     
 # Complexity 
 parser.add_argument('--std_min',            type=int,        default = exp(-20))
 parser.add_argument('--std_max',            type=int,        default = exp(2))
-parser.add_argument("--beta",               type=float,      default = .05)
+parser.add_argument("--beta",               type=float,      default = 0)
 
 # Entropy
 parser.add_argument("--alpha",              type=str,        default = 0)        # Soft-Actor-Critic entropy aim
@@ -104,7 +104,7 @@ parser.add_argument('--capacity',           type=int,        default = 100)
 parser.add_argument('--epochs',             type=tuple_type, default = (1000,))
 parser.add_argument('--steps_per_epoch',    type=int,        default = 10)
 parser.add_argument('--batch_size',         type=int,        default = 32)
-parser.add_argument('--elbo_num',           type=int,        default = 3)
+parser.add_argument('--elbo_num',           type=int,        default = 1)
 parser.add_argument('--GAMMA',              type=int,        default = .99)
 parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
 parser.add_argument('--accuracy',           type=str,        default = "mse")

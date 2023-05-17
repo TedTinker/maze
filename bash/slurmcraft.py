@@ -1,5 +1,6 @@
 #%%
-import argparse, ast, json
+from copy import deepcopy
+import argparse, json
 parser = argparse.ArgumentParser()
 parser.add_argument("--comp",         type=str,  default = "deigo")
 parser.add_argument("--agents",       type=int,  default = 10)
@@ -17,51 +18,63 @@ except: pass
 
 
 from itertools import product
-def expand_args(args = ""):
-    if(args == ""): combos = []
-    easy_args = ""
-    hard_args = []
-    arg_split = ["--" + arg for arg in args.split("--") if arg.replace(" ", "") != ""]
-    for arg in arg_split:
-        arg_words = [word for word in arg.split(" ") if word.replace(" ", "") != ""]
-        if(len(arg_words) == 2): easy_args += arg + " "
-        else:
-            if arg_words[1] == "num_min_max":
-                num, min_val, max_val = arg_words[2:]
+def expand_args(name, args):
+    combos = [{}]
+    complex = False
+    for key, value in args.items():
+        if(type(value) != list):
+            for combo in combos:
+                combo[key] = value
+        else: 
+            complex = True
+            if(value[0]) == "num_min_max": 
+                num, min_val, max_val = value[1]
                 num = int(num)
                 min_val = float(min_val)
                 max_val = float(max_val)
-                nums = [min_val + i*((max_val - min_val) / (num - 1)) for i in range(num)]
-                hard_args.append([arg_words[0], nums])
-            else: hard_args.append([arg_words[0], arg_words[1:]])    
-    if(hard_args == []): combos = [easy_args]
-    else:
-        combos = list(product(*[args[1] for args in hard_args]))
-        combos = [" ".join([hard_args[i][0] + " " + str(combo[i]) for i in range(len(hard_args))]) for combo in combos]
-        combos = [easy_args + combo for combo in combos]
-    return(combos)
+                value = [min_val + i*((max_val - min_val) / (num - 1)) for i in range(num)]
+            new_combos = []
+            for v in value:
+                temp_combos = deepcopy(combos)
+                for combo in temp_combos: 
+                    combo[key] = v        
+                    new_combos.append(combo)   
+            combos = new_combos  
+    if(complex and name[-1] != "_"): name += "_"
+    return(name, combos)
 
 slurm_dict = {
-    "d"    : "", 
-    "e"    : "--alpha None",
-    "en"   : "--alpha None --curiosity naive",
-    "ef"   : "--alpha None --curiosity free",
+    "d"    : {}, 
+    "e"    : {"alpha" : "None"},
+    "en"   : {"alpha" : "None", "curiosity" : "naive"},
+    "ef"   : {"alpha" : "None", "curiosity" : "free", "beta" : .05, "elbo_num" : 3},
 }
 
-def add_this(name, this):
+def get_args(name):
+    s = "" 
+    for key, value in slurm_dict[name].items(): s += "--{} {} ".format(key, value)
+    return(s)
+
+def add_this(name, args):
     keys, values = [], []
     for key, value in slurm_dict.items(): keys.append(key) ; values.append(value)
     for key, value in zip(keys, values):  
-        this_this = this
-        if(key[-1] == "_"): key = key[:-1] ; this_this += "_"
-        slurm_dict[key + "_" + name] = value + " " + this_this  
-add_this("hard", "--elbo_num 5 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('t',)\"")
-add_this("many", "--elbo_num 5 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('1','2','3')\" --epochs \"(500,1000,2000)\" --default_reward \"((1,-1),)\" --better_reward \"((1,10),)\"")
-add_this("rand", "--randomness 10")
+        new_key = key + "_" + name 
+        new_value = deepcopy(value)
+        for arg_name, arg in args.items():
+            if(type(arg) != list): new_value[arg_name] = arg
+            else:
+                for if_arg_name, if_arg in arg[0].items():
+                    if(if_arg_name in value and value[if_arg_name] == if_arg):
+                        new_value[arg_name] = arg[1]
+        slurm_dict[new_key] = new_value
+add_this("hard", {"hard_maze" : "True", "maze_list" : "\"('t',)\"", "max_steps" : 15, "steps_per_epoch" : 15, "agents_per_pos_list" : 10, "naive_eta" : 3, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001], "elbo_num" : [{"curiosity" : "free"}, 5]}) 
+#add_this("many", "--elbo_num 5 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('1','2','3')\" --epochs \"(500,1000,2000)\" --default_reward \"((1,-1),)\" --better_reward \"((1,10),)\"")
+add_this("rand", {"randomness" : 10})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():
-    combos = expand_args(value)
+    key, combos = expand_args(key, value)
     if(len(combos) == 1): new_slurm_dict[key] = combos[0] 
     else:
         for i, combo in enumerate(combos): new_slurm_dict[key + str(i+1)] = combo
@@ -88,7 +101,7 @@ if(__name__ == "__main__" and args.arg_list != []):
 """
 #!/bin/bash -l
 #SBATCH --partition=compute
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=3
 #SBATCH --time 48:00:00
 #SBATCH --mem=50G
 """
@@ -114,7 +127,7 @@ if(__name__ == "__main__" and args.arg_list != []):
 #SBATCH --ntasks={}
 module load singularity
 singularity exec maze.sif python maze/main.py --comp {} --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
-""".format(partition, max_cpus, args.comp, name, slurm_dict[name])[2:])
+""".format(partition, max_cpus, args.comp, name, get_args(name))[2:])
             
 
 
