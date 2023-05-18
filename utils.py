@@ -73,7 +73,7 @@ parser.add_argument('--speed_scalar',       type=float,      default = .0001)
 # Module 
 parser.add_argument('--hidden_size',        type=int,        default = 32)   
 parser.add_argument('--state_size',         type=int,        default = 32)
-parser.add_argument('--actor_hq',           type=bool,       default = False)
+parser.add_argument('--actor_hq',           type=bool,       default = True)
 parser.add_argument('--critic_hq',          type=bool,       default = False)
 parser.add_argument('--forward_lr',         type=float,      default = .01)
 parser.add_argument('--alpha_lr',           type=float,      default = .01) 
@@ -98,12 +98,12 @@ parser.add_argument("--free_eta",           type=float,      default = 10)      
 parser.add_argument("--dkl_max",            type=float,      default = 1)        
 
 # Memory buffer
-parser.add_argument('--capacity',           type=int,        default = 100)
+parser.add_argument('--capacity',           type=int,        default = 250)
 
 # Training
 parser.add_argument('--epochs',             type=tuple_type, default = (1000,))
 parser.add_argument('--steps_per_epoch',    type=int,        default = 10)
-parser.add_argument('--batch_size',         type=int,        default = 32)
+parser.add_argument('--batch_size',         type=int,        default = 128)
 parser.add_argument('--elbo_num',           type=int,        default = 1)
 parser.add_argument('--GAMMA',              type=int,        default = .99)
 parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
@@ -111,13 +111,16 @@ parser.add_argument('--accuracy',           type=str,        default = "mse")
 
 # Saving data
 parser.add_argument('--keep_data',           type=int,        default = 25)
+
 parser.add_argument('--epochs_per_pred_list',type=int,        default = 100)
 parser.add_argument('--agents_per_pred_list',type=int,        default = 1)
 parser.add_argument('--episodes_in_pred_list',type=int,       default = 1)
 parser.add_argument('--samples_per_pred',    type=int,        default = 2)
+
 parser.add_argument('--epochs_per_pos_list', type=int,        default = 100)
 parser.add_argument('--agents_per_pos_list', type=int,        default = -1)
-parser.add_argument('--episodes_in_pos_list',type=int,        default = 3)
+parser.add_argument('--episodes_in_pos_list',type=int,        default = 1)
+
 parser.add_argument('--epochs_per_agent_list',type=int,        default = 100)
 parser.add_argument('--agents_per_agent_list',type=int,        default = 1)
 

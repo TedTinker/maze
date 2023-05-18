@@ -47,7 +47,7 @@ slurm_dict = {
     "d"    : {}, 
     "e"    : {"alpha" : "None"},
     "en"   : {"alpha" : "None", "curiosity" : "naive"},
-    "ef"   : {"alpha" : "None", "curiosity" : "free", "beta" : .05, "elbo_num" : 3},
+    "ef"   : {"alpha" : "None", "curiosity" : "free", "beta" : .05},
 }
 
 def get_args(name):
@@ -68,9 +68,9 @@ def add_this(name, args):
                     if(if_arg_name in value and value[if_arg_name] == if_arg):
                         new_value[arg_name] = arg[1]
         slurm_dict[new_key] = new_value
-add_this("hard", {"hard_maze" : "True", "maze_list" : "\"('t',)\"", "max_steps" : 15, "steps_per_epoch" : 15, "agents_per_pos_list" : 10, "naive_eta" : 3, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001], "elbo_num" : [{"curiosity" : "free"}, 5]}) 
-#add_this("many", "--elbo_num 5 --hard_maze True --max_steps 15 --steps_per_epoch 15 --agents_per_pos_list 10 --naive_eta 3 --free_eta 1 --beta .001 --maze_list \"('1','2','3')\" --epochs \"(500,1000,2000)\" --default_reward \"((1,-1),)\" --better_reward \"((1,10),)\"")
-add_this("rand", {"randomness" : 10})
+add_this("hard",   {"hard_maze" : True, "maze_list" : "\"('t',)\"",        "max_steps" : 15, "steps_per_epoch" : 15, "naive_eta" : 3, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001]}) 
+add_this("many",   {"hard_maze" : True, "maze_list" : "\"('1','2','3')\"", "max_steps" : 15, "steps_per_epoch" : 15, "naive_eta" : 3, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001], "min_speed" : 20, "max_speed" : 30, "epochs" : "\"(500,1000,2000)\"", "default_reward" : "\"((1,-1),)\"", "better_reward" : "\"((1,10),)\""})
+add_this("rand",   {"randomness" : 10})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():

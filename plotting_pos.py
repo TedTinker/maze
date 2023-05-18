@@ -156,7 +156,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
             
                 plot_position = (plot_position[0], plot_position[1] + 1)
                         
-        fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(agent) for agent in agents])
+        #fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(agent) for agent in agents])
         buf = BytesIO()
         plt.savefig(buf, format = "png", bbox_inches = "tight")
         buf.seek(0)
