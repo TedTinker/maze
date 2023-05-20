@@ -48,7 +48,7 @@ slurm_dict = {
     "e"    : {"alpha" : "None"},
     "en"   : {"alpha" : "None", "curiosity" : "naive"},
     "ef"   : {"alpha" : "None", "curiosity" : "free", "beta" : .05},
-}
+    }
 
 def get_args(name):
     s = "" 
@@ -62,14 +62,15 @@ def add_this(name, args):
         new_key = key + "_" + name 
         new_value = deepcopy(value)
         for arg_name, arg in args.items():
-            if(type(arg) != list): new_value[arg_name] = arg
+            if(type(arg) != list or type(arg[0]) != dict): new_value[arg_name] = arg
             else:
                 for if_arg_name, if_arg in arg[0].items():
                     if(if_arg_name in value and value[if_arg_name] == if_arg):
                         new_value[arg_name] = arg[1]
         slurm_dict[new_key] = new_value
-add_this("hard",   {"hard_maze" : True, "maze_list" : "\"('t',)\"",        "max_steps" : 15, "steps_per_epoch" : 15, "naive_eta" : 3, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001]}) 
-add_this("many",   {"hard_maze" : True, "maze_list" : "\"('1','2','3')\"", "max_steps" : 15, "steps_per_epoch" : 15, "naive_eta" : 3, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001], "min_speed" : 20, "max_speed" : 30, "epochs" : "\"(500,1000,2000)\"", "default_reward" : "\"((1,-1),)\"", "better_reward" : "\"((1,10),)\""})
+add_this("hard",   {"hard_maze" : True, "maze_list" : "\"('t',)\"",        "max_steps" : 15, "steps_per_epoch" : 15, "naive_eta" : 1, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001]}) 
+add_this("many",   {"hard_maze" : True, "maze_list" : "\"('1','2','3')\"", "max_steps" : 15, "steps_per_epoch" : 15, "naive_eta" : 1, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001], "min_speed" : 20, "max_speed" : 30, "epochs" : "\"(500,1000,2000)\"", "default_reward" : "\"((1,-10),)\"", "better_reward" : "\"((1,10),)\""})
+add_this("cri_hq", {"critic_hq" : True})
 add_this("rand",   {"randomness" : 10})
 
 new_slurm_dict = {}

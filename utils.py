@@ -93,7 +93,7 @@ parser.add_argument("--target_entropy",     type=float,      default = -2)      
 
 # Curiosity
 parser.add_argument("--curiosity",          type=str,        default = "none")     # Which kind of curiosity
-parser.add_argument("--naive_eta",          type=float,      default = 15)        # Scale curiosity
+parser.add_argument("--naive_eta",          type=float,      default = 10)        # Scale curiosity
 parser.add_argument("--free_eta",           type=float,      default = 10)        # Scale curiosity
 parser.add_argument("--dkl_max",            type=float,      default = 1)        
 
