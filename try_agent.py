@@ -54,9 +54,12 @@ class Agent_and_Episode:
     def act(self):
         _, (zq_mu, zq_std), h_q = self.forward(self.o[-1], self.s[-1], self.a[-1], self.h_q[-1])
         self.zq_mu.append(zq_mu) ; self.zq_std.append(zq_std) ; self.h_q.append(h_q)
-        a, _, h_actor = self.actor(self.o[-1], self.s[-1], self.a[-1], self.h_actor[-1])
+        if(self.args.actor_hq):
+            a, _, _ = self.actor(self.h_q[-1])
+        else:
+            a, _, h_actor = self.actor(self.o[-1], self.s[-1], self.a[-1], self.h_actor[-1])
+            self.h_actor.append(h_actor)
         yaw, speed = torch.flatten(a).tolist()
-        self.h_actor.append(h_actor)
         return((yaw, speed))
         
     def step(self, yaw, speed):
@@ -66,12 +69,18 @@ class Agent_and_Episode:
         self.o.append(o) ; self.s.append(s)
         self.positions.append(self.maze.maze.get_pos_yaw_spe())
         
-        Q1, h_critic1 = self.critic1(self.o[-1], self.s[-1], self.a[-1], self.h_critic1[-1])
-        Q2, h_critic2 = self.critic2(self.o[-1], self.s[-1], self.a[-1], self.h_critic2[-1])
-        Qt1, h_critict1 = self.critic1_target(self.o[-1], self.s[-1], self.a[-1], self.h_critict1[-1])
-        Qt2, h_critict2 = self.critic2_target(self.o[-1], self.s[-1], self.a[-1], self.h_critict2[-1])
-        self.h_critic1.append(h_critic1)   ; self.h_critic2.append(h_critic2)
-        self.h_critict1.append(h_critict1) ; self.h_critict2.append(h_critict2)
+        if(self.args.critic_hq): 
+            Q1 = self.critic1(self.h_q[-1], self.a[-1])
+            Q2 = self.critic2(self.h_q[-1], self.a[-1])
+            Qt1 = self.critic1_target(self.h_q[-1], self.a[-1])
+            Qt2 = self.critic2_target(self.h_q[-1], self.a[-1]) 
+        else:
+            Q1, h_critic1 = self.critic1(self.o[-1], self.s[-1], self.a[-1], self.h_critic1[-1])
+            Q2, h_critic2 = self.critic2(self.o[-1], self.s[-1], self.a[-1], self.h_critic2[-1])
+            Qt1, h_critict1 = self.critic1_target(self.o[-1], self.s[-1], self.a[-1], self.h_critict1[-1])
+            Qt2, h_critict2 = self.critic2_target(self.o[-1], self.s[-1], self.a[-1], self.h_critict2[-1])
+            self.h_critic1.append(h_critic1)   ; self.h_critic2.append(h_critic2)
+            self.h_critict1.append(h_critict1) ; self.h_critict2.append(h_critict2)
         self.Qs.append([Q1.item(), Q2.item(), Qt1.item(), Qt2.item()])
         return(self.Qs, self.done)
     
