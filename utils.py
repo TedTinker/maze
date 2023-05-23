@@ -107,7 +107,6 @@ parser.add_argument('--batch_size',         type=int,        default = 128)
 parser.add_argument('--elbo_num',           type=int,        default = 1)
 parser.add_argument('--GAMMA',              type=int,        default = .99)
 parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
-parser.add_argument('--accuracy',           type=str,        default = "mse")
 
 # Saving data
 parser.add_argument('--keep_data',           type=int,        default = 25)
@@ -169,6 +168,13 @@ def get_args_title(default_args, args):
     if(name == ""): name = "default" 
     else:           name += ")"
     if(name.endswith(" ()")): name = name[:-3]
+    parts = name.split(',')
+    name = "" ; line = ""
+    for i, part in enumerate(parts):
+        if(len(line) > 50 and len(part) > 2): name += line + "\n" ; line = ""
+        line += part
+        if(i+1 != len(parts)): line += ","
+    name += line
     return(name)
 
 args.arg_title = get_args_title(default_args, args)
