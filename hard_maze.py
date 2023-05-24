@@ -100,7 +100,7 @@ class Hard_Maze:
         if(verbose): print("agent: pos {}, yaw {}, spe {}.".format(self.agent_pos, self.agent_yaw, self.agent_spe))
         
         end, which, reward = self.maze.end_collisions()
-        reward *= self.args.step_cost ** self.steps
+        if(reward > 0): reward *= self.args.step_cost ** self.steps
         if(verbose): print("end {}, which {}, reward {}".format(end, which, reward))
         
         col = self.maze.other_collisions()

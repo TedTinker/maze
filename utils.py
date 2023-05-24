@@ -60,7 +60,7 @@ parser.add_argument('--default_reward',     type=tuple_type, default = ((1, 1),)
 parser.add_argument('--better_reward',      type=tuple_type, default = ((1, .5), (1, 9.5),))
 parser.add_argument('--randomness',         type=int,        default = 0)
 parser.add_argument('--random_steps',       type=int,        default = 1)
-parser.add_argument('--step_cost',          type=int,        default = .99)
+parser.add_argument('--step_cost',          type=int,        default = 1)
 
 # Hard Maze
 parser.add_argument('--body_size',          type=float,      default = 2)    
