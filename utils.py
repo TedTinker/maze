@@ -60,14 +60,15 @@ parser.add_argument('--default_reward',     type=tuple_type, default = ((1, 1),)
 parser.add_argument('--better_reward',      type=tuple_type, default = ((1, .5), (1, 9.5),))
 parser.add_argument('--randomness',         type=int,        default = 0)
 parser.add_argument('--random_steps',       type=int,        default = 1)
+parser.add_argument('--step_cost',          type=int,        default = .99)
 
 # Hard Maze
 parser.add_argument('--body_size',          type=float,      default = 2)    
 parser.add_argument('--image_size',         type=int,        default = 8)
 parser.add_argument('--max_yaw_change',     type=float,      default = pi/2)
-parser.add_argument('--min_speed',          type=float,      default = 10)
-parser.add_argument('--max_speed',          type=float,      default = 20)
-parser.add_argument('--steps_per_step',     type=int,        default = 5)
+parser.add_argument('--min_speed',          type=float,      default = 25)
+parser.add_argument('--max_speed',          type=float,      default = 35)
+parser.add_argument('--steps_per_step',     type=int,        default = 4)
 parser.add_argument('--speed_scalar',       type=float,      default = .0001)
 
 # Module 

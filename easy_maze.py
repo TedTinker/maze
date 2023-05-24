@@ -89,6 +89,7 @@ class Easy_Maze:
                     weights = [w for w, r in spot.exit_reward]
                     rewards = [r for w, r in spot.exit_reward]
                     reward = choices(rewards, weights = weights, k = 1)[0]
+                    reward *= self.args.step_cost ** self.steps
         
         if(wall): reward += self.args.wall_punishment
         if(self.steps == self.args.max_steps and exit == False):
