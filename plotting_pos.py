@@ -139,7 +139,10 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 for plot_dict in plot_dicts:
                     if(plot_dict["arg_name"] == arg_name): break
 
+                print("\n\nIssue here")
+                print(plot_position, axs)
                 ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
+                print("\n\n")
                 arena_map = plt.imread("arenas/{}.png".format(maze_name))
                 arena_map = np.flip(arena_map, 0)    
                 h, w, _ = arena_map.shape

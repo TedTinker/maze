@@ -3,7 +3,7 @@ import numpy as np
 import pybullet as p
 from math import pi, degrees, sin, cos
 
-from utils import default_args, args, print
+from utils import default_args, print
 from arena import Arena
 
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     from time import sleep
     import matplotlib.pyplot as plt
 
-    maze = Hard_Maze("t", True, args)
+    maze = Hard_Maze("3", True, default_args)
     done = False
     while(done == False):
         reward, name, done, action_name = maze.action(random(), random(), verbose = True)

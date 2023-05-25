@@ -28,17 +28,19 @@ arena_dict = {
         (3, 1),
         [Exit(  "L",    (2,0), "default"),
         Exit(   "R",    (2,4), "better")],
-        [(1, 1), (1, 0), (3, 0), (3, 2), (2, 1)]),
+        [(1, 1), (1, 0), (3, 0), (3, 2)]),
     "1.png" : Arena_Description(
         (2,2), 
         [Exit(  "L",    (1,0), "default"),
-        Exit(   "R",    (1,4), "better")]),
+        Exit(   "R",    (1,4), "better")],
+        [(0, 1), (0, 2), (0, 3), (2, 1), (2, 3)]),
     "2.png" : Arena_Description(
         (3,3), 
         [Exit(  "LL",   (4,1), "better"),
         Exit(   "LR",   (0,1), "default"),
         Exit(   "RL",   (0,5), "default"),
-        Exit(   "RR",   (4,5), "default")]),
+        Exit(   "RR",   (4,5), "default")],
+        [(1, 2), (1, 3), (1, 4), (3, 2), (3, 4)]),
     "3.png" : Arena_Description(
         (4,4), 
         [Exit(  "LLL",  (6,3), "default"),
@@ -48,7 +50,8 @@ arena_dict = {
         Exit(   "RLL",  (0,5), "better"),
         Exit(   "RLR",  (0,7), "default"),
         Exit(   "RRL",  (6,7), "default"),
-        Exit(   "RRR",  (6,5), "default")])}
+        Exit(   "RRR",  (6,5), "default")],
+        [(2, 3), (2, 4), (2, 5), (4, 3), (4, 5)])}
 
 
 

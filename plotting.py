@@ -59,7 +59,7 @@ def many_min_max(min_max_list):
 
 
 def plots(plot_dicts, min_max_dict):
-    fig, axs = plt.subplots(17, len(plot_dicts), figsize = (10*len(plot_dicts), 100))
+    fig, axs = plt.subplots(17, len(plot_dicts), figsize = (10*len(plot_dicts), 150))
                 
     for i, plot_dict in enumerate(plot_dicts):
         
@@ -81,7 +81,8 @@ def plots(plot_dicts, min_max_dict):
         ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
         awesome_plot(ax, rew_dict, "turquoise", "Reward")
         ax.axhline(y = 0, color = 'black', linestyle = '--', alpha = .2)
-        ax.set_ylabel("Reward")
+        ax.set_ylabel("Cumulative Reward")
+        ax.set_xlabel("Epochs")
         ax.set_title(plot_dict["arg_title"] + "\nCumulative Rewards")
         divide_arenas(rew_dict, ax)
         
@@ -90,7 +91,8 @@ def plots(plot_dicts, min_max_dict):
         ax.axhline(y = 0, color = "black", linestyle = '--', alpha = .2)
         ax.plot(max_rewards, color = "black", label = "Max Reward")
         ax.plot(min_rewards, color = "black", label = "Min Reward")
-        ax.set_ylabel("Reward")
+        ax.set_ylabel("Cumulative Reward")
+        ax.set_xlabel("Epochs")
         ax.set_title(plot_dict["arg_title"] + "\nCumulative Rewards, shared min/max")
         divide_arenas(rew_dict, ax)
     
@@ -117,8 +119,9 @@ def plots(plot_dicts, min_max_dict):
         ax.set_yticks([(2*j+1)*agents*1.1/2 for j in range(len(kinds))], kinds, rotation='vertical')
         ax.tick_params(left = False)
         ax.set_ylim([-1, len(kinds)*agents*1.1])
-        ax.set_ylabel("Ending Spot")
-        ax.set_title(plot_dict["arg_title"] + "\nEnding Spots")
+        ax.set_ylabel("Chosen Exit")
+        ax.set_xlabel("Epochs")
+        ax.set_title(plot_dict["arg_title"] + "\nChosen Exits")
         divide_arenas(xs, ax)
         
         
@@ -131,6 +134,7 @@ def plots(plot_dicts, min_max_dict):
         ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
         h1 = awesome_plot(ax, accuracy_dict, "green", "Accuracy")
         ax.set_ylabel("Loss")
+        ax.set_xlabel("Epochs")
         h2 = awesome_plot(ax, comp_dict, "red",  "Complexity")
         ax.legend(handles = [h1, h2])
         ax.set_title(plot_dict["arg_title"] + "\nForward Losses")
@@ -139,6 +143,7 @@ def plots(plot_dicts, min_max_dict):
         ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
         h1 = awesome_plot(ax, accuracy_dict, "green", "Accuracy", min_max)
         ax.set_ylabel("Loss")
+        ax.set_xlabel("Epochs")
         h2 = awesome_plot(ax, comp_dict, "red",  "Complexity", min_max)
         ax.legend(handles = [h1, h2])
         ax.set_title(plot_dict["arg_title"] + "\nForward Losses, shared min/max")
@@ -153,6 +158,7 @@ def plots(plot_dicts, min_max_dict):
         ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
         h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy")
         ax.set_ylabel("log Loss")
+        ax.set_xlabel("Epochs")
         h2 = awesome_plot(ax, log_comp_dict, "red",  "log Complexity")
         ax.legend(handles = [h1, h2])
         ax.set_title(plot_dict["arg_title"] + "\nlog Forward Losses")
@@ -163,6 +169,7 @@ def plots(plot_dicts, min_max_dict):
             ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
             h1 = awesome_plot(ax, log_accuracy_dict, "green", "log Accuracy", min_max)
             ax.set_ylabel("log Loss")
+            ax.set_xlabel("Epochs")
             h2 = awesome_plot(ax, log_comp_dict, "red",  "log Complexity", min_max)
             ax.legend(handles = [h1, h2])
             ax.set_title(plot_dict["arg_title"] + "\nlog Forward Losses, shared min/max")
@@ -188,6 +195,7 @@ def plots(plot_dicts, min_max_dict):
         ax3.spines["right"].set_position(("axes", 1.08))
         h3 = awesome_plot(ax3, alpha_dict, "black", "Alpha")
         ax3.set_ylabel("Alpha Loss")
+        ax.set_xlabel("Epochs")
         ax.legend(handles = [h1, h2, h3])
         ax.set_title(plot_dict["arg_title"] + "\nOther Losses")
         divide_arenas(crit1_dict, ax)
@@ -196,6 +204,7 @@ def plots(plot_dicts, min_max_dict):
         min_max = many_min_max([min_max_dict["critic_1"], min_max_dict["critic_2"]])
         h1 = awesome_plot(ax, actor_dict, "red", "Actor", min_max_dict["actor"])
         ax.set_ylabel("Actor Loss")
+        ax.set_xlabel("Epochs")
         ax2 = ax.twinx()
         h2 = awesome_plot(ax2, crit1_dict, "blue", "log Critic", min_max)
         awesome_plot(ax2, crit2_dict, "blue", "log Critic", min_max)
@@ -219,6 +228,7 @@ def plots(plot_dicts, min_max_dict):
         handles = []
         handles.append(awesome_plot(ax, ext_dict, "red", "Extrinsic"))
         ax.set_ylabel("Extrinsic")
+        ax.set_xlabel("Epochs")
         if((cur_dict["min"] != cur_dict["max"]).all()):
             ax2 = ax.twinx()
             handles.append(awesome_plot(ax2, cur_dict, "green", "Curiosity"))
@@ -236,6 +246,7 @@ def plots(plot_dicts, min_max_dict):
         handles = []
         handles.append(awesome_plot(ax, ext_dict, "red", "Extrinsic", min_max_dict["extrinsic"]))
         ax.set_ylabel("Extrinsic")
+        ax.set_xlabel("Epochs")
         if((cur_dict["min"] != cur_dict["max"]).all()):
             ax2 = ax.twinx()
             handles.append(awesome_plot(ax2, cur_dict, "green", "Curiosity", min_max_dict["intrinsic_curiosity"]))
@@ -260,6 +271,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, naive_dict, "green", "Naive")
         awesome_plot(ax, free_dict, "red", "Free")
         ax.set_ylabel("Curiosity")
+        ax.set_xlabel("Epochs")
         ax.legend()
         ax.set_title(plot_dict["arg_title"] + "\nPossible Curiosities")
         divide_arenas(naive_dict, ax)
@@ -268,6 +280,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, naive_dict, "green", "Naive", min_max)
         awesome_plot(ax, free_dict, "red", "Free", min_max)
         ax.set_ylabel("Curiosity")
+        ax.set_xlabel("Epochs")
         ax.legend()
         ax.set_title(plot_dict["arg_title"] + "\nPossible Curiosities, shared min/max")
         divide_arenas(naive_dict, ax)
@@ -282,6 +295,7 @@ def plots(plot_dicts, min_max_dict):
         awesome_plot(ax, log_naive_dict, "green", "log Naive")
         awesome_plot(ax, log_free_dict, "red", "log Free")
         ax.set_ylabel("log Curiosity")
+        ax.set_xlabel("Epochs")
         ax.legend()
         ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities")
         divide_arenas(naive_dict, ax)
@@ -292,6 +306,7 @@ def plots(plot_dicts, min_max_dict):
             awesome_plot(ax, log_naive_dict, "green", "log Naive", min_max)
             awesome_plot(ax, log_free_dict, "red", "log Free", min_max)
             ax.set_ylabel("log Curiosity")
+            ax.set_xlabel("Epochs")
             ax.legend()
             ax.set_title(plot_dict["arg_title"] + "\nlog Possible Curiosities, shared min/max")
             divide_arenas(naive_dict, ax)

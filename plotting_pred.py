@@ -95,7 +95,7 @@ def hard_plotting_pred(complete_order, plot_dicts):
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
                         rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
-                        fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 1.5))
+                        fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 2.5))
                         title = "Agent {}: Epoch {} (Maze {}), Episode {}".format(agent, epoch, maze_name, episode)
                         fig.suptitle(title, y = 1.1)
                         for row, (action_name, (rgbd, spe), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))) in enumerate(pred_list):

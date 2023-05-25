@@ -52,15 +52,15 @@ parser.add_argument('--comp',               type=str,        default = "deigo")
 # Maze 
 parser.add_argument('--hard_maze',          type=bool,       default = False)
 parser.add_argument('--maze_list',          type=tuple_type, default = ("t",))
-parser.add_argument('--max_steps',          type=int,        default = 10)
-parser.add_argument('--step_lim_punishment',type=int,        default = -1)
-parser.add_argument('--wall_punishment',    type=int,        default = -1)
-parser.add_argument('--non_one',            type=int,        default = -1)
+parser.add_argument('--max_steps',          type=int,      default = 10)
+parser.add_argument('--step_lim_punishment',type=float,      default = -1)
+parser.add_argument('--wall_punishment',    type=float,      default = -1)
+parser.add_argument('--non_one',            type=float,      default = -1)
 parser.add_argument('--default_reward',     type=tuple_type, default = ((1, 1),))  # ((weight, reward), (weight, reward))
 parser.add_argument('--better_reward',      type=tuple_type, default = ((1, .5), (1, 9.5),))
-parser.add_argument('--randomness',         type=int,        default = 0)
+parser.add_argument('--randomness',         type=int,        default = 1)#0)
 parser.add_argument('--random_steps',       type=int,        default = 1)
-parser.add_argument('--step_cost',          type=int,        default = 1)
+parser.add_argument('--step_cost',          type=float,      default = .999)
 
 # Hard Maze
 parser.add_argument('--body_size',          type=float,      default = 2)    
@@ -106,7 +106,7 @@ parser.add_argument('--epochs',             type=tuple_type, default = (1000,))
 parser.add_argument('--steps_per_epoch',    type=int,        default = 10)
 parser.add_argument('--batch_size',         type=int,        default = 128)
 parser.add_argument('--elbo_num',           type=int,        default = 1)
-parser.add_argument('--GAMMA',              type=int,        default = .99)
+parser.add_argument('--GAMMA',              type=float,      default = .99)
 parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
 
 # Saving data
