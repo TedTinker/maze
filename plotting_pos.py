@@ -124,8 +124,14 @@ def hard_plotting_pos(complete_order, plot_dicts):
         handles.append(handle)
     plt.close()
     
-    for epoch_maze_name in epochs_maze_names:
+    saved_paths = 0
+    for i, epoch_maze_name in enumerate(epochs_maze_names):
         epoch, maze_name = epoch_maze_name.split("_")
+        if(i+1 != len(epochs_maze_names)):
+            next_epoch_maze_name = epochs_maze_names[i+1]
+            _, next_maze_name = next_epoch_maze_name.split("_")
+        else:
+            next_maze_name = None
         fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
         fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
         plot_position = (0, 0)
@@ -139,25 +145,30 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 for plot_dict in plot_dicts:
                     if(plot_dict["arg_name"] == arg_name): break
 
-                print("\n\nIssue here")
-                print(plot_position, axs)
                 ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
-                print("\n\n")
                 arena_map = plt.imread("arenas/{}.png".format(maze_name))
                 arena_map = np.flip(arena_map, 0)    
                 h, w, _ = arena_map.shape
                 extent = [-.5, w-.5, -h+.5, .5]
-                ax.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
-                for c, agent in enumerate(agents):
-                    for episode in range(episodes):
-                        path = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][1:]
-                        xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
-                        ax.plot(xs, ys, color=cmap(norm(c)))
-                        
-                ax.set_title("{}".format(plot_dict["arg_name"]))
-                ax.axis("off")
+                def plot_pos(here):
+                    here.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
+                    for c, agent in enumerate(agents):
+                        for episode in range(episodes):
+                            path = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][1:]
+                            xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
+                            here.plot(xs, ys, color=cmap(norm(c)))
+                    here.set_title("{}".format(plot_dict["arg_name"]))
+                    here.axis("off")
+                plot_pos(ax)
+                if(next_maze_name != maze_name):
+                    fig2, ax2 = plt.subplots()  
+                    plot_pos(ax2)  
+                    ax2.set_title("Epoch {} (Maze {})".format(epoch, maze_name))
+                    fig2.savefig("saved/thesis_pics/{}_paths_{}.png".format(plot_dict["arg_name"], saved_paths)) 
+                    plt.close(fig2)
             
                 plot_position = (plot_position[0], plot_position[1] + 1)
+        if(next_maze_name != maze_name): saved_paths += 1
                         
         #fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(agent) for agent in agents])
         buf = BytesIO()
@@ -166,7 +177,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         im = imageio.imread(buf)
         images.append(im)
         buf.close()
-        plt.close()
+        plt.close(fig)
             
         print("{}:\tDone with hard epoch {} (maze {}).".format(duration(), epoch, maze_name))
     

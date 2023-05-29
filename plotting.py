@@ -55,7 +55,7 @@ def many_min_max(min_max_list):
     mins = [min_max[0] for min_max in min_max_list if min_max[0] != None]
     maxs = [min_max[1] for min_max in min_max_list if min_max[1] != None]
     return((min(mins), max(maxs)))
-
+    
 
 
 def plots(plot_dicts, min_max_dict):
@@ -87,15 +87,21 @@ def plots(plot_dicts, min_max_dict):
         divide_arenas(rew_dict, ax)
         
         ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
-        awesome_plot(ax, rew_dict, "turquoise", "Reward", min_max_dict["rewards"])
-        ax.axhline(y = 0, color = "black", linestyle = '--', alpha = .2)
-        ax.plot(max_rewards, color = "black", label = "Max Reward")
-        ax.plot(min_rewards, color = "black", label = "Min Reward")
-        ax.set_ylabel("Cumulative Reward")
-        ax.set_xlabel("Epochs")
-        ax.set_title(plot_dict["arg_title"] + "\nCumulative Rewards, shared min/max")
-        divide_arenas(rew_dict, ax)
-    
+        def plot_cumulative_rewards_shared_min_max(here):
+            awesome_plot(here, rew_dict, "turquoise", "Reward", min_max_dict["rewards"])
+            here.axhline(y = 0, color = "black", linestyle = '--', alpha = .2)
+            here.plot(max_rewards, color = "black", label = "Max Reward")
+            here.plot(min_rewards, color = "black", label = "Min Reward")
+            here.set_ylabel("Cumulative Reward")
+            here.set_xlabel("Epochs")
+            here.set_title(plot_dict["arg_title"] + "\nCumulative Rewards, shared min/max")
+            divide_arenas(rew_dict, here)
+        plot_cumulative_rewards_shared_min_max(ax)
+        fig2, ax2 = plt.subplots()  
+        plot_cumulative_rewards_shared_min_max(ax2)  
+        fig2.savefig("thesis_pics/{}_rewards.png".format(plot_dict["arg_name"])) 
+        plt.close(fig2)
+            
     
     
         # Ending spot
@@ -110,19 +116,25 @@ def plots(plot_dicts, min_max_dict):
             if("3" in plot_dict["args"].maze_list): kinds += ["LLL", "LLR", "LRL", "LRR", "RLL", "RLR", "RRL", "RRR"]
         else: kinds = ["NONE", "BAD", "GOOD"]
         
-        for j, kind in enumerate(kinds):
-            counts = np.count_nonzero(spot_names == kind, 0)
-            counts = [count + (j*agents*1.1) for count in counts]
-            ax.fill_between(xs, [j*agents*1.1 for _ in xs], counts, color = "black", linewidth = 0)
-            if(j != len(kinds)-1):
-                ax.plot(xs, [agents*1.05 + j*agents*1.1 for _ in xs], color = "black", linestyle = "--")
-        ax.set_yticks([(2*j+1)*agents*1.1/2 for j in range(len(kinds))], kinds, rotation='vertical')
-        ax.tick_params(left = False)
-        ax.set_ylim([-1, len(kinds)*agents*1.1])
-        ax.set_ylabel("Chosen Exit")
-        ax.set_xlabel("Epochs")
-        ax.set_title(plot_dict["arg_title"] + "\nChosen Exits")
-        divide_arenas(xs, ax)
+        def plot_exits(here):
+            for j, kind in enumerate(kinds):
+                counts = np.count_nonzero(spot_names == kind, 0)
+                counts = [count + (j*agents*1.1) for count in counts]
+                here.fill_between(xs, [j*agents*1.1 for _ in xs], counts, color = "black", linewidth = 0)
+                if(j != len(kinds)-1):
+                    here.plot(xs, [agents*1.05 + j*agents*1.1 for _ in xs], color = "black", linestyle = "--")
+            here.set_yticks([(2*j+1)*agents*1.1/2 for j in range(len(kinds))], kinds, rotation='vertical')
+            here.tick_params(left = False)
+            here.set_ylim([-1, len(kinds)*agents*1.1])
+            here.set_ylabel("Chosen Exit")
+            here.set_xlabel("Epochs")
+            here.set_title(plot_dict["arg_title"] + "\nChosen Exits")
+            divide_arenas(xs, here)
+        plot_exits(ax)
+        fig2, ax2 = plt.subplots()  
+        plot_exits(ax2)  
+        fig2.savefig("thesis_pics/{}_exits.png".format(plot_dict["arg_name"])) 
+        plt.close(fig2)
         
         
         
@@ -321,7 +333,7 @@ def plots(plot_dicts, min_max_dict):
     # Done!
     fig.tight_layout(pad=1.0)
     plt.savefig("plot.png", bbox_inches = "tight")
-    plt.close()
+    plt.close(fig)
     
     
 
