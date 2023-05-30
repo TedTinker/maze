@@ -97,6 +97,15 @@ def easy_plotting_pos(complete_order, plot_dicts):
     resized = []
     for image in images: resized.append(resize(image, (x_max, y_max, 4)))
     imageio.mimwrite("easy_video.mp4", resized, fps = 3)
+    
+    
+    
+real_names = {
+    "t" : "Biased T-Maze",
+    "1" : "T-Maze",
+    "2" : "Double T-Maze",
+    "3" : "Triple T-Maze",
+}
             
             
         
@@ -163,8 +172,9 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 if(next_maze_name != maze_name):
                     fig2, ax2 = plt.subplots()  
                     plot_pos(ax2)  
-                    ax2.set_title("Epoch {} (Maze {})".format(epoch, maze_name))
-                    fig2.savefig("saved/thesis_pics/{}_paths_{}.png".format(plot_dict["arg_name"], saved_paths)) 
+                    real_name = real_names[maze_name]
+                    ax2.set_title("Agent Trajectories (Epoch {}, {})".format(epoch, real_name))
+                    fig2.savefig("saved/thesis_pics/paths_{}_{}.png".format(plot_dict["arg_name"], saved_paths), bbox_inches = "tight", dpi=300) 
                     plt.close(fig2)
             
                 plot_position = (plot_position[0], plot_position[1] + 1)

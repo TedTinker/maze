@@ -99,7 +99,8 @@ def plots(plot_dicts, min_max_dict):
         plot_cumulative_rewards_shared_min_max(ax)
         fig2, ax2 = plt.subplots()  
         plot_cumulative_rewards_shared_min_max(ax2)  
-        fig2.savefig("thesis_pics/{}_rewards.png".format(plot_dict["arg_name"])) 
+        ax2.set_title("Cumulative Rewards")
+        fig2.savefig("thesis_pics/rewards_{}.png".format(plot_dict["arg_name"]), bbox_inches = "tight", dpi=300) 
         plt.close(fig2)
             
     
@@ -133,7 +134,8 @@ def plots(plot_dicts, min_max_dict):
         plot_exits(ax)
         fig2, ax2 = plt.subplots()  
         plot_exits(ax2)  
-        fig2.savefig("thesis_pics/{}_exits.png".format(plot_dict["arg_name"])) 
+        ax2.set_title("Chosen Exits")
+        fig2.savefig("thesis_pics/exits_{}.png".format(plot_dict["arg_name"]), bbox_inches = "tight", dpi=300) 
         plt.close(fig2)
         
         
