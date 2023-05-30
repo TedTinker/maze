@@ -22,11 +22,14 @@ for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exit
         axs[1].imshow(plt.imread(exits))         ; axs[1].axis("off")
         axs[2].imshow(plt.imread(paths_list[0])) ; axs[2].axis("off")
     else:
-        fig, axs = plt.subplots(2, max([2, len(paths_list)]))
-        axs[0,0].imshow(plt.imread(rewards)) ; axs[0,0].axis("off")
-        axs[0,1].imshow(plt.imread(exits))   ; axs[1,0].axis("off")
+        fig, axs = plt.subplots(max([2, len(paths_list)]), 2)
+        axs[0,0].imshow(plt.imread(rewards))
+        axs[1,0].imshow(plt.imread(exits))   
         for i, paths in enumerate(paths_list):
-            axs[1,i].imshow(plt.imread(paths_list[i])); axs[1,i].axis("off")
+            axs[i,1].imshow(plt.imread(paths_list[i]))
+        for row in range(max([2, len(paths_list)])):
+            for column in range(2):
+                axs[row, column].axis("off")
 
     fig.tight_layout(pad=1.0)
     plt.savefig("{}.png".format(arg_name), bbox_inches = "tight")
