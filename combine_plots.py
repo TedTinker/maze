@@ -36,14 +36,14 @@ add_this("many")
 
 for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exits_files, paths_files):
     if(len(paths_list) == 1):
-        fig, axs = plt.subplots(3, 1, figsize = (30, 10))
+        fig, axs = plt.subplots(3, 1, figsize = (10, 30))
         axs[0].imshow(plt.imread(rewards))       ; axs[0].axis("off")
         axs[1].imshow(plt.imread(exits))         ; axs[1].axis("off")
         axs[2].imshow(plt.imread(paths_list[0])) ; axs[2].axis("off")
     else:
         rows = max([2, len(paths_list)])
         columns = 2
-        fig, axs = plt.subplots(10 * rows, 10 * columns)
+        fig, axs = plt.subplots(rows, columns, figsize = (10 * columns, 10 * rows))
         axs[0,0].imshow(plt.imread(rewards))
         axs[1,0].imshow(plt.imread(exits))   
         for i, paths in enumerate(paths_list):
@@ -55,7 +55,7 @@ for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exit
     if(arg_name in real_names.keys()): title = real_names[arg_name]
     elif(arg_name.endswith("rand")):   title = "with Curiosity Trap"
     else:                              title = arg_name
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=30, y=1.001)
     fig.tight_layout(pad=1.0)
     plt.savefig("{}.png".format(arg_name), bbox_inches = "tight", dpi=300)
     plt.close(fig)

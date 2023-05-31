@@ -71,7 +71,7 @@ def add_this(name, args):
                         new_value[arg_name] = arg[1]
         slurm_dict[new_key] = new_value
 add_this("hard",   {"hard_maze" : True, "maze_list" : "\"('t',)\"",        "max_steps" : 10, "steps_per_epoch" : 10, "naive_eta" : 1, "free_eta" : 1, "beta" : [{"curiosity" : "free"}, .001], "agents_per_pos_list" : 36}) 
-add_this("many",   {"hard_maze" : True, "maze_list" : "\"('1','2','3')\"", "max_steps" : 16, "steps_per_epoch" : 16, "naive_eta" : 3, "free_eta" : 3, "beta" : [{"curiosity" : "free"}, .03],  "agents_per_pos_list" : 36, "tau" : .2, "epochs" : "\"(500,1500,3000)\"", "default_reward" : "\"((1,0),)\"", "better_reward" : "\"((1,10),)\""})
+add_this("many",   {"hard_maze" : True, "maze_list" : "\"('1','2','3')\"", "max_steps" : 16, "steps_per_epoch" : 16, "naive_eta" : 3, "free_eta" : 3, "beta" : [{"curiosity" : "free"}, .03],  "agents_per_pos_list" : 36, "tau" : .2, "epochs" : "\"(100,100,100)\"", "default_reward" : "\"((1,0),)\"", "better_reward" : "\"((1,10),)\""})
 add_this("cri_hq", {"critic_hq" : True})
 add_this("rand",   {"randomness" : 10})
 

@@ -170,7 +170,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     here.axis("off")
                 plot_pos(ax)
                 if(next_maze_name != maze_name):
-                    fig2, ax2 = plt.subplots()  
+                    fig2, ax2 = plt.subplots(figsize = (10, 10))  
                     plot_pos(ax2)  
                     real_name = real_names[maze_name]
                     ax2.set_title("Agent Trajectories (Epoch {}, {})".format(epoch, real_name))
