@@ -55,7 +55,7 @@ for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exit
     if(arg_name in real_names.keys()): title = real_names[arg_name]
     elif(arg_name.endswith("rand")):   title = "with Curiosity Trap"
     else:                              title = arg_name
-    fig.suptitle(title, fontsize=30, y=1.001)
+    fig.suptitle(title, fontsize=30, y=1.0)
     fig.tight_layout(pad=1.0)
     plt.savefig("{}.png".format(arg_name), bbox_inches = "tight", dpi=300)
     plt.close(fig)
