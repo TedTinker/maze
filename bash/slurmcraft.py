@@ -71,38 +71,40 @@ def add_this(name, args):
                         new_value[arg_name] = arg[1]
         slurm_dict[new_key] = new_value
 add_this("hard",   {
-    "hard_maze" : True, 
-    "maze_list" : "\"('t',)\"",        
-    "max_steps" : 10, 
-    "steps_per_epoch" : 10, 
-    "naive_eta" : 1, 
-    "free_eta" : 1, 
-    "beta" : [{"curiosity" : "free"}, .005], 
+    "hard_maze" :           True, 
+    "maze_list" :           "\"('t',)\"",        
+    "max_steps" :           10, 
+    "steps_per_epoch" :     10, 
+    "naive_eta" :           1, 
+    "free_eta" :            1, 
+    "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36}) 
 add_this("many",   {
-    "hard_maze" : True, 
-    "maze_list" : "\"('1','2','3')\"", 
-    "max_steps" : 25, 
-    "steps_per_epoch" : 25, 
-    "naive_eta" : 1, 
-    "free_eta" : 1, 
-    "beta" : [{"curiosity" : "free"}, .005], 
+    "hard_maze" :           True, 
+    "maze_list" :           "\"('1','2','3')\"", 
+    "max_steps" :           10, 
+    "steps_per_epoch" :     10, 
+    "naive_eta" :           1, 
+    "free_eta" :            1, 
+    "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36, 
-    "epochs" : "\"(500,1000,2000)\"", 
-    "default_reward" : "\"((1,-1),)\"", 
-    "better_reward" : "\"((1,10),)\""})
+    "epochs" :              "\"(500,1000,2000)\"", 
+    "default_reward" :      "\"((1,-1),)\"", 
+    "better_reward" :       "\"((1,10),)\"",
+    "wall_punishment" :     -.5})
 add_this("one",    {
-    "hard_maze" : True, 
-    "maze_list" : "\"('1')\"",         
-    "max_steps" : 10, 
-    "steps_per_epoch" : 10, 
-    "naive_eta" : 1, 
-    "free_eta" : 1, 
-    "beta" : [{"curiosity" : "free"}, .005], 
+    "hard_maze" :           True, 
+    "maze_list" :           "\"('1',)\"",         
+    "max_steps" :           10, 
+    "steps_per_epoch" :     10, 
+    "naive_eta" :           1, 
+    "free_eta" :            1, 
+    "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36, 
-    "epochs" : "\"(500,)\"",                                               
-    "better_reward" : "\"((1,10),)\"",
-    "wall_punishment" : 0})
+    "epochs" :              "\"(500,)\"",
+    "default_reward" :      "\"((1,-10),)\"",                                               
+    "better_reward" :       "\"((1,10),)\"",
+    "wall_punishment" :     -.5})
 add_this("cri_hq", {"critic_hq" : True})
 add_this("rand",   {"randomness" : 10})
 
