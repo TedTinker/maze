@@ -321,8 +321,6 @@ class Agent:
         image_loss = F.binary_cross_entropy_with_logits(zq_pred_rgbd, next_rgbd_tiled, reduction = "none").mean((-1,-2,-3)).unsqueeze(-1) * masks / self.args.elbo_num
         speed_loss = self.args.speed_scalar * F.mse_loss(zq_pred_spe, next_spe_tiled,  reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         accuracy_for_naive = image_loss + speed_loss
-        #print("IMAGES:", image_loss.sum().item())
-        #print("SPEEDS:", speed_loss.sum().item())
         accuracy            = accuracy_for_naive.mean()
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
         if(self.args.dkl_max != None):
@@ -351,9 +349,9 @@ class Agent:
                 
         # Train critics
         with torch.no_grad():
-            next_action, log_pis_next, _ = self.actor(next_hqs) if self.args.actor_hq else self.actor(rgbd[:,1:], spe[:,1:], actions[:,1:])
-            Q_target1_next, _ = self.critic1_target(next_hqs, next_action) if self.args.critic_hq else self.critic1_target(rgbd[:,1:], spe[:,1:], next_action)
-            Q_target2_next, _ = self.critic2_target(next_hqs, next_action) if self.args.critic_hq else self.critic2_target(rgbd[:,1:], spe[:,1:], next_action)
+            new_actions, log_pis_next, _ = self.actor(next_hqs) if self.args.actor_hq else self.actor(rgbd[:,1:], spe[:,1:], actions[:,1:])
+            Q_target1_next, _ = self.critic1_target(next_hqs, new_actions) if self.args.critic_hq else self.critic1_target(rgbd[:,1:], spe[:,1:], new_actions)
+            Q_target2_next, _ = self.critic2_target(next_hqs, new_actions) if self.args.critic_hq else self.critic2_target(rgbd[:,1:], spe[:,1:], new_actions)
             Q_target_next = torch.min(Q_target1_next, Q_target2_next)
             if self.args.alpha == None: Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.alpha * log_pis_next))
             else:                       Q_targets = rewards + (self.args.GAMMA * (1 - dones) * (Q_target_next - self.args.alpha * log_pis_next))
@@ -390,17 +388,17 @@ class Agent:
         if self.epochs % self.args.d == 0:
             if self.args.alpha == None: alpha = self.alpha 
             else:                       alpha = self.args.alpha
-            actions_pred, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(rgbd[:,:-1], spe[:,:-1], actions[:,:-1])
+            new_actions, log_pis, _ = self.actor(hqs.detach()) if self.args.actor_hq else self.actor(rgbd[:,:-1], spe[:,:-1], actions[:,:-1])
 
             if self.args.action_prior == "normal":
                 loc = torch.zeros(action_size, dtype=torch.float64)
                 scale_tril = torch.tensor([[1, 0], [1, 1]], dtype=torch.float64)
                 policy_prior = MultivariateNormal(loc=loc, scale_tril=scale_tril)
-                policy_prior_log_prrgbd = policy_prior.log_prob(actions_pred).unsqueeze(-1)
+                policy_prior_log_prrgbd = policy_prior.log_prob(new_actions).unsqueeze(-1)
             elif self.args.action_prior == "uniform":
                 policy_prior_log_prrgbd = 0.0
-            Q_1, _ = self.critic1(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic1(rgbd[:,:-1], spe[:,:-1], actions_pred)
-            Q_2, _ = self.critic2(hqs.detach(), actions_pred) if self.args.critic_hq else self.critic2(rgbd[:,:-1], spe[:,:-1], actions_pred)
+            Q_1, _ = self.critic1(hqs.detach(), new_actions) if self.args.critic_hq else self.critic1(rgbd[:,:-1], spe[:,:-1], new_actions)
+            Q_2, _ = self.critic2(hqs.detach(), new_actions) if self.args.critic_hq else self.critic2(rgbd[:,:-1], spe[:,:-1], new_actions)
             Q = torch.min(Q_1, Q_2).mean(-1).unsqueeze(-1)
             intrinsic_entropy = torch.mean((alpha * log_pis)*masks).item()
             actor_loss = (alpha * log_pis - policy_prior_log_prrgbd - Q)*masks
