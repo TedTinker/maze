@@ -91,7 +91,7 @@ class Easy_Maze:
                     reward = choices(rewards, weights = weights, k = 1)[0]
                     if(reward > 0): reward *= self.args.step_cost ** self.steps
         
-        if(wall): reward += self.args.wall_punishment
+        wall_punishment = self.args.wall_punishment if wall else 0
         if(self.steps == self.args.max_steps and exit == False):
             reward += self.args.step_lim_punishment
             done = True
@@ -100,10 +100,10 @@ class Easy_Maze:
         action_name = "Right" if x == 1 else "Left" if x == -1 else "Up" if y == 1 else "Down"
         if(verbose): print("\n\nStep: {}. Action: {}.".format(self.steps, action_name))
         if(verbose): print("\n{}\n".format(self))
-        if(verbose): print("Reward: {}. Spot name: {}. Done: {}.".format(reward, spot_name, done))
+        if(verbose): print("Reward: {}. Spot name: {}. Done: {}.".format(reward + wall_punishment, spot_name, done))
         if(verbose): print(self.obs_str())
         if(verbose): print(self.obs())
-        return(reward, spot_name, done, action_name)    
+        return(reward, wall_punishment, spot_name, done, action_name)    
     
     def __str__(self):
         to_print = ""

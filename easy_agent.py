@@ -129,10 +129,15 @@ class Agent:
             o = self.maze.obs().unsqueeze(0)
             a, _, h_actor = self.actor(o, prev_a, h_actor)
             action = torch.flatten(a).tolist()
-            r, spot_name, done, action_name = self.maze.action(action[0], action[1], verbose)
+            r, wall_punishment, spot_name, done, action_name = self.maze.action(action[0], action[1], verbose)
             no = self.maze.obs().unsqueeze(0)
-            if(push): self.memory.push(o, a, r, no, done, done)
-        return(a, h_actor, r, spot_name, done, action_name)
+            if(push): 
+                if(done and self.args.retroactive_reward): 
+                    for i in range(self.memory.time_ptr):
+                        retro_reward = r if r <= 0 else r * self.args.step_cost ** (self.memory.time_ptr - i)
+                        self.memory.r[self.memory.episode_ptr, i] += retro_reward
+                self.memory.push(o, a, r + wall_punishment, no, done, done)
+        return(a, h_actor, r + wall_punishment, spot_name, done, action_name)
     
     
     
@@ -142,10 +147,15 @@ class Agent:
             _, _, h_q = self.forward(o, prev_a, h_q_m1)
             a, _, _ = self.actor(h_q)
             action = torch.flatten(a).tolist()
-            r, spot_name, done, action_name = self.maze.action(action[0], action[1], verbose)
+            r, wall_punishment, spot_name, done, action_name = self.maze.action(action[0], action[1], verbose)
             no = self.maze.obs().unsqueeze(0)
-            if(push): self.memory.push(o, a, r, no, done, done)
-        return(a, h_q, r, spot_name, done, action_name)
+            if(push): 
+                if(done and self.args.retroactive_reward): 
+                    for i in range(self.memory.time_ptr):
+                        retro_reward = r if r <= 0 else r * self.args.step_cost ** (self.memory.time_ptr - i)
+                        self.memory.r[self.memory.episode_ptr, i] += retro_reward
+                self.memory.push(o, a, r + wall_punishment, no, done, done)
+        return(a, h_q, r + wall_punishment, spot_name, done, action_name)
     
     
     

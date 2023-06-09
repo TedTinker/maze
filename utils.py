@@ -108,6 +108,7 @@ parser.add_argument('--batch_size',         type=int,        default = 128)
 parser.add_argument('--elbo_num',           type=int,        default = 1)
 parser.add_argument('--GAMMA',              type=float,      default = .99)
 parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
+parser.add_argument('--retroactive_reward', type=bool,       default = False)
 
 # Saving data
 parser.add_argument('--keep_data',           type=int,        default = 25)

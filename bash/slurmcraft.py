@@ -82,16 +82,17 @@ add_this("hard",   {
 add_this("many",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"('1','2','3')\"", 
-    "max_steps" :           10, 
+    "max_steps" :           [10, 15, 20], 
     "steps_per_epoch" :     10, 
     "naive_eta" :           1, 
     "free_eta" :            1, 
     "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"(500,1000,2000)\"", 
-    "default_reward" :      "\"((1,-1),)\"", 
+    "default_reward" :      "\"((1,-10),)\"", 
     "better_reward" :       "\"((1,10),)\"",
-    "wall_punishment" :     -.5})
+    "wall_punishment" :     [-1, -.5, 0],
+    "step_lim_punishment" : [-1, -3, -5],})
 add_this("one",    {
     "hard_maze" :           True, 
     "maze_list" :           "\"('1',)\"",         
@@ -103,8 +104,12 @@ add_this("one",    {
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"(500,)\"",
     "default_reward" :      "\"((1,-10),)\"",                                               
-    "better_reward" :       "\"((1,10),)\"",
-    "wall_punishment" :     -.5})
+    "better_reward" :       "\"((1,1),)\"",
+    "wall_punishment" :     -.5,
+    "step_lim_punishment" : -1,
+    "min_speed" :           34,
+    "max_speed" :           35,
+    "retroactive_reward" :  True})
 add_this("cri_hq", {"critic_hq" : True})
 add_this("rand",   {"randomness" : 10})
 

@@ -63,7 +63,7 @@ class Agent_and_Episode:
         return((yaw, speed))
         
     def step(self, yaw, speed):
-        _, _, self.done, _ = self.maze.action(yaw, speed, True)
+        _, _, _, self.done, _ = self.maze.action(yaw, speed, True)
         self.a.append(torch.tensor([[[yaw, speed]]]))
         o, s = self.maze.obs()
         self.o.append(o) ; self.s.append(s)

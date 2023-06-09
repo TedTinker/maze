@@ -104,13 +104,13 @@ class Hard_Maze:
         if(verbose): print("end {}, which {}, reward {}".format(end, which, reward))
         
         col = self.maze.other_collisions()
-        if(col): reward += self.args.wall_punishment
+        wall_punishment = self.args.wall_punishment if col else 0
         if(not end): end = self.steps >= self.args.max_steps
         exit = which != "NONE"
         if(end and not exit): reward += self.args.step_lim_punishment
-        if(verbose): print("end {}, which {}, reward {}\n\n".format(end, which, reward))
+        if(verbose): print("end {}, which {}, reward {}\n\n".format(end, which, reward + wall_punishment))
 
-        return(reward, which, end, action_name)
+        return(reward, wall_punishment, which, end, action_name)
     
     
     
@@ -120,10 +120,10 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     default_args.randomness = 1
-    maze = Hard_Maze("3", True, default_args)
+    maze = Hard_Maze("1", True, default_args)
     done = False
     while(done == False):
-        reward, name, done, action_name = maze.action(random(), random(), verbose = True)
+        reward, wall_punishment, name, done, action_name = maze.action(random(), random(), verbose = True)
         rgbd, spe = maze.obs()
         rgbd = rgbd.squeeze(0)[:,:,0:3]
         plt.imshow(rgbd)
