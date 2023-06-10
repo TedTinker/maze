@@ -90,12 +90,11 @@ class Hard_Maze:
         spe = [self.args.min_speed, self.args.max_speed, spe] ; spe.sort() ; spe = spe[1]
         if(verbose): print("updated: yaw {}, spe {}.".format(yaw, spe))
         action_name = "Yaw: {}. Speed: {}.".format(round(degrees(yaw)), round(spe))
-            
-        self.change_velocity(yaw, spe, verbose = verbose)
+        
         for _ in range(self.args.steps_per_step):
+            self.change_velocity(yaw/self.args.steps_per_step, spe/self.args.steps_per_step, verbose = verbose)
             p.stepSimulation(physicsClientId = self.maze.physicsClient)
             self.agent_pos, self.agent_yaw, self.agent_spe = self.maze.get_pos_yaw_spe()
-            self.change_velocity(0, spe)
             
         if(verbose): print("agent: pos {}, yaw {}, spe {}.".format(self.agent_pos, self.agent_yaw, self.agent_spe))
         
@@ -120,14 +119,19 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     default_args.randomness = 1
-    maze = Hard_Maze("1", True, default_args)
+    maze = Hard_Maze("t", True, default_args)
     done = False
+    i = 0
+    yaws = [0, 0, -90, 0, 0]
+    speeds = [100, 100, 100, 100, 100]
     while(done == False):
-        reward, wall_punishment, name, done, action_name = maze.action(random(), random(), verbose = True)
+        #reward, wall_punishment, name, done, action_name = maze.action(random(), random(), verbose = True)
+        reward, wall_punishment, name, done, action_name = maze.action(yaws[i], speeds[i], verbose = True)
         rgbd, spe = maze.obs()
         rgbd = rgbd.squeeze(0)[:,:,0:3]
         plt.imshow(rgbd)
         plt.show()
         plt.close()
         sleep(1)
+        i += 1
 # %%

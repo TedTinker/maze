@@ -136,7 +136,7 @@ class Agent:
             if(push): 
                 if(done and self.args.retroactive_reward): 
                     for i in range(self.memory.time_ptr):
-                        retro_reward = r if r <= 0 else r * self.args.step_cost ** (self.memory.time_ptr - i)
+                        retro_reward = r if r <= 0 else r * self.args.retro_step_cost ** (self.memory.time_ptr - i)
                         self.memory.r[self.memory.episode_ptr, i] += retro_reward
                 self.memory.push(o, s, a, r + wall_punishment, no, ns, done, done)
         return(a, h_actor, r + wall_punishment, spot_name, done, action_name)
@@ -154,7 +154,7 @@ class Agent:
             if(push): 
                 if(done and self.args.retroactive_reward): 
                     for i in range(self.memory.time_ptr):
-                        retro_reward = r if r <= 0 else r * self.args.step_cost ** (self.memory.time_ptr - i)
+                        retro_reward = r if r <= 0 else r * self.args.retro_step_cost ** (self.memory.time_ptr - i)
                         self.memory.r[self.memory.episode_ptr, i] += retro_reward
                 self.memory.push(o, s, a, r + wall_punishment, no, ns, done, done)
                 

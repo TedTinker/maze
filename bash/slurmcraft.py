@@ -102,14 +102,15 @@ add_this("one",    {
     "free_eta" :            1, 
     "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36, 
-    "epochs" :              "\"(500,)\"",
-    "default_reward" :      "\"((1,-10),)\"",                                               
-    "better_reward" :       "\"((1,1),)\"",
-    "wall_punishment" :     -.5,
-    "step_lim_punishment" : -1,
-    "min_speed" :           34,
-    "max_speed" :           35,
-    "retroactive_reward" :  True})
+    "default_reward" :      "\"((1,-1),)\"",                                               
+    "better_reward" :       "\"((1,10),)\"",
+})
+    #"epochs" :              "\"(500,)\"",
+    #"wall_punishment" :     -.5,
+    #"step_lim_punishment" : -1,
+    #"min_speed" :           34,
+    #"max_speed" :           35,
+    #"retroactive_reward" :  False})
 add_this("cri_hq", {"critic_hq" : True})
 add_this("rand",   {"randomness" : 10})
 
