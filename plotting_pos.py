@@ -73,7 +73,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
                     else:                      ax.scatter(x_coords, y_coords, marker = "s", s = 250, cmap = cmap, c = proportions, norm = norm)
                     ax.set_ylim([-.5, 2.5])
                     ax.set_xlim([-1.5, 3.5])
-                    ax.set_title("{}".format(plot_dict["arg_name"]))
+                    ax.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     ax.axis("off")
                 
                     plot_position = (plot_position[0], plot_position[1] + 1)
@@ -166,7 +166,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                             path = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][1:]
                             xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
                             here.plot(xs, ys, color=cmap(norm(c)))
-                    here.set_title("{}".format(plot_dict["arg_name"]))
+                    here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     here.axis("off")
                 plot_pos(ax)
                 if(next_maze_name != maze_name):

@@ -82,7 +82,7 @@ add_this("hard",   {
 add_this("many",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"('1','2','3')\"", 
-    "max_steps" :           [10, 15, 20], 
+    "max_steps" :           10, 
     "steps_per_epoch" :     10, 
     "naive_eta" :           1, 
     "free_eta" :            1, 

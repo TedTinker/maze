@@ -40,7 +40,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                         rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
                         title = "Agent {}: Epoch {} (Maze {}), Episode {}".format(agent, epoch, maze_name, episode)
-                        fig.suptitle(title, y = 1.1)
+                        fig.suptitle(plot_dict["arg_title"] + "\n" + title, y = 1.1)
                         for row, (action_name, obs, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
@@ -96,8 +96,8 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         pred_list = pred_lists[episode]
                         rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 2.5))
-                        title = "Agent {}: Epoch {} (Maze {}), Episode {}".format(agent, epoch, maze_name, episode)
-                        fig.suptitle(title, y = 1.1)
+                        title = "Agent {}: Epoch {} (Maze {}), Episode {}".format( agent, epoch, maze_name, episode)
+                        fig.suptitle(plot_dict["arg_title"] + "\n" + title, y = 1.1)
                         for row, (action_name, (rgbd, spe), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
