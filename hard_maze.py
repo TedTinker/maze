@@ -122,8 +122,8 @@ if __name__ == "__main__":
     maze = Hard_Maze("t", True, default_args)
     done = False
     i = 0
-    yaws = [0, 0, -90, 0, 0]
-    speeds = [100, 100, 100, 100, 100]
+    yaws = [0, 0, -1, 0, 0]
+    speeds = [-1, -1, -1, -1, -1]
     while(done == False):
         #reward, wall_punishment, name, done, action_name = maze.action(random(), random(), verbose = True)
         reward, wall_punishment, name, done, action_name = maze.action(yaws[i], speeds[i], verbose = True)

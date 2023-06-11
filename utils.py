@@ -38,7 +38,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
 
-def tuple_type(arg_string): return(ast.literal_eval(arg_string))
+def literal(arg_string): return(ast.literal_eval(arg_string))
 
 # Meta 
 parser.add_argument("--arg_title",          type=str,        default = "default") 
@@ -50,14 +50,14 @@ parser.add_argument('--device',             type=str,        default = device)
 parser.add_argument('--comp',               type=str,        default = "deigo")
 
 # Maze 
-parser.add_argument('--hard_maze',          type=bool,       default = False)
-parser.add_argument('--maze_list',          type=tuple_type, default = ("t",))
+parser.add_argument('--hard_maze',          type=literal,    default = False)
+parser.add_argument('--maze_list',          type=literal,    default = ("t",))
 parser.add_argument('--max_steps',          type=int,        default = 10)
 parser.add_argument('--step_lim_punishment',type=float,      default = -1)
 parser.add_argument('--wall_punishment',    type=float,      default = -1)
 parser.add_argument('--non_one',            type=float,      default = -1)
-parser.add_argument('--default_reward',     type=tuple_type, default = ((1, 1),))  # ((weight, reward), (weight, reward))
-parser.add_argument('--better_reward',      type=tuple_type, default = ((1, 0), (1, 10),))
+parser.add_argument('--default_reward',     type=literal,    default = ((1, 1),))  # ((weight, reward), (weight, reward))
+parser.add_argument('--better_reward',      type=literal,    default = ((1, 0), (1, 10),))
 parser.add_argument('--randomness',         type=int,        default = 0)
 parser.add_argument('--random_steps',       type=int,        default = 1)
 parser.add_argument('--step_cost',          type=float,      default = .99)
@@ -74,8 +74,8 @@ parser.add_argument('--speed_scalar',       type=float,      default = .0001)
 # Module 
 parser.add_argument('--hidden_size',        type=int,        default = 32)   
 parser.add_argument('--state_size',         type=int,        default = 32)
-parser.add_argument('--actor_hq',           type=bool,       default = True)
-parser.add_argument('--critic_hq',          type=bool,       default = False)
+parser.add_argument('--actor_hq',           type=literal,    default = True)
+parser.add_argument('--critic_hq',          type=literal,    default = False)
 parser.add_argument('--forward_lr',         type=float,      default = .01)
 parser.add_argument('--alpha_lr',           type=float,      default = .01) 
 parser.add_argument('--actor_lr',           type=float,      default = .01)
@@ -102,13 +102,13 @@ parser.add_argument("--dkl_max",            type=float,      default = 1)
 parser.add_argument('--capacity',           type=int,        default = 250)
 
 # Training
-parser.add_argument('--epochs',             type=tuple_type, default = (1000,))
+parser.add_argument('--epochs',             type=literal,    default = (1000,))
 parser.add_argument('--steps_per_epoch',    type=int,        default = 10)
 parser.add_argument('--batch_size',         type=int,        default = 128)
 parser.add_argument('--elbo_num',           type=int,        default = 1)
 parser.add_argument('--GAMMA',              type=float,      default = .9)
 parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
-parser.add_argument('--retroactive_reward', type=bool,       default = False)
+parser.add_argument('--retroactive_reward', type=literal,    default = False)
 parser.add_argument('--retro_step_cost',    type=float,      default = .99)
 
 # Saving data
@@ -123,8 +123,8 @@ parser.add_argument('--epochs_per_pos_list', type=int,        default = 100)
 parser.add_argument('--agents_per_pos_list', type=int,        default = -1)
 parser.add_argument('--episodes_in_pos_list',type=int,        default = 1)
 
-parser.add_argument('--epochs_per_agent_list',type=int,        default = 100)
-parser.add_argument('--agents_per_agent_list',type=int,        default = 1)
+parser.add_argument('--epochs_per_agent_list',type=int,       default = 100)
+parser.add_argument('--agents_per_agent_list',type=int,       default = 1)
 
 
 

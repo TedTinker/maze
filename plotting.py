@@ -272,6 +272,39 @@ def plots(plot_dicts, min_max_dict):
             ax3.set_ylabel("Entropy")
         ax.legend(handles = handles)
         ax.set_title(plot_dict["arg_title"] + "\nExtrinsic and Intrinsic Rewards, shared min/max")
+        divide_arenas(ext_dict, ax)        
+        
+        
+        # Extrinsic and Intrinsic rewards with same dims
+        ext_dict = get_quantiles(plot_dict, "extrinsic")
+        cur_dict = get_quantiles(plot_dict, "intrinsic_curiosity")
+        ent_dict = get_quantiles(plot_dict, "intrinsic_entropy")
+        min_max = many_min_max([min_max_dict["extrinsic"], min_max_dict["intrinsic_curiosity"], min_max_dict["intrinsic_entropy"]])
+        
+        ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
+        handles = []
+        handles.append(awesome_plot(ax, ext_dict, "red", "Extrinsic"))
+        ax.set_ylabel("Rewards")
+        ax.set_xlabel("Epochs")
+        if((cur_dict["min"] != cur_dict["max"]).all()):
+            handles.append(awesome_plot(ax, cur_dict, "green", "Curiosity"))
+        if((ent_dict["min"] != ent_dict["max"]).all()):
+            handles.append(awesome_plot(ax, ent_dict, "black", "Entropy"))
+        ax.legend(handles = handles)
+        ax.set_title(plot_dict["arg_title"] + "\nExtrinsic and Intrinsic Rewards, shared dims)")
+        divide_arenas(ext_dict, ax)
+        
+        ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
+        handles = []
+        handles.append(awesome_plot(ax, ext_dict, "red", "Extrinsic", min_max))
+        ax.set_ylabel("Rewards")
+        ax.set_xlabel("Epochs")
+        if((cur_dict["min"] != cur_dict["max"]).all()):
+            handles.append(awesome_plot(ax, cur_dict, "green", "Curiosity", min_max))
+        if((ent_dict["min"] != ent_dict["max"]).all()):
+            handles.append(awesome_plot(ax, ent_dict, "black", "Entropy", min_max))
+        ax.legend(handles = handles)
+        ax.set_title(plot_dict["arg_title"] + "\nExtrinsic and Intrinsic Rewards, shared min/max and dim")
         divide_arenas(ext_dict, ax)
         
         
