@@ -70,6 +70,7 @@ def add_this(name, args):
                     if(if_arg_name in value and value[if_arg_name] == if_arg):
                         new_value[arg_name] = arg[1]
         slurm_dict[new_key] = new_value
+        
 add_this("hard",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"('t',)\"",        
@@ -78,24 +79,27 @@ add_this("hard",   {
     "naive_eta" :           1, 
     "free_eta" :            1, 
     "beta" :                [{"curiosity" : "free"}, .005], 
-    "agents_per_pos_list" : 36,
-    "episodes_in_pos_list" :10}) 
+    "agents_per_pos_list" : 36}) 
+
 add_this("many",   {
     "hard_maze" :           True, 
-    "maze_list" :           "\"('1','2', '3')\"", 
-    "max_steps" :           15, 
-    "steps_per_epoch" :     15, 
-    "naive_eta" :           1, 
-    "free_eta" :            1, 
+    "maze_list" :           "\"('1','2','3')\"", 
+    "max_steps" :           16, 
+    "steps_per_epoch" :     16, 
+    "min_speed" :           75,
+    "max_speed" :           150,
+    "naive_eta" :           .1, 
+    "free_eta" :            .1, 
     "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"(500,1500,3000)\"", 
     "default_reward" :      "\"((1,-1),)\"", 
     "better_reward" :       "\"((1,1),)\"",
     "wall_punishment" :     -.5,
-    "step_lim_punishment" : 0,
-    "target_entropy" :      -10,
+    "step_lim_punishment" : -.1,
+    "target_entropy" :      .4,
     "retroactive_reward" :  True})
+
 add_this("cri_hq", {"critic_hq" : True})
 add_this("rand",   {"randomness" : 10})
 
