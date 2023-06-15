@@ -75,8 +75,10 @@ def plots(plot_dicts, min_max_dict):
     
         # Cumulative rewards
         rew_dict = get_quantiles(plot_dict, "rewards", adjust_xs = False)
-        max_rewards = [10*x for x in range(rew_dict["xs"][-1])]
-        min_rewards = [-1*x for x in range(rew_dict["xs"][-1])]
+        max_reward = max([r for (w,r) in plot_dict["args"].better_reward])
+        max_rewards = [max_reward*x for x in range(rew_dict["xs"][-1])]
+        min_reward = min([r for (w,r) in plot_dict["args"].default_reward] + [plot_dict["args"].step_lim_punishment]) + plot_dict["args"].wall_punishment
+        min_rewards = [min_reward*x for x in range(rew_dict["xs"][-1])]
         
         ax = axs[row_num,i] if len(plot_dicts) > 1 else axs[row_num] ; row_num += 1
         awesome_plot(ax, rew_dict, "turquoise", "Reward")

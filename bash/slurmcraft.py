@@ -73,7 +73,7 @@ def add_this(name, args):
         
 add_this("hard",   {
     "hard_maze" :           True, 
-    "maze_list" :           "\"('t',)\"",        
+    "maze_list" :           "\"['t']\"",        
     "max_steps" :           10, 
     "steps_per_epoch" :     10, 
     "naive_eta" :           1, 
@@ -83,21 +83,21 @@ add_this("hard",   {
 
 add_this("many",   {
     "hard_maze" :           True, 
-    "maze_list" :           "\"('1','2','3')\"", 
+    "maze_list" :           "\"['1','2','3']\"", 
     "max_steps" :           16, 
     "steps_per_epoch" :     16, 
     "min_speed" :           75,
     "max_speed" :           150,
-    "naive_eta" :           .1, 
-    "free_eta" :            .1, 
+    "naive_eta" :           .5, 
+    "free_eta" :            .5, 
     "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36, 
-    "epochs" :              "\"(500,1500,3000)\"", 
-    "default_reward" :      "\"((1,-1),)\"", 
-    "better_reward" :       "\"((1,1),)\"",
+    "epochs" :              "\"[500,1500,3000]\"", 
+    "default_reward" :      "\"[(1,-1)]\"", 
+    "better_reward" :       "\"[(1,1)]\"",
     "wall_punishment" :     -.5,
     "step_lim_punishment" : -.1,
-    "target_entropy" :      .4,
+    "target_entropy" :      .1,
     "retroactive_reward" :  True})
 
 add_this("cri_hq", {"critic_hq" : True})
@@ -132,7 +132,7 @@ if(__name__ == "__main__" and args.arg_list != []):
 """
 #!/bin/bash -l
 #SBATCH --partition=compute
-#SBATCH --cpus-per-task=3
+#SBATCH --cpus-per-task=1
 #SBATCH --time 48:00:00
 #SBATCH --mem=50G
 """
