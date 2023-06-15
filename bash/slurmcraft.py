@@ -131,9 +131,9 @@ if(__name__ == "__main__" and args.arg_list != []):
         partition = \
 """
 #!/bin/bash -l
-#SBATCH --partition=compute
+#SBATCH --partition=short
 #SBATCH --cpus-per-task=1
-#SBATCH --time 48:00:00
+#SBATCH --time 02:00:00
 #SBATCH --mem=50G
 """
 
