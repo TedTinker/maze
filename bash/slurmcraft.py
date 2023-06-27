@@ -70,37 +70,38 @@ def add_this(name, args):
                     if(if_arg_name in value and value[if_arg_name] == if_arg):
                         new_value[arg_name] = arg[1]
         slurm_dict[new_key] = new_value
-        
+
 add_this("hard",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['t']\"",        
-    "max_steps" :           10, 
-    "steps_per_epoch" :     10, 
-    "naive_eta" :           1, 
-    "free_eta" :            1, 
-    "beta" :                [{"curiosity" : "free"}, .005], 
+    "max_steps" :           30, 
+    "steps_per_epoch" :     30, 
+    "min_speed" :           25,
+    "max_speed" :           50,
+    "naive_eta" :           1.5, 
+    "free_eta" :            .5, 
+    "beta" :                [{"curiosity" : "free"}, .001], 
     "agents_per_pos_list" : 36}) 
 
 add_this("many",   {
     "hard_maze" :           True, 
-    "maze_list" :           "\"['1','2','3']\"", 
-    "max_steps" :           16, 
-    "steps_per_epoch" :     16, 
-    "min_speed" :           75,
-    "max_speed" :           150,
-    "naive_eta" :           .5, 
-    "free_eta" :            .5, 
+    "maze_list" :           "\"['1', '2', '3']\"", 
+    "max_steps" :           20, 
+    "steps_per_epoch" :     20, 
+    "min_speed" :           50,
+    "max_speed" :           100,
+    "naive_eta" :           2.5, 
+    "free_eta" :            1, 
     "beta" :                [{"curiosity" : "free"}, .005], 
     "agents_per_pos_list" : 36, 
-    "epochs" :              "\"[500,1500,3000]\"", 
-    "default_reward" :      "\"[(1,-1)]\"", 
-    "better_reward" :       "\"[(1,1)]\"",
-    "wall_punishment" :     -.5,
+    "epochs" :              "\"[500, 1500, 3000]\"", 
+    "default_reward" :      "\"[(1,-10)]\"", 
+    "better_reward" :       "\"[(1,10)]\"",
+    "wall_punishment" :     -1,
     "step_lim_punishment" : -.1,
-    "target_entropy" :      .1,
-    "retroactive_reward" :  True})
+    "target_entropy" :      -.5,
+    "retroactive_reward" :  False})
 
-add_this("cri_hq", {"critic_hq" : True})
 add_this("rand",   {"randomness" : 10})
 
 new_slurm_dict = {}
@@ -131,9 +132,9 @@ if(__name__ == "__main__" and args.arg_list != []):
         partition = \
 """
 #!/bin/bash -l
-#SBATCH --partition=short
+#SBATCH --partition=compute
 #SBATCH --cpus-per-task=1
-#SBATCH --time 02:00:00
+#SBATCH --time 48:00:00
 #SBATCH --mem=50G
 """
 

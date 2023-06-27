@@ -33,14 +33,14 @@ arena_dict = {
         (2,2), 
         [Exit(  "L",    (1,0), "default"),
         Exit(   "R",    (1,4), "better")],
-        [(0, 0), (0, 1), (2, 0), (2, 1)]),
+        [(0, 0), (0, 1), (2, 0)]),
     "2.png" : Arena_Description(
         (3,3), 
         [Exit(  "LL",   (4,1), "better"),
         Exit(   "LR",   (0,1), "default"),
         Exit(   "RL",   (0,5), "default"),
         Exit(   "RR",   (4,5), "default")],
-        [(0, 0), (0, 2), (1, 0), (0, 4), (0, 6), (1, 6), (3, 6), (4, 4), (4, 6)]),
+        [(0, 0), (0, 2), (1, 0), (3, 6), (4, 4), (4, 6)]),
     "3.png" : Arena_Description(
         (4,4), 
         [Exit(  "LLL",  (6,3), "default"),
