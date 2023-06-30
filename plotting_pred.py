@@ -103,30 +103,31 @@ def hard_plotting_pred(complete_order, plot_dicts):
                                 ax = axs[row, column] ; ax.axis("off")
                                 if(row == 0 and column > 0): pass
                                 else:                
+                                    steps_per_step = plot_dict["args"].steps_per_step
                                     # Actual obs
                                     if(column == 0):   
                                         ax.imshow(rgbd[:,:,0:3])
-                                        ax.set_title("Step {}\nAction: {}\nSpeed {}".format(row, action_name, round(spe.item())))
+                                        ax.set_title("Step {}\nAction: {}\nSpeed {}".format(row, action_name, steps_per_step*round(spe.item())))
                                     # ZP Mean
                                     elif(column == 1): 
                                         ax.imshow(torch.sigmoid(rgbd_mu_pred_p[:,:,0:3])) 
-                                        ax.set_title("ZP Mean\nSpeed {}".format(round(spe_mu_pred_p.item())))
+                                        ax.set_title("ZP Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_p.item())))
                                     # ZP Samples
                                     elif(column in [i+2 for i in range(plot_dict["args"].samples_per_pred)]):
                                         pred_num = column - 2
                                         pred = pred_rgbd_p[pred_num]
                                         ax.imshow(torch.sigmoid(pred[:,:,0:3]))
-                                        ax.set_title("ZP Sample {}\nSpeed {}".format(pred_num+1, round(pred_spe_p[pred_num].item())))
+                                        ax.set_title("ZP Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_p[pred_num].item())))
                                     # ZQ Mean
                                     elif(column == 2 + plot_dict["args"].samples_per_pred):
                                         ax.imshow(torch.sigmoid(rgbd_mu_pred_q[:,:,0:3]))
-                                        ax.set_title("ZQ Mean\nSpeed {}".format(round(spe_mu_pred_q.item())))
+                                        ax.set_title("ZQ Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_q.item())))
                                     # ZQ Samples
                                     else:
                                         pred_num = column - 3 - plot_dict["args"].samples_per_pred
                                         pred = pred_rgbd_q[pred_num]
                                         ax.imshow(torch.sigmoid(pred[:,:,0:3]))
-                                        ax.set_title("ZQ Sample {}\nSpeed {}".format(pred_num+1, round(pred_spe_q[pred_num].item())))
+                                        ax.set_title("ZQ Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_q[pred_num].item())))
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
                         plt.close()
                         
