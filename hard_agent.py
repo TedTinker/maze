@@ -178,7 +178,6 @@ class Agent:
                         o, s = self.maze.obs()
                         a, h_actor, _, _, done, action_name = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
                         (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, s, prev_a, h_q)
-                        (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         pred_rgbd_p = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_p] ; pred_rgbd_q = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_q]
                         pred_spe_p = [pred.squeeze(0).squeeze(0) for pred in pred_spe_p]   ; pred_spe_q = [pred.squeeze(0).squeeze(0) for pred in pred_spe_q]
@@ -208,7 +207,6 @@ class Agent:
                         o, s = self.maze.obs()
                         a, h_q_p1, _, _, done, action_name = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
                         (zp_mu, zp_std), (zq_mu, zq_std), _ = self.forward(o, s, prev_a, h_q)
-                        (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         pred_rgbd_p = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_p] ; pred_rgbd_q = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_q]
                         pred_spe_p = [pred.squeeze(0).squeeze(0) for pred in pred_spe_p]   ; pred_spe_q = [pred.squeeze(0).squeeze(0) for pred in pred_spe_q]

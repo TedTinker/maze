@@ -14,12 +14,11 @@ class Exit:
         self.name = name ; self.pos = pos ; self.rew = rew
         
 class Arena_Description:
-    def __init__(self, start, exits, random_pos = []):
+    def __init__(self, start, exits):
         self.start = start 
         self.exits = pd.DataFrame(
             data = [[exit.name, exit.pos, exit.rew] for exit in exits],
             columns = ["Name", "Position", "Reward"])
-        self.random_pos = random_pos
         
         
         
@@ -27,20 +26,20 @@ arena_dict = {
     "t.png" : Arena_Description(
         (3, 1),
         [Exit(  "L",    (2,0), "default"),
-        Exit(   "R",    (2,4), "better")],
-        [(1, 0), (1, 1), (3, 0), (3, 2), (4, 1)]),
+        Exit(   "R",    (2,4), "better")]
+        ),
     "1.png" : Arena_Description(
         (2,2), 
         [Exit(  "L",    (1,0), "default"),
-        Exit(   "R",    (1,4), "better")],
-        [(0, 0), (0, 1), (2, 0)]),
+        Exit(   "R",    (1,4), "better")]
+        ),
     "2.png" : Arena_Description(
         (3,3), 
         [Exit(  "LL",   (4,1), "better"),
         Exit(   "LR",   (0,1), "default"),
         Exit(   "RL",   (0,5), "default"),
-        Exit(   "RR",   (4,5), "default")],
-        [(0, 0), (0, 2), (1, 0), (3, 6), (4, 4), (4, 6)]),
+        Exit(   "RR",   (4,5), "default")]
+        ),
     "3.png" : Arena_Description(
         (4,4), 
         [Exit(  "LLL",  (6,3), "default"),
@@ -50,8 +49,8 @@ arena_dict = {
         Exit(   "RLL",  (0,5), "better"),
         Exit(   "RLR",  (0,7), "default"),
         Exit(   "RRL",  (6,7), "default"),
-        Exit(   "RRR",  (6,5), "default")],
-        [(0, 0), (0, 2), (0, 8), (1, 0), (1, 8), (5, 0), (5, 8), (6, 0), (6, 2), (6, 4), (6, 6), (6, 8)])}
+        Exit(   "RRR",  (6,5), "default")]
+        )}
 
 
 
@@ -86,10 +85,13 @@ class Arena():
         if(not arena_name.endswith(".png")): arena_name += ".png"
         self.start = arena_dict[arena_name].start
         self.exits = arena_dict[arena_name].exits
-        self.random_pos = arena_dict[arena_name].random_pos
         arena_map = cv2.imread("arenas/" + arena_name)
         w, h, _ = arena_map.shape
         self.physicsClient = get_physics(GUI, w, h)
+        
+        name = arena_name.split(".")[0]
+        arena_randomness = cv2.imread("arenas/{}_rand.png".format(name))
+        self.random_pos = []
 
         plane_positions = [[0, 0, 0], [10, 0, 0], [0, 10, 0], [10, 10, 0]]
         plane_ids = []
@@ -100,6 +102,8 @@ class Arena():
         self.ends = {} ; self.colors = {} 
         for loc in ((x, y) for x in range(w) for y in range(h)):
             pos = [loc[0], loc[1], .5]
+            if((arena_randomness[loc] == [0]).all()):
+                self.random_pos.append(loc)
             if ((arena_map[loc] == [255]).all()):
                 if (not self.exits.loc[self.exits["Position"] == loc].empty):
                     row = self.exits.loc[self.exits["Position"] == loc]
