@@ -178,6 +178,7 @@ class Agent:
                         o, s = self.maze.obs()
                         a, h_actor, _, _, done, action_name = self.step_in_episode(prev_a, h_actor, push = False, verbose = False)
                         (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(o, s, prev_a, h_q)
+                        (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         pred_rgbd_p = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_p] ; pred_rgbd_q = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_q]
                         pred_spe_p = [pred.squeeze(0).squeeze(0) for pred in pred_spe_p]   ; pred_spe_q = [pred.squeeze(0).squeeze(0) for pred in pred_spe_q]
@@ -207,6 +208,7 @@ class Agent:
                         o, s = self.maze.obs()
                         a, h_q_p1, _, _, done, action_name = self.step_in_episode_hq(prev_a, h_q, push = False, verbose = False)
                         (zp_mu, zp_std), (zq_mu, zq_std), _ = self.forward(o, s, prev_a, h_q)
+                        (rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p) = self.forward.get_preds(a, zp_mu, zp_std, h_q, quantity = self.args.samples_per_pred)
                         (rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q) = self.forward.get_preds(a, zq_mu, zq_std, h_q, quantity = self.args.samples_per_pred)
                         pred_rgbd_p = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_p] ; pred_rgbd_q = [pred.squeeze(0).squeeze(0) for pred in pred_rgbd_q]
                         pred_spe_p = [pred.squeeze(0).squeeze(0) for pred in pred_spe_p]   ; pred_spe_q = [pred.squeeze(0).squeeze(0) for pred in pred_spe_q]
@@ -332,8 +334,6 @@ class Agent:
         accuracy_for_naive = image_loss + speed_loss
         accuracy            = accuracy_for_naive.mean()
         complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
-        if(self.args.dkl_max != None):
-            complexity_for_free = torch.clamp(complexity_for_free, min = 0, max = self.args.dkl_max)
         complexity          = self.args.beta * complexity_for_free.mean()        
                         
         self.forward_opt.zero_grad()
@@ -345,6 +345,8 @@ class Agent:
                         
         
         # Get curiosity                  
+        if(self.args.dkl_max != None):
+            complexity_for_free = torch.clamp(complexity_for_free, min = 0, max = self.args.dkl_max)
         naive_curiosity = self.args.naive_eta * accuracy_for_naive  
         free_curiosity = self.args.free_eta * complexity_for_free
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity
