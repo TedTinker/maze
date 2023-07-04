@@ -76,10 +76,10 @@ add_this("hard",   {
     "maze_list" :           "\"['t']\"",        
     "max_steps" :           30, 
     "steps_per_epoch" :     30, 
-    "min_speed" :           10,
+    "min_speed" :           20,
     "max_speed" :           50,
-    "naive_eta" :           [{"curiosity" : "naive"}, [.5, .75, .1, 1.25, 1.5]], 
-    "free_eta" :            [{"curiosity" : "free"}, [.1, .2, .3, .4, .5]], 
+    "naive_eta" :           1, 
+    "free_eta" :            .5, 
     "beta" :                [{"curiosity" : "free"}, .001], 
     "agents_per_pos_list" : 36}) 
 
