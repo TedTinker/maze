@@ -59,7 +59,7 @@ def many_min_max(min_max_list):
 
 
 def plots(plot_dicts, min_max_dict):
-    fig, axs = plt.subplots(17, len(plot_dicts), figsize = (10*len(plot_dicts), 150))
+    fig, axs = plt.subplots(17, len(plot_dicts), figsize = (20*len(plot_dicts), 300))
                 
     for i, plot_dict in enumerate(plot_dicts):
         
@@ -114,7 +114,7 @@ def plots(plot_dicts, min_max_dict):
         xs = [x for x in range(spot_names.shape[1])]
         if(plot_dict["args"].hard_maze): 
             kinds = ["NONE"]
-            if("t" in plot_dict["args"].maze_list or "1" in plot_dict["args"].maze_list): kinds += ["L", "R"]
+            if("t" in plot_dict["args"].maze_list or "1" in plot_dict["args"].maze_list): kinds += ["LEFT", "RIGHT"]
             if("2" in plot_dict["args"].maze_list): kinds += ["LL", "LR", "RL", "RR"]
             if("3" in plot_dict["args"].maze_list): kinds += ["LLL", "LLR", "LRL", "LRR", "RLL", "RLR", "RRL", "RRR"]
         else: kinds = ["NONE", "BAD", "GOOD"]

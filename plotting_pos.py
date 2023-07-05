@@ -173,7 +173,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     fig2, ax2 = plt.subplots(figsize = (10, 10))  
                     plot_pos(ax2)  
                     real_name = real_names[maze_name]
-                    ax2.set_title("Agent Trajectories (Epoch {}, {})".format(epoch, real_name))
+                    ax2.set_title("Agent Trajectories\n(Epoch {}, {})".format(epoch, real_name))
                     fig2.savefig("saved/thesis_pics/paths_{}_{}.png".format(plot_dict["arg_name"], saved_paths), bbox_inches = "tight", dpi=300) 
                     plt.close(fig2)
             

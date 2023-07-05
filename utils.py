@@ -6,6 +6,22 @@ def print(*args, **kwargs):
     kwargs["flush"] = True
     builtins.print(*args, **kwargs)
 
+
+
+import matplotlib
+import matplotlib.pyplot as plt
+
+font = {'family' : 'sans-serif',
+        #'weight' : 'bold',
+        'size'   : 22}
+
+matplotlib.rc('font', **font)
+
+#plt.rcParams['axes.labelweight'] = 'bold'
+#plt.rcParams['axes.titleweight'] = 'bold'
+
+
+
 import datetime 
 
 start_time = datetime.datetime.now()

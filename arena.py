@@ -25,8 +25,8 @@ class Arena_Description:
 arena_dict = {
     "t.png" : Arena_Description(
         (3, 1),
-        [Exit(  "L",    (2,0), "default"),
-        Exit(   "R",    (2,4), "better")]
+        [Exit(  "LEFT",     (2,0), "default"),
+        Exit(   "RIGHT",    (2,4), "better")]
         ),
     "1.png" : Arena_Description(
         (2,2), 
