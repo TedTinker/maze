@@ -195,6 +195,14 @@ module load singularity
 singularity exec maze.sif python maze/plotting_pos.py --comp {} --arg_title {} --arg_name plotting_positions
 """.format(partition, args.comp, combined)[2:])
         
+    with open("plotting_p_values.slurm", "w") as f:
+        f.write(
+"""
+{}
+module load singularity
+singularity exec maze.sif python maze/plotting_p_val.py --comp {} --arg_title {} --arg_name plotting_p_values
+""".format(partition, args.comp, combined)[2:])
+        
     with open("combine_plots.slurm", "w") as f:
         f.write(
 """
