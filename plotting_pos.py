@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.colors import Normalize
 import imageio
 from io import BytesIO
 import os
 import numpy as np
 from skimage.transform import resize
+from itertools import product
 
 from utils import args, duration, load_dicts, print
 from easy_maze import Easy_Maze
+from arena import arena_dict
 
 print("name:\n{}".format(args.arg_name))
 
@@ -161,6 +164,14 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 extent = [-.5, w-.5, -h+.5, .5]
                 def plot_pos(here):
                     here.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
+                    exits = arena_dict[maze_name + ".png"].exit_list
+                    for exit in exits:
+                        y, x = exit.pos
+                        y = -y
+                        if(exit.rew == "default"): text = "Bad\nExit" ; color = "red"
+                        if(exit.rew == "better"):  text = "Good\nExit"; color = "green"
+                        here.text(x, y, text, fontsize=12, ha='center', va='center')
+                        #here.gca().add_patch(patches.Rectangle((x, y), 1, 1, facecolor=color))
                     for c, agent in enumerate(agents):
                         for episode in range(episodes):
                             path = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][1:]

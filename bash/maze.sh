@@ -85,7 +85,7 @@ jid=$(sbatch --dependency=afterok:$dict_jid maze/bash/plotting_pred.slurm | awk 
 echo "$jid : plotting predictions"
 
 jid=$(sbatch --dependency=afterok:$dict_jid maze/bash/plotting_p_values.slurm | awk '{print $4}')
-echo "$jid : plotting P-values"
+echo "$jid : plotting p-values"
 
 job_ids=$(echo ${jid_list[@]} | tr ' ' ':')  
 jid=$(sbatch --dependency=afterok:${job_ids} maze/bash/combine_plots.slurm | awk '{print $4}')

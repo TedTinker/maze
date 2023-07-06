@@ -16,6 +16,7 @@ class Exit:
 class Arena_Description:
     def __init__(self, start, exits):
         self.start = start 
+        self.exit_list = exits
         self.exits = pd.DataFrame(
             data = [[exit.name, exit.pos, exit.rew] for exit in exits],
             columns = ["Name", "Position", "Reward"])

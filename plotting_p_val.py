@@ -1,5 +1,8 @@
 from itertools import product
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from scipy.stats import chi2_contingency
+from copy import deepcopy
 
 from utils import args, duration, load_dicts, print
 
@@ -7,30 +10,77 @@ print("name:\n{}\n".format(args.arg_name),)
 
 
 
+real_names = {
+    "d"  : "No Entropy,\nNo Curiosity",
+    "e"  : "Entropy",
+    "n"  : "Naive Curiosity",
+    "en" : "Entropy and\nNaive Curiosity",
+    "f"  : "Aware Curiosity",
+    "ef" : "Entropy and \nAware Curiosity",
+}
+
+def add_this(name):
+    keys, values = [], []
+    for key, value in real_names.items(): keys.append(key) ; values.append(value)
+    for key, value in zip(keys, values):  
+        new_key = key + "_" + name 
+        real_names[new_key] = value
+add_this("hard")
+add_this("many")
+
+
+
 def hard_p_values(complete_order, plot_dicts):
-    rows = len(plot_dicts)
     arg_names = [arg_name for arg_name in complete_order if not arg_name in ["break", "empty_space"]]
+    
+    def custom_sort(item):
+        if item.endswith("_rand"): return(arg_names.index(item[:-5]))
+        else:                      return(arg_names.index(item))
+
+    arg_names = sorted(arg_names, key=custom_sort)
+    real_arg_names = [real_names[arg_name] if not arg_name.endswith("rand") else "with Curiosity Trap" for arg_name in arg_names]
+    reversed_names = deepcopy(real_arg_names)
+    reversed_names.reverse()
     total_epochs = 0
     
     for maze_name, epochs in zip(plot_dicts[0]["args"].maze_list, plot_dicts[0]["args"].epochs):
         done_combos = []
-        fig, axs = plt.subplots(rows, rows, figsize = (rows * 10, rows * 10))
-        fig.suptitle("Epoch {} (Maze {})".format(epochs, maze_name), y = 1.05)
-                
-        for arg_1, arg_2 in product(arg_names, repeat = 2):
-            if((arg_1,arg_2) in arg_names or (arg_2, arg_1) in arg_names): pass 
+        plt.figure(figsize = (10, 10))
+        plt.xlim([-.5, len(arg_names)-.5])
+        plt.ylim([-.5, len(arg_names)-.5])
+        plt.title("P-Values\n(Epoch {}, Maze {})".format(epochs, maze_name))        
+        plt.yticks(range(len(arg_names)), reversed_names, rotation='horizontal')
+        plt.xticks(range(len(arg_names)), real_arg_names, rotation='vertical')
+
+        for (x, arg_1), (y, arg_2) in product(enumerate(arg_names), repeat = 2):
+            if(x == y):
+                p = "" ; color = "black"
             else:
-                arg_names.append((arg_1,arg_2))
-                ax = axs[arg_names.index(arg_1), arg_names.index(arg_2)]
+                done_combos.append((arg_1,arg_2))
                 for plot_dict in plot_dicts:
-                    if(plot_dict["args"].name == arg_1): spots_1 = plot_dict["args"].spot_names
-                    if(plot_dict["args"].name == arg_2): spots_2 = plot_dict["args"].spot_names 
+                    if(plot_dict["args"].arg_name == arg_1): spots_1 = [spot_names[epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]]
+                    if(plot_dict["args"].arg_name == arg_2): spots_2 = [spot_names[epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]]
                 
-                plt.savefig("{}.png".format(maze_name), format = "png", bbox_inches = "tight")
-                plt.close()
+                elements = list(set(spots_1 + spots_2))
+                observed = []
+                for lst in [spots_1, spots_2]:
+                    frequencies = [lst.count(elem) for elem in elements]
+                    observed.append(frequencies)
+
+                _, p, _, _ = chi2_contingency(observed)
+                if(p < .05): color = "red"
+                else:        color = "green"
+                p = "{}".format(round(p,2))
+            
+            y = -1*y + len(arg_names) - 1
+            plt.gca().add_patch(patches.Rectangle((x-.5, y-.5), 1, 1, facecolor=color))
+            plt.text(x, y, p, fontsize=12, ha='center', va='center')
+        
+        plt.savefig("{}_p_values.png".format(maze_name), format = "png", bbox_inches = "tight")
+        plt.close()
                 
 
 
 plot_dicts, min_max_dict, (easy, complete_easy_order, easy_plot_dicts), (hard, complete_hard_order, hard_plot_dicts) = load_dicts(args)               
-if(hard): print("\nPlotting P-values in hard maze(s).\n") ; hard_p_values(complete_hard_order, hard_plot_dicts)   
+if(hard): print("\nPlotting p-values in hard maze(s).\n") ; hard_p_values(complete_hard_order, hard_plot_dicts)   
 print("\nDuration: {}. Done!".format(duration()))
