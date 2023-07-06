@@ -1,5 +1,5 @@
 #%%
-from random import choices
+from random import choices, random
 import pandas as pd
 import numpy as np
 import pybullet as p
@@ -103,8 +103,8 @@ class Arena():
         self.ends = {} ; self.colors = {} 
         for loc in ((x, y) for x in range(w) for y in range(h)):
             pos = [loc[0], loc[1], .5]
-            if((arena_randomness[loc] == [0]).all()):
-                self.random_pos.append(loc)
+            #if((arena_randomness[loc] == [0]).all()):
+            #    self.random_pos.append(loc)
             if ((arena_map[loc] == [255]).all()):
                 if (not self.exits.loc[self.exits["Position"] == loc].empty):
                     row = self.exits.loc[self.exits["Position"] == loc]
@@ -117,6 +117,7 @@ class Arena():
                 cube = p.loadURDF("cube.urdf", (pos[0], pos[1], pos[2]), ors, 
                                   useFixedBase=True, physicsClientId=self.physicsClient)
                 self.colors[cube] = color
+                if(random() < .3): self.random_pos.append(loc)
         
         for cube, color in self.colors.items():
             p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)
