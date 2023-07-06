@@ -141,10 +141,10 @@ def plots(plot_dicts, min_max_dict):
             if(len(kinds) > 5): 
                 here.tick_params(axis='y', labelsize=10)  
                 labels = ['0%', '', '100%']
-                space = .03
+                space = .1
             else:
                 labels = ['0%', '50%', '100%']
-                space = .1
+                space = .05
             here.yaxis.set_tick_params(length=0) 
             here.set_ylim([-1, len(kinds)*agents*1.1])
             here.set_ylabel("Chosen Exit")
