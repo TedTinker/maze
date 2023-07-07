@@ -118,7 +118,7 @@ if __name__ == "__main__":
     from time import sleep
     import matplotlib.pyplot as plt
 
-    default_args.randomness = 1
+    default_args.randomness = .5
     maze = Hard_Maze("t", True, default_args)
     done = False
     i = 0

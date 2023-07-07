@@ -117,7 +117,7 @@ class Arena():
                 cube = p.loadURDF("cube.urdf", (pos[0], pos[1], pos[2]), ors, 
                                   useFixedBase=True, physicsClientId=self.physicsClient)
                 self.colors[cube] = color
-                if(random() < .3): self.random_pos.append(loc)
+                if(random() < args.randomness): self.random_pos.append(loc)
         
         for cube, color in self.colors.items():
             p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)

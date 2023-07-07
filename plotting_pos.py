@@ -168,8 +168,12 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     for exit in exits:
                         y, x = exit.pos
                         y = -y
-                        if(exit.rew == "default"): text = "Bad\nExit" ; color = "red"
-                        if(exit.rew == "better"):  text = "Good\nExit"; color = "green"
+                        if(maze_name == "t"):
+                            if(exit.rew == "default"): text = "Okay\nExit" ; color = "red"
+                            if(exit.rew == "better"):  text = "Better\nExit"; color = "green"
+                        else:
+                            if(exit.rew == "default"): text = "Bad\nExit" ; color = "red"
+                            if(exit.rew == "better"):  text = "Good\nExit"; color = "green"
                         here.text(x, y, text, fontsize=12, ha='center', va='center')
                         #here.gca().add_patch(patches.Rectangle((x, y), 1, 1, facecolor=color))
                     for c, agent in enumerate(agents):

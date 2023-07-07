@@ -74,7 +74,7 @@ parser.add_argument('--wall_punishment',    type=float,      default = -1)
 parser.add_argument('--non_one',            type=float,      default = -1)
 parser.add_argument('--default_reward',     type=literal,    default = [(1, 1)])  # ((weight, reward), (weight, reward))
 parser.add_argument('--better_reward',      type=literal,    default = [(1, 0), (1, 10)])
-parser.add_argument('--randomness',         type=int,        default = 0)
+parser.add_argument('--randomness',         type=float,      default = 0)
 parser.add_argument('--random_steps',       type=int,        default = 1)
 parser.add_argument('--step_cost',          type=float,      default = .99)
 

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from scipy.stats import chi2_contingency
 from copy import deepcopy
+from scipy.stats import binom_test
 
 from utils import args, duration, load_dicts, print
 
@@ -27,6 +28,12 @@ def add_this(name):
         real_names[new_key] = value
 add_this("hard")
 add_this("many")
+add_this("1")
+add_this("2")
+add_this("3")
+add_this("4")
+add_this("5")
+add_this("6")
 
 real_maze_names = {
     "t" : "Biased T-Maze",
@@ -55,7 +62,7 @@ def hard_p_values(complete_order, plot_dicts):
         plt.figure(figsize = (10, 10))
         plt.xlim([-.5, len(arg_names)-.5])
         plt.ylim([-.5, len(arg_names)-.5])
-        plt.title("P-Values\n(Epoch {}, Maze {})".format(epochs, real_maze_names[maze_name]))        
+        plt.title("P-Values\n(Epoch {}, Maze {})".format(epochs + total_epochs, real_maze_names[maze_name]))        
         plt.yticks(range(len(arg_names)), reversed_names, rotation='horizontal')
         plt.xticks(range(len(arg_names)), real_arg_names, rotation='vertical')
 
@@ -68,15 +75,24 @@ def hard_p_values(complete_order, plot_dicts):
                     if(plot_dict["args"].arg_name == arg_1): spots_1 = [spot_names[epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]]
                     if(plot_dict["args"].arg_name == arg_2): spots_2 = [spot_names[epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]]
                 
-                elements = list(set(spots_1 + spots_2))
-                observed = []
-                for lst in [spots_1, spots_2]:
-                    frequencies = [lst.count(elem) for elem in elements]
-                    observed.append(frequencies)
+                spots_1 = ["good" if spot in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_1]
+                spots_2 = ["good" if spot in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_2]
+                
+                good_spots_1 = spots_1.count("good")
+                good_spots_2 = spots_2.count("good")
 
-                _, p, _, _ = chi2_contingency(observed)
-                if(p < .05): color = "red"
-                else:        color = "green"
+                total_spots_1 = len(spots_1)
+                total_spots_2 = len(spots_2)
+
+                prop_1 = good_spots_1 / total_spots_1
+                prop_2 = good_spots_2 / total_spots_2
+
+                p = binom_test(min(good_spots_1, good_spots_2), n=max(total_spots_1, total_spots_2), p=max(prop_1, prop_2), alternative='less')
+
+                if(p < .05): 
+                    if(prop_1 > prop_2): color = "red"
+                    else:                color = "green"
+                else:        color = "white"
                 p = "{}".format(round(p,2))
             
             y = -1*y + len(arg_names) - 1
