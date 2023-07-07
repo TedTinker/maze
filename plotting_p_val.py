@@ -28,6 +28,13 @@ def add_this(name):
 add_this("hard")
 add_this("many")
 
+real_maze_names = {
+    "t" : "Biased T-Maze",
+    "1" : "T-Maze",
+    "2" : "Double T-Maze",
+    "3" : "Triple T-Maze",
+}
+     
 
 
 def hard_p_values(complete_order, plot_dicts):
@@ -48,7 +55,7 @@ def hard_p_values(complete_order, plot_dicts):
         plt.figure(figsize = (10, 10))
         plt.xlim([-.5, len(arg_names)-.5])
         plt.ylim([-.5, len(arg_names)-.5])
-        plt.title("P-Values\n(Epoch {}, Maze {})".format(epochs, maze_name))        
+        plt.title("P-Values\n(Epoch {}, Maze {})".format(epochs, real_maze_names[maze_name]))        
         plt.yticks(range(len(arg_names)), reversed_names, rotation='horizontal')
         plt.xticks(range(len(arg_names)), real_arg_names, rotation='vertical')
 
