@@ -102,7 +102,7 @@ add_this("many",   {
     "target_entropy" :      -.5,
     "retroactive_reward" :  False})
 
-add_this("rand",   {"randomness" : .5})
+add_this("rand",   {"randomness" : .4})#.5})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():

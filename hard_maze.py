@@ -128,8 +128,12 @@ if __name__ == "__main__":
         #reward, wall_punishment, name, done, action_name = maze.action(random(), random(), verbose = True)
         reward, wall_punishment, name, done, action_name = maze.action(yaws[i], speeds[i], verbose = True)
         rgbd, spe = maze.obs()
-        rgbd = rgbd.squeeze(0)[:,:,0:3]
-        plt.imshow(rgbd)
+        rgb = rgbd.squeeze(0)[:,:,0:3]
+        d = rgbd.squeeze(0)[:,:,-1]
+        plt.imshow(rgb)
+        plt.show()
+        plt.close()
+        plt.imshow(d)
         plt.show()
         plt.close()
         sleep(1)
