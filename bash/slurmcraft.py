@@ -77,7 +77,7 @@ add_this("hard",   {
     "max_steps" :           30, 
     "steps_per_epoch" :     30, 
     "min_speed" :           0,
-    "max_speed" :           75,
+    "max_speed" :           70,
     "naive_eta" :           1, 
     "free_eta" :            .5, 
     "beta" :                [{"curiosity" : "free"}, .001], 
@@ -88,7 +88,7 @@ add_this("many",   {
     "maze_list" :           "\"['1', '2', '3']\"", 
     "max_steps" :           20, 
     "steps_per_epoch" :     20, 
-    "min_speed" :           25,
+    "min_speed" :           0,
     "max_speed" :           200,
     "naive_eta" :           2.5, 
     "free_eta" :            1.25, 
@@ -102,7 +102,7 @@ add_this("many",   {
     "target_entropy" :      -.5,
     "retroactive_reward" :  False})
 
-add_this("rand",   {"randomness" : .4})#.5})
+add_this("rand",   {"randomness" : .5})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():

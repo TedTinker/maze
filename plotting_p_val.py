@@ -52,7 +52,12 @@ def hard_p_values(complete_order, plot_dicts):
         else:                      return(arg_names.index(item))
 
     arg_names = sorted(arg_names, key=custom_sort)
-    real_arg_names = [real_names[arg_name] if not arg_name.endswith("rand") else "with Curiosity Trap" for arg_name in arg_names]
+    real_arg_names = []
+    for arg_name in arg_names:
+        if arg_name.endswith("rand"): real_name = "with Curiosity Trap"
+        elif(arg_name in real_names): real_name = real_names[arg_name]
+        else:                         real_name = arg_name
+        real_arg_names.append(real_name)
     reversed_names = deepcopy(real_arg_names)
     reversed_names.reverse()
     total_epochs = 0
@@ -88,14 +93,15 @@ def hard_p_values(complete_order, plot_dicts):
             prop_2 = good_spots_2 / total_spots_2
 
             p = binom_test(min(good_spots_1, good_spots_2), n=max(total_spots_1, total_spots_2), p=max(prop_1, prop_2), alternative='less')
-
+            p = round(p,2)
+            
             print("({}, {}), {} by {}: {},".format(x, y, arg_1, arg_2, p, end = " "))
-            if(p < .05): 
+            if(p <= .05): 
                 if(prop_1 < prop_2): color = "red"
                 else:                color = "green"
             else:        color = "white"
             print(color + ".")
-            p = "{}".format(round(p,2))
+            
             
             flipped_y = -1*y + len(arg_names) - 1
             if(x > y):  

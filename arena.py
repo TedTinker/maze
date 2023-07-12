@@ -91,20 +91,18 @@ class Arena():
         self.physicsClient = get_physics(GUI, w, h)
         
         name = arena_name.split(".")[0]
-        arena_randomness = cv2.imread("arenas/{}_rand.png".format(name))
         self.random_pos = []
 
         plane_positions = [[0, 0, 0], [10, 0, 0], [0, 10, 0], [10, 10, 0]]
         plane_ids = []
         for position in plane_positions:
             plane_id = p.loadURDF("plane.urdf", position, globalScaling=.5, useFixedBase=True, physicsClientId=self.physicsClient)
+            p.changeVisualShape(plane_id, -1, rgbaColor=(0,0,0,1), physicsClientId = self.physicsClient)
             plane_ids.append(plane_id)
 
-        self.ends = {} ; self.colors = {} 
+        self.ends = {} ; self.colors = {} ; cube_locs = []
         for loc in ((x, y) for x in range(w) for y in range(h)):
             pos = [loc[0], loc[1], .5]
-            #if((arena_randomness[loc] == [0]).all()):
-            #    self.random_pos.append(loc)
             if ((arena_map[loc] == [255]).all()):
                 if (not self.exits.loc[self.exits["Position"] == loc].empty):
                     row = self.exits.loc[self.exits["Position"] == loc]
@@ -117,7 +115,9 @@ class Arena():
                 cube = p.loadURDF("cube.urdf", (pos[0], pos[1], pos[2]), ors, 
                                   useFixedBase=True, physicsClientId=self.physicsClient)
                 self.colors[cube] = color
-                if(random() < args.randomness): self.random_pos.append(loc)
+                cube_locs.append(loc)
+            
+            self.random_pos = choices(cube_locs, k = int(len(cube_locs) * args.randomness))
         
         for cube, color in self.colors.items():
             p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)
