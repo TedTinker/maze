@@ -119,7 +119,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     default_args.randomness = .5
-    maze = Hard_Maze("t", True, default_args)
+    maze = Hard_Maze("3", True, default_args)
     done = False
     i = 0
     yaws = [0, 0, -1, 0, 0]

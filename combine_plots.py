@@ -53,7 +53,7 @@ for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exit
                 axs[row, column].axis("off")
 
     if(arg_name in real_names.keys()): title = real_names[arg_name]
-    elif(arg_name.endswith("rand")):   title = "with Curiosity Trap"
+    elif(arg_name.endswith("rand")):   title = "with Curiosity Traps"
     else:                              title = arg_name
     fig.suptitle(title, fontsize=30, y=1.0)
     fig.tight_layout(pad=1.0)

@@ -86,21 +86,21 @@ add_this("hard",   {
 add_this("many",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', '2', '3']\"", 
-    "max_steps" :           20, 
-    "steps_per_epoch" :     20, 
+    "max_steps" :           30, 
+    "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           200,
-    "naive_eta" :           2.5, 
-    "free_eta" :            1.25, 
+    "naive_eta" :           [{"curiosity" : "naive"}, [.5, 1, 1.5, 2]], 
+    "free_eta" :            [{"curiosity" : "free"}, [.25, .5, .75, 1]], 
     "beta" :                [{"curiosity" : "free"}, .02], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 1500, 3000]\"", 
     "default_reward" :      "\"[(1,-10)]\"", 
     "better_reward" :       "\"[(1,10)]\"",
     "wall_punishment" :     -1,
-    "step_lim_punishment" : -.1,
-    "target_entropy" :      -.5,
-    "retroactive_reward" :  False})
+    "step_lim_punishment" : -1,
+    "target_entropy" :      0
+    })
 
 add_this("rand",   {"randomness" : .5})
 

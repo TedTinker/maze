@@ -1,11 +1,13 @@
+#%% 
 from itertools import product
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.patches import Polygon
 from matplotlib.lines import Line2D
 from scipy.stats import chi2_contingency
-from copy import deepcopy
+from statsmodels.stats.proportion import proportions_ztest as ztest
 from scipy.stats import binom_test
+from copy import deepcopy
 
 from utils import args, duration, load_dicts, print
 
@@ -54,7 +56,7 @@ def hard_p_values(complete_order, plot_dicts):
     arg_names = sorted(arg_names, key=custom_sort)
     real_arg_names = []
     for arg_name in arg_names:
-        if arg_name.endswith("rand"): real_name = "with Curiosity Trap"
+        if arg_name.endswith("rand"): real_name = "with Curiosity Traps"
         elif(arg_name in real_names): real_name = real_names[arg_name]
         else:                         real_name = arg_name
         real_arg_names.append(real_name)
@@ -62,23 +64,15 @@ def hard_p_values(complete_order, plot_dicts):
     reversed_names.reverse()
     total_epochs = 0
     
+    p_value_dicts = {}
     for maze_name, epochs in zip(plot_dicts[0]["args"].maze_list, plot_dicts[0]["args"].epochs):
-        done_combos = []
-        plt.figure(figsize = (10, 10))
-        ax = plt.gca()
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        plt.xlim([-.5, len(arg_names)-.5])
-        plt.ylim([-.5, len(arg_names)-.5])
-        plt.title("P-Values\n(Epoch {}, Maze {})".format(epochs + total_epochs, real_maze_names[maze_name]))        
-        plt.yticks(range(len(arg_names)), reversed_names, rotation='horizontal')
-        plt.xticks(range(len(arg_names)), real_arg_names, rotation='vertical')
+        p_value_dicts[(maze_name, epochs)] = {}
 
+        # Maybe use cumulative rewards
         for (x, arg_1), (y, arg_2) in product(enumerate(arg_names), repeat = 2):
-            done_combos.append((arg_1,arg_2))
             for plot_dict in plot_dicts:
-                if(plot_dict["args"].arg_name == arg_1): spots_1 = [spot_names[epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]]
-                if(plot_dict["args"].arg_name == arg_2): spots_2 = [spot_names[epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]]
+                if(plot_dict["args"].arg_name == arg_1): spots_1 = sum([spot_names[epochs + total_epochs - 3 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
+                if(plot_dict["args"].arg_name == arg_2): spots_2 = sum([spot_names[epochs + total_epochs - 3 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
             
             spots_1 = ["good" if spot in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_1]
             spots_2 = ["good" if spot in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_2]
@@ -92,32 +86,63 @@ def hard_p_values(complete_order, plot_dicts):
             prop_1 = good_spots_1 / total_spots_1
             prop_2 = good_spots_2 / total_spots_2
 
-            p = binom_test(min(good_spots_1, good_spots_2), n=max(total_spots_1, total_spots_2), p=max(prop_1, prop_2), alternative='less')
+            _, p = ztest([good_spots_1, good_spots_2], [len(spots_1), len(spots_2)])
             p = round(p,2)
-            
-            print("({}, {}), {} by {}: {},".format(x, y, arg_1, arg_2, p, end = " "))
+                        
+            print("({}, {}), {} by {}: {} vs {}, {},".format(x, y, arg_1, arg_2, prop_1, prop_2, p, end = " "))
             if(p <= .05): 
                 if(prop_1 < prop_2): color = "red"
                 else:                color = "green"
             else:        color = "white"
             print(color + ".")
             
-            
+            p_value_dicts[(maze_name, epochs)][(arg_1, arg_2)] = [x, y, good_spots_1, good_spots_2, p, color]
+    
+    
+    
+    for (maze_name, epochs), p_value_dict in p_value_dicts.items():
+        plt.figure(figsize = (10, 10))
+        ax = plt.gca()
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        plt.xlim([-.5, len(arg_names)-.5])
+        plt.ylim([-.5, len(arg_names)-.5])
+        plt.title("P-Values\n(Epoch {}, {})".format(epochs + total_epochs, real_maze_names[maze_name]))        
+        plt.yticks(range(len(arg_names)), reversed_names, rotation='horizontal')
+        plt.xticks(range(len(arg_names)), real_arg_names, rotation='vertical')
+        for (arg_1, arg_2), (x, y, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
             flipped_y = -1*y + len(arg_names) - 1
-            if(x > y):  
-                pass
+            if(x > y): pass
             else:
                 if(x == y): 
                     plt.gca().add_line(Line2D([x - .5, x + .5], [flipped_y + .5, flipped_y - .5], color='black', linewidth = .5))
                 else:  
                     plt.gca().add_patch(patches.Rectangle((x - .5, flipped_y - .5), 1, 1, facecolor=color))
                     plt.text(x, flipped_y, p, fontsize=12, ha='center', va='center')
-            
-        plt.savefig("{}_p_values.png".format(maze_name), format = "png", bbox_inches = "tight")
+        
+        plt.savefig("bad_p_value_plot.png".format(maze_name), format = "png", bbox_inches = "tight")
         plt.close()
                 
+                
+                
+    for (maze_name, epochs), p_value_dict in p_value_dicts.items():
+        plt.figure(figsize = (10, 10))
+        ax = plt.gca() ; ax.axis("off")
+        plt.title("P-Values\n(Epoch {}, {})".format(epochs + total_epochs, real_maze_names[maze_name]))   
+        data = [["", "Good Exits", "with Traps", "P-Value"]]     
+
+        for (arg_1, arg_2), (x, y, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
+            if(arg_2 == arg_1 + "_rand"):
+                data.append([real_names[arg_1], good_spots_1, good_spots_2, p])
+        
+        table = plt.table(cellText=data, loc='center', cellLoc='center', colWidths=[.3, .2, .2, .2])
+        table.scale(1, 4)
+        plt.savefig("{}_p_values.png".format(maze_name), format = "png", bbox_inches = "tight")
+        plt.close()
+
 
 
 plot_dicts, min_max_dict, (easy, complete_easy_order, easy_plot_dicts), (hard, complete_hard_order, hard_plot_dicts) = load_dicts(args)               
 if(hard): print("\nPlotting p-values in hard maze(s).\n") ; hard_p_values(complete_hard_order, hard_plot_dicts)   
 print("\nDuration: {}. Done!".format(duration()))
+# %%
