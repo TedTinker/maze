@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.colors import Normalize
-import imageio
+import imageio.v2 as imageio
 from io import BytesIO
 import os
 import numpy as np
@@ -162,27 +162,29 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 arena_map = np.flip(arena_map, 0)    
                 h, w, _ = arena_map.shape
                 extent = [-.5, w-.5, -h+.5, .5]
+                
                 def plot_pos(here):
-                    here.imshow(arena_map, extent = extent, zorder = 1, origin = "lower") 
+                    here.imshow(arena_map, extent = extent, origin = "lower", zorder = 1) 
+                    for c, agent in enumerate(agents):
+                        for episode in range(episodes):
+                            path = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][1:]
+                            xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
+                            here.plot(xs, ys, color=cmap(norm(c)), zorder = 2)
                     exits = arena_dict[maze_name + ".png"].exit_list
                     for exit in exits:
                         y, x = exit.pos
                         y = -y
                         if(maze_name == "t"):
-                            if(exit.rew == "default"): text = "Okay\nExit" ; color = "red"
-                            if(exit.rew == "better"):  text = "Better\nExit"; color = "green"
+                            if(exit.rew == "default"): text = "Okay\nExit" ; color = (1,1,.25,1)
+                            if(exit.rew == "better"):  text = "Better\nExit"; color = (.25,1,.25,1)
                         else:
-                            if(exit.rew == "default"): text = "Bad\nExit" ; color = "red"
-                            if(exit.rew == "better"):  text = "Good\nExit"; color = "green"
-                        here.text(x, y, text, fontsize=12, ha='center', va='center')
-                        #here.gca().add_patch(patches.Rectangle((x, y), 1, 1, facecolor=color))
-                    for c, agent in enumerate(agents):
-                        for episode in range(episodes):
-                            path = plot_dict["pos_lists"]["{}_{}_{}".format(agent, epoch, maze_name)][episode][1:]
-                            xs = [p[1] for p in path] ; ys = [-p[0] for p in path]
-                            here.plot(xs, ys, color=cmap(norm(c)))
+                            if(exit.rew == "default"): text = "Bad\nExit" ; color = (1,.25,.25,1)
+                            if(exit.rew == "better"):  text = "Good\nExit"; color = (.25,1,.25,1)
+                        here.fill([x - .25, x + .25, x + .25, x - .25], [y - .25, y - .25, y + .25, y + .25], color=color, zorder=3)
+                        here.text(x, y, text, fontsize=12, ha='center', va='center', zorder = 4)
                     here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     here.axis("off")
+                    
                 plot_pos(ax)
                 if(next_maze_name != maze_name):
                     fig2, ax2 = plt.subplots(figsize = (10, 10))  

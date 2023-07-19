@@ -86,19 +86,19 @@ add_this("hard",   {
 add_this("many",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', '2', '3']\"", 
-    "max_steps" :           40, 
-    "steps_per_epoch" :     40, 
+    "max_steps" :           30, 
+    "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           200,
-    "naive_eta" :           .75, 
+    "naive_eta" :           1, 
     "free_eta" :            1, 
-    "beta" :                [{"curiosity" : "free"}, .01], 
+    "beta" :                .01, #[{"curiosity" : "free"}, .01], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      "\"[(1,-10)]\"", 
-    "better_reward" :       "\"[(1,10)]\"",
+    "default_reward" :      ["\"[(1,-5)]\"",  "\"[(1,-10)]\"", "\"[(1,-20)]\""], 
+    "better_reward" :       ["\"[(1,5)]\"",   "\"[(1,10)]\"",  "\"[(1,20)]\""],
     "wall_punishment" :     -1,
-    "step_lim_punishment" : -1,
+    "step_lim_punishment" : [-1,-2,-5],
     "target_entropy" :      0
     })
 

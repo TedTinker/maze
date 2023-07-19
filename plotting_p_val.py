@@ -32,12 +32,8 @@ def add_this(dict, name):
         dict[new_key] = value
 add_this(real_names, "hard")
 add_this(real_names, "many")
-add_this(real_names, "1")
-add_this(real_names, "2")
-add_this(real_names, "3")
-add_this(real_names, "4")
-add_this(real_names, "5")
-add_this(real_names, "6")
+for i in range(15):
+    add_this(real_names, str(i))
 
 real_maze_names = {
     "t" : "Biased T-Maze",
@@ -96,8 +92,9 @@ def hard_p_values(complete_order, plot_dicts):
             prop_2 = good_spots_2 / total_spots_2
 
             _, p = ztest([good_spots_1, good_spots_2], [len(spots_1), len(spots_2)])
-                        
-            if(p <= .05): 
+            
+            confidence = .999 
+            if(p <= 1-confidence): 
                 if(prop_1 < prop_2): color = "red"
                 else:                color = "green"
             else:        color = "white"
