@@ -92,13 +92,13 @@ add_this("many",   {
     "max_speed" :           200,
     "naive_eta" :           1, 
     "free_eta" :            1, 
-    "beta" :                .01, #[{"curiosity" : "free"}, .01], 
+    "beta" :                [{"curiosity" : "free"}, .01], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      ["\"[(1,-5)]\"",  "\"[(1,-10)]\"", "\"[(1,-20)]\""], 
-    "better_reward" :       ["\"[(1,5)]\"",   "\"[(1,10)]\"",  "\"[(1,20)]\""],
+    "default_reward" :      "\"[(1,-1)]\"", 
+    "better_reward" :       "\"[(1,10)]\"",
     "wall_punishment" :     -1,
-    "step_lim_punishment" : [-1,-2,-5],
+    "step_lim_punishment" : -.5,
     "target_entropy" :      0
     })
 
@@ -124,6 +124,9 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     for key, value in slurm_dict.items(): print(key, ":", value,"\n")
+    interesting = []
+    for this in interesting:
+        print("{} : {}".format(this,slurm_dict[this]))
 
 max_cpus = 36
 if(__name__ == "__main__" and args.arg_list != []):
