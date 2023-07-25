@@ -21,10 +21,10 @@ zipdir(dir_path, zipf)
 zipf.close()
 
 smtp_user = 'tedjtinker@gmail.com'
-smtp_pass = '1TedTinkerGoogle!'
+smtp_pass = 'iftmktzvjjsmyjpn'
 to_address = 'tedjtinker@gmail.com'
-subject = 'subject'
-body = 'text'
+subject = 'thesis_pics'
+body = 'No text please'
 
 msg = MIMEMultipart()
 msg['From'] = smtp_user
