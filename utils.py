@@ -198,6 +198,8 @@ def get_args_title(default_args, args):
 
 args.arg_title = get_args_title(default_args, args)
 
+try: os.mkdir("saved")
+except: pass
 folder = "saved/" + args.arg_name
 if(args.arg_title[:3] != "___" and not args.arg_name in ["default", "finishing_dictionaries", "plotting", "plotting_predictions", "plotting_positions"]):
     try: os.mkdir(folder)
