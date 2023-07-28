@@ -84,22 +84,22 @@ add_this("hard",   {
     "agents_per_pos_list" : 36}) 
 
 add_this("many",   {
-    "GAMMA"     :           [.9, .99],
+    "GAMMA"     :           .9,
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', '2', '3']\"", 
     "max_steps" :           30, 
     "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           200,
-    "naive_eta" :           [.5, .75, 1, 1.25, 1.5], 
+    "naive_eta" :           1, 
     "free_eta" :            1, 
     "beta" :                [{"curiosity" : "free"}, .01], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      ["\"[(1,-1)]\"", "\"[(1,-1.5)]\"", "\"[(1,-2)]\""], 
+    "default_reward" :      "\"[(1,-1)]\"", 
     "better_reward" :       "\"[(1,10)]\"",
     "wall_punishment" :     -1,
-    "step_lim_punishment" : [0, -.5],
+    "step_lim_punishment" : -.5,
     "target_entropy" :      0
     })
 
