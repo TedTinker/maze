@@ -96,14 +96,14 @@ add_this("many",   {
     "beta" :                [{"curiosity" : "free"}, .01], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      ["\"[(1,-2)]\"", "\"[(1,-1)]\""], 
+    "default_reward" :      ["\"[(1,-2)]\"", "\"[(1,-1.5)]\"", "\"[(1,-1)]\"", "\"[(1,-.5)]\"", "\"[(1,-0)]\""], 
     "better_reward" :       "\"[(1,10)]\"",
     "wall_punishment" :     -1,
-    "step_lim_punishment" : [-.1, -.5],
+    "step_lim_punishment" : [-.1, -.5, -0],
     "target_entropy" :      0
     })
 
-add_this("rand",   {"randomness" : [.3, .4, .5]})
+add_this("rand",   {"randomness" : [.2, .3, .4, .5]})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():
