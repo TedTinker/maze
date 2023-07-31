@@ -46,7 +46,7 @@ from math import exp, pi
 import numpy as np
 from time import sleep
 
-if(os.getcwd().split("/")[-1] != "maze"): os.chdir("maze")
+#if(os.getcwd().split("/")[-1] != "maze"): os.chdir("maze")
 
 import torch
 from torch import nn 
