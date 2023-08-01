@@ -118,7 +118,7 @@ parser.add_argument("--dkl_max",            type=float,      default = 1)
 parser.add_argument('--capacity',           type=int,        default = 250)
 
 # Training
-parser.add_argument('--epochs',             type=literal,    default = [1000])
+parser.add_argument('--epochs',             type=literal,    default = [100])
 parser.add_argument('--steps_per_epoch',    type=int,        default = 10)
 parser.add_argument('--batch_size',         type=int,        default = 128)
 parser.add_argument('--elbo_num',           type=int,        default = 1)
