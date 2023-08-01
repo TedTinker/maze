@@ -145,7 +145,8 @@ def hard_plotting_pos(complete_order, plot_dicts):
             _, next_maze_name = next_epoch_maze_name.split("_")
         else:
             next_maze_name = None
-        fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
+        if(not too_many_plot_dicts):
+            fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
         fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
@@ -207,9 +208,9 @@ def hard_plotting_pos(complete_order, plot_dicts):
             im = imageio.imread(buf)
             images.append(im)
             buf.close()
-            plt.close(fig)
         else: 
             print("Can't save this many plots!")
+        plt.close(fig)
             
         print("{}:\tDone with hard epoch {} (maze {}).".format(duration(), epoch, maze_name))
     
