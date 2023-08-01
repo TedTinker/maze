@@ -90,7 +90,8 @@ def hard_p_values(complete_order, plot_dicts):
 
             prop_1 = good_spots_1 / total_spots_1
             prop_2 = good_spots_2 / total_spots_2
-
+            
+            # This line gives warning
             _, p = ztest([good_spots_1, good_spots_2], [len(spots_1), len(spots_2)])
             
             confidence = .999 
