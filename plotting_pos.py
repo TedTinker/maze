@@ -113,6 +113,7 @@ real_names = {
             
         
 def hard_plotting_pos(complete_order, plot_dicts):
+    too_many_plot_dicts = len(plot_dicts) > 2
     os.chdir("..")
     images = []
     rows = 0 ; columns = 0 ; current_count = 0 
@@ -199,12 +200,16 @@ def hard_plotting_pos(complete_order, plot_dicts):
                         
         #fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(agent) for agent in agents])
         buf = BytesIO()
-        plt.savefig(buf, format = "png", bbox_inches = "tight")
-        buf.seek(0)
-        im = imageio.imread(buf)
-        images.append(im)
-        buf.close()
-        plt.close(fig)
+        
+        if(not too_many_plot_dicts):
+            plt.savefig(buf, format = "png", bbox_inches = "tight")
+            buf.seek(0)
+            im = imageio.imread(buf)
+            images.append(im)
+            buf.close()
+            plt.close(fig)
+        else: 
+            print("Can't save this many plots!")
             
         print("{}:\tDone with hard epoch {} (maze {}).".format(duration(), epoch, maze_name))
     
