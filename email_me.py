@@ -12,6 +12,7 @@ def zipdir(path, limit):
     ziph = zipfile.ZipFile('thesis_pics_{}.zip'.format(zip_count), 'w', zipfile.ZIP_DEFLATED)
 
     for root, dirs, files in os.walk(path):
+        files.sort()
         for file in files:
             filename = os.path.join(root, file)
             size += os.path.getsize(filename)

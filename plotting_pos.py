@@ -145,8 +145,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
             _, next_maze_name = next_epoch_maze_name.split("_")
         else:
             next_maze_name = None
-        if(not too_many_plot_dicts):
-            fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
+        fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
         fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
