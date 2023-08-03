@@ -140,15 +140,17 @@ def hard_plotting_pos(complete_order, plot_dicts):
     saved_paths = 0
     for i, epoch_maze_name in enumerate(epochs_maze_names):
         epoch, maze_name = epoch_maze_name.split("_")
+        print(epoch, maze_name)
         if(i+1 != len(epochs_maze_names)):
             next_epoch_maze_name = epochs_maze_names[i+1]
             _, next_maze_name = next_epoch_maze_name.split("_")
         else:
             next_maze_name = None
-        fig, axs = plt.subplots(rows, columns, figsize = (columns * 10, rows * 10))
+        fig, axs = plt.subplots(rows, columns, figsize =  (columns * 5, rows * 5)) # (columns * 10, rows * 10))
         fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
+            print(arg_name)
             if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
             elif(arg_name == "empty_space"): 
                 ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
@@ -188,6 +190,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     
                 plot_pos(ax)
                 if(next_maze_name != maze_name):
+                    print("Making thesis_pic")
                     fig2, ax2 = plt.subplots(figsize = (10, 10))  
                     plot_pos(ax2)  
                     real_name = real_names[maze_name]

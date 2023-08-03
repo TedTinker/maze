@@ -124,8 +124,8 @@ def all_like_this(this):
 
         
 if(__name__ == "__main__" and args.arg_list == []):
-    for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = []
+    #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
+    interesting = ["en_many_" + str(i+1) for i in range(72)]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 
