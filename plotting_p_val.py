@@ -106,7 +106,7 @@ def hard_p_values(complete_order, plot_dicts):
     
     
     for (maze_name, epochs), p_value_dict in p_value_dicts.items():
-        plt.figure(figsize = (10, 10))
+        plt.figure(figsize = (3,3))#(10, 10))
         ax = plt.gca()
         for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
             flipped_y = -1*y + len(arg_names) - 1

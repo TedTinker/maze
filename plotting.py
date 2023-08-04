@@ -105,7 +105,7 @@ def plots(plot_dicts, min_max_dict):
             divide_arenas(rew_dict, here)
         
         if(not too_many_plot_dicts): plot_cumulative_rewards_shared_min_max(ax)
-        fig2, ax2 = plt.subplots(figsize = (5, 5)) # (10, 10))  
+        fig2, ax2 = plt.subplots(figsize = (3, 3)) # (10, 10))  
         plot_cumulative_rewards_shared_min_max(ax2)  
         ax2.set_title("Cumulative Rewards")
         fig2.savefig("thesis_pics/rewards_{}.png".format(plot_dict["arg_name"]), bbox_inches = "tight", dpi=300) 

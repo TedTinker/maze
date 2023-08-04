@@ -146,7 +146,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
             _, next_maze_name = next_epoch_maze_name.split("_")
         else:
             next_maze_name = None
-        fig, axs = plt.subplots(rows, columns, figsize =  (columns * 5, rows * 5)) # (columns * 10, rows * 10))
+        fig, axs = plt.subplots(rows, columns, figsize =  (columns * 3, rows * 3)) # (columns * 10, rows * 10))
         fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
@@ -191,7 +191,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 plot_pos(ax)
                 if(next_maze_name != maze_name):
                     print("Making thesis_pic")
-                    fig2, ax2 = plt.subplots(figsize = (10, 10))  
+                    fig2, ax2 = plt.subplots(figsize =(3,3))# (10, 10))  
                     plot_pos(ax2)  
                     real_name = real_names[maze_name]
                     ax2.set_title("Agent Trajectories\n(Epoch {}, {})".format(epoch, real_name))
