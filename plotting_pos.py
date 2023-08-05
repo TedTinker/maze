@@ -187,8 +187,9 @@ def hard_plotting_pos(complete_order, plot_dicts):
                         here.text(x, y, text, fontsize=12, ha='center', va='center', zorder = 4)
                     here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     here.axis("off")
-                    
-                plot_pos(ax)
+                
+                if(not too_many_plot_dicts):                    
+                    plot_pos(ax)
                 if(next_maze_name != maze_name):
                     print("Making thesis_pic")
                     fig2, ax2 = plt.subplots(figsize =(3,3))# (10, 10))  
