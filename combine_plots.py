@@ -36,7 +36,7 @@ add_this("many")
 
 for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exits_files, paths_files):
     if(len(paths_list) == 1):
-        fig, axs = plt.subplots(3, 1, figsize = (10, 30))
+        fig, axs = plt.subplots(3, 1, figsize = (3, 9))#(10, 30))
         axs[0].imshow(plt.imread(rewards))       ; axs[0].axis("off")
         axs[1].imshow(plt.imread(exits))         ; axs[1].axis("off")
         axs[2].imshow(plt.imread(paths_list[0])) ; axs[2].axis("off")
