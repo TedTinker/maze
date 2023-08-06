@@ -35,6 +35,7 @@ add_this("hard")
 add_this("many")
 
 for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exits_files, paths_files):
+    print(arg_name)
     if(len(paths_list) == 1):
         fig, axs = plt.subplots(3, 1, figsize = (3, 9))#(10, 30))
         axs[0].imshow(plt.imread(rewards))       ; axs[0].axis("off")
@@ -64,5 +65,6 @@ for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exit
     os.remove(exits)
     for paths in paths_list:
         os.remove(paths)
+    print("Done with", arg_name)
 
 print("\nDuration: {}. Done!".format(duration()))
