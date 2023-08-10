@@ -103,7 +103,7 @@ add_this("many",   {
     "target_entropy" :      0
     })
 
-add_this("rand",   {"randomness" : [.2, .5]})
+add_this("rand",   {"randomness" : .5})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():
@@ -125,7 +125,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["en_many_" + str(i+1) for i in range(72)]
+    interesting = ["ef_many"]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 
