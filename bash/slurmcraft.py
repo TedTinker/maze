@@ -96,7 +96,7 @@ add_this("many",   {
     "beta" :                [{"curiosity" : "free"}, .01], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      "\"[(1,-0)]\"", 
+    "default_reward" :      ["\"[(1,{})]\"".format(str(i)) for i in [-1, -.5, 0, .5, 1]], 
     "better_reward" :       "\"[(1,10)]\"",
     "wall_punishment" :     -1,
     "step_lim_punishment" : -.1,
