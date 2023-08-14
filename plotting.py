@@ -59,7 +59,8 @@ def many_min_max(min_max_list):
 
 
 def plots(plot_dicts, min_max_dict):
-    too_many_plot_dicts = len(plot_dicts) > 2
+    too_many_plot_dicts = len(plot_dicts) > 20
+    figsize = (3, 3) if too_many_plot_dicts else (10, 10)
     if(not too_many_plot_dicts):
         fig, axs = plt.subplots(17, len(plot_dicts), figsize = (20*len(plot_dicts), 300))
     
@@ -105,7 +106,7 @@ def plots(plot_dicts, min_max_dict):
             divide_arenas(rew_dict, here)
         
         if(not too_many_plot_dicts): plot_cumulative_rewards_shared_min_max(ax)
-        fig2, ax2 = plt.subplots(figsize = (3, 3)) # (10, 10))  
+        fig2, ax2 = plt.subplots(figsize = figsize)  
         plot_cumulative_rewards_shared_min_max(ax2)  
         ax2.set_title("Cumulative Rewards")
         fig2.savefig("thesis_pics/rewards_{}.png".format(plot_dict["arg_name"]), bbox_inches = "tight", dpi=300) 
@@ -169,7 +170,7 @@ def plots(plot_dicts, min_max_dict):
             divide_arenas(xs, here)
             
         if(not too_many_plot_dicts): plot_exits(ax)
-        fig2, ax2 = plt.subplots(figsize = (3, 3)) # (10, 10))   
+        fig2, ax2 = plt.subplots(figsize = figsize)   
         plot_exits(ax2)  
         ax2.set_title("Chosen Exits")
         fig2.savefig("thesis_pics/exits_{}.png".format(plot_dict["arg_name"]), bbox_inches = "tight", dpi=300) 

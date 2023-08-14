@@ -113,7 +113,7 @@ real_names = {
             
         
 def hard_plotting_pos(complete_order, plot_dicts):
-    too_many_plot_dicts = len(plot_dicts) > 2
+    too_many_plot_dicts = len(plot_dicts) > 20
     os.chdir("..")
     images = []
     rows = 0 ; columns = 0 ; current_count = 0 
@@ -122,6 +122,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         else: current_count += 1
     columns = max(columns, current_count)
     if(complete_order[-1] != "break"): rows += 1
+    figsize = (3, 3) if too_many_plot_dicts else (10, 10)
     
     epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
     epochs_maze_names.sort(key=lambda x: (int(x.split('_')[0]), x.split('_')[1]))
@@ -146,7 +147,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
             _, next_maze_name = next_epoch_maze_name.split("_")
         else:
             next_maze_name = None
-        fig, axs = plt.subplots(rows, columns, figsize =  (columns * 3, rows * 3)) # (columns * 10, rows * 10))
+        fig, axs = plt.subplots(rows, columns, figsize = figsize)
         fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
@@ -184,7 +185,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                             if(exit.rew == "default"): text = "Bad\nExit" ; color = (1,.25,.25,1)
                             if(exit.rew == "better"):  text = "Good\nExit"; color = (.25,1,.25,1)
                         here.fill([x - .25, x + .25, x + .25, x - .25], [y - .25, y - .25, y + .25, y + .25], color=color, zorder=3)
-                        here.text(x, y, text, fontsize=12, ha='center', va='center', zorder = 4)
+                        here.text(x, y, text, fontsize = 12 if too_many_plot_dicts else 12, ha='center', va='center', zorder = 4)
                     here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     here.axis("off")
                 
@@ -192,7 +193,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     plot_pos(ax)
                 if(next_maze_name != maze_name):
                     print("Making thesis_pic")
-                    fig2, ax2 = plt.subplots(figsize =(3,3))# (10, 10))  
+                    fig2, ax2 = plt.subplots(figsize = figsize)  
                     plot_pos(ax2)  
                     real_name = real_names[maze_name]
                     ax2.set_title("Agent Trajectories\n(Epoch {}, {})".format(epoch, real_name))

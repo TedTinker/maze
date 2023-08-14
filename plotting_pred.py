@@ -78,6 +78,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                                 
         
 def hard_plotting_pred(complete_order, plot_dicts):
+    too_many_plot_dicts = len(plot_dicts) > 20
     epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pred_lists"].keys()]))
     epochs_maze_names.sort(key=lambda x: (int(x.split('_')[0]), x.split('_')[1]))
     agents = list(set([int(key.split("_")[0]) for key in plot_dicts[0]["pred_lists"].keys()])) ; agents.sort()

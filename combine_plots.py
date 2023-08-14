@@ -11,6 +11,7 @@ files = os.listdir() ; files.sort()
 rewards_files = [file for file in files if file.startswith("rewards")]
 exits_files = [file for file in files if file.startswith("exits")]
 arg_names = ["_".join(rewards.split("_")[1:])[:-4] for rewards in rewards_files]
+too_many_plot_dicts = len(arg_names) > 20
 
 paths_files = []
 for arg_name in arg_names:
@@ -37,7 +38,7 @@ add_this("many")
 for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exits_files, paths_files):
     print(arg_name)
     if(len(paths_list) == 1):
-        fig, axs = plt.subplots(3, 1, figsize = (3, 9))#(10, 30))
+        fig, axs = plt.subplots(3, 1, figsize = (3, 9) if too_many_plot_dicts else (10, 30))
         axs[0].imshow(plt.imread(rewards))       ; axs[0].axis("off")
         axs[1].imshow(plt.imread(exits))         ; axs[1].axis("off")
         axs[2].imshow(plt.imread(paths_list[0])) ; axs[2].axis("off")
