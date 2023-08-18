@@ -14,12 +14,13 @@ class Exit:
         self.name = name ; self.pos = pos ; self.rew = rew
         
 class Arena_Description:
-    def __init__(self, start, exits):
+    def __init__(self, start, exits, random_by_choice = []):
         self.start = start 
         self.exit_list = exits
         self.exits = pd.DataFrame(
             data = [[exit.name, exit.pos, exit.rew] for exit in exits],
             columns = ["Name", "Position", "Reward"])
+        self.random_by_choice = random_by_choice
         
         
         
@@ -27,19 +28,22 @@ arena_dict = {
     "t.png" : Arena_Description(
         (3, 1),
         [Exit(  "LEFT",     (2,0), "default"),
-        Exit(   "RIGHT",    (2,4), "better")]
+        Exit(   "RIGHT",    (2,4), "better")],
+        [(1, 0), (3, 0)]
         ),
     "1.png" : Arena_Description(
         (2,2), 
         [Exit(  "LEFT",    (1,0), "default"),
-        Exit(   "RIGHT",    (1,4), "better")]
+        Exit(   "RIGHT",    (1,4), "better")],
+        [(0, 1), (2, 1)]
         ),
     "2.png" : Arena_Description(
         (3,3), 
         [Exit(  "LEFT\nLEFT",   (4,1), "better"),
         Exit(   "LEFT\nRIGHT",  (0,1), "default"),
         Exit(   "RIGHT\nLEFT",  (0,5), "default"),
-        Exit(   "RIGHT\nRIGHT", (4,5), "default")]
+        Exit(   "RIGHT\nRIGHT", (4,5), "default")],
+        [(1, 4), (3, 4), (2, 6)]
         ),
     "3.png" : Arena_Description(
         (4,4), 
@@ -50,7 +54,8 @@ arena_dict = {
         Exit(   "RIGHT\nLEFT\nLEFT",   (0,5), "better"),
         Exit(   "RIGHT\nLEFT\nRIGHT",  (0,7), "default"),
         Exit(   "RIGHT\nRIGHT\nLEFT",  (6,7), "default"),
-        Exit(   "RIGHT\nRIGHT\nRIGHT", (6,5), "default")]
+        Exit(   "RIGHT\nRIGHT\nRIGHT", (6,5), "default")],
+        [(2, 3), (4, 3), (3, 1)]
         )}
 
 
@@ -116,8 +121,12 @@ class Arena():
                                   useFixedBase=True, physicsClientId=self.physicsClient)
                 self.colors[cube] = color
                 cube_locs.append(loc)
-            
             self.random_pos = choices(cube_locs, k = int(len(cube_locs) * args.randomness))
+            
+        print(args.randomness, args.random_by_choice)
+        if(args.random_by_choice):
+            self.random_pos = arena_dict[arena_name].random_by_choice
+        print("\n\nRandom positions:", self.random_pos, "\n\n")
         
         for cube, color in self.colors.items():
             p.changeVisualShape(cube, -1, rgbaColor = color, physicsClientId = self.physicsClient)

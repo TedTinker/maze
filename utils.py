@@ -76,6 +76,7 @@ parser.add_argument('--default_reward',     type=literal,    default = [(1, 1)])
 parser.add_argument('--better_reward',      type=literal,    default = [(1, 0), (1, 10)])
 parser.add_argument('--randomness',         type=float,      default = 0)
 parser.add_argument('--random_steps',       type=int,        default = 1)
+parser.add_argument('--random_by_choice',   type=bool,       default = False)
 parser.add_argument('--step_cost',          type=float,      default = .99)
 
 # Hard Maze
@@ -133,7 +134,7 @@ parser.add_argument('--keep_data',           type=int,        default = 25)
 parser.add_argument('--epochs_per_pred_list',type=int,        default = 1000000)#100)
 parser.add_argument('--agents_per_pred_list',type=int,        default = 1)
 parser.add_argument('--episodes_in_pred_list',type=int,       default = 1)
-parser.add_argument('--samples_per_pred',    type=int,        default = 2)
+parser.add_argument('--samples_per_pred',    type=int,        default = 0)
 
 parser.add_argument('--epochs_per_pos_list', type=int,        default = 100)
 parser.add_argument('--agents_per_pos_list', type=int,        default = -1)

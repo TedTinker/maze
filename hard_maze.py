@@ -80,7 +80,7 @@ class Hard_Maze:
         
     def action(self, yaw, spe, verbose = True):
         self.steps += 1
-        if(self.args.randomness > 0 and self.steps % self.args.random_steps == 0): self.maze.randomize()
+        if((self.args.randomness > 0 or self.args.random_by_choice) and self.steps % self.args.random_steps == 0): self.maze.randomize()
         
         if(verbose): print("\n\nStep {}: yaw {}, spe {}.".format(self.steps, yaw, spe))
         yaw = -yaw * self.args.max_yaw_change
@@ -118,8 +118,9 @@ if __name__ == "__main__":
     from time import sleep
     import matplotlib.pyplot as plt
 
-    default_args.randomness = .5
-    maze = Hard_Maze("3", True, default_args)
+    default_args.randomness = 0.0
+    default_args.random_by_choice = False
+    maze = Hard_Maze("t", True, default_args)
     done = False
     i = 0
     yaws = [0, 0, -1, 0, 0]

@@ -9,7 +9,6 @@ from skimage.transform import resize
 from itertools import product
 
 from utils import args, duration, load_dicts, print
-from easy_maze import Easy_Maze
 from arena import arena_dict
 
 print("name:\n{}".format(args.arg_name))
@@ -17,6 +16,7 @@ print("name:\n{}".format(args.arg_name))
 
 
 def easy_plotting_pos(complete_order, plot_dicts):
+    from easy_maze import Easy_Maze
     images = []
     rows = 0 ; columns = 0 ; current_count = 0 
     for arg_name in complete_order: 
@@ -122,7 +122,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         else: current_count += 1
     columns = max(columns, current_count)
     if(complete_order[-1] != "break"): rows += 1
-    figsize = (3, 3) if too_many_plot_dicts else (10, 10)
+    figsize = (columns * 3, rows * 3) if too_many_plot_dicts else (columns * 10, rows * 10)
     
     epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
     epochs_maze_names.sort(key=lambda x: (int(x.split('_')[0]), x.split('_')[1]))
@@ -178,12 +178,8 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     for exit in exits:
                         y, x = exit.pos
                         y = -y
-                        if(maze_name == "t"):
-                            if(exit.rew == "default"): text = "Okay\nExit" ; color = (1,1,.25,1)
-                            if(exit.rew == "better"):  text = "Better\nExit"; color = (.25,1,.25,1)
-                        else:
-                            if(exit.rew == "default"): text = "Bad\nExit" ; color = (1,.25,.25,1)
-                            if(exit.rew == "better"):  text = "Good\nExit"; color = (.25,1,.25,1)
+                        if(exit.rew == "default"): text = "Bad\nExit" ; color = (1,.25,.25,1)
+                        if(exit.rew == "better"):  text = "Good\nExit"; color = (.25,1,.25,1)
                         here.fill([x - .25, x + .25, x + .25, x - .25], [y - .25, y - .25, y + .25, y + .25], color=color, zorder=3)
                         here.text(x, y, text, fontsize = 12 if too_many_plot_dicts else 12, ha='center', va='center', zorder = 4)
                     here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
@@ -193,7 +189,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     plot_pos(ax)
                 if(next_maze_name != maze_name):
                     print("Making thesis_pic")
-                    fig2, ax2 = plt.subplots(figsize = figsize)  
+                    fig2, ax2 = plt.subplots(figsize = (3, 3) if too_many_plot_dicts else (10, 10))  
                     plot_pos(ax2)  
                     real_name = real_names[maze_name]
                     ax2.set_title("Agent Trajectories\n(Epoch {}, {})".format(epoch, real_name))

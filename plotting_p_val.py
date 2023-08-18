@@ -77,6 +77,7 @@ def hard_p_values(complete_order, plot_dicts):
         # Maybe use cumulative rewards
         for (x, arg_1), (y, arg_2) in product(enumerate(arg_names), repeat = 2):
             for plot_dict in plot_dicts:
+                print("HERE!", maze_name, epochs, total_epochs)
                 if(plot_dict["args"].arg_name == arg_1): spots_1 = sum([spot_names[epochs + total_epochs - 11 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
                 if(plot_dict["args"].arg_name == arg_2): spots_2 = sum([spot_names[epochs + total_epochs - 11 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
             
@@ -103,9 +104,11 @@ def hard_p_values(complete_order, plot_dicts):
             print("({}, {}),\t{} vs {}: \t{} vs {}, \tp={},\t{}.".format(x, y, arg_1, arg_2, prop_1, prop_2, p, color))
             
             p_value_dicts[(maze_name, epochs)][(arg_1, arg_2)] = [x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color]
+            
+        total_epochs += epochs
     
     
-    
+    total_epochs = 0
     for (maze_name, epochs), p_value_dict in p_value_dicts.items():
         plt.figure(figsize = (3,3) if too_many_plot_dicts else (10, 10))
         ax = plt.gca()
@@ -127,6 +130,8 @@ def hard_p_values(complete_order, plot_dicts):
         plt.xticks(range(len(arg_names)), real_arg_names, rotation='vertical')
         plt.savefig("bad_p_value_plot.png".format(maze_name), format = "png", bbox_inches = "tight")
         plt.close()
+        
+        total_epochs += epochs
                 
                 
              
@@ -136,8 +141,9 @@ def hard_p_values(complete_order, plot_dicts):
         "n" : ["en"],
         "f" : ["ef"]}
 
+    total_epochs = 0
     for (maze_name, epochs), p_value_dict in p_value_dicts.items():
-        data = [["", "Good Exits", "", "Good Exits", "P-Value"]]     
+        data = [["Hyperparameter 1", "Good Exits", "Hyperparameter 2", "Good Exits", "P-Value"]]     
         p_vals = []
         for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
             base_arg_1, base_arg_2 = arg_1.split("_")[0], arg_2.split("_")[0]
@@ -168,11 +174,13 @@ def hard_p_values(complete_order, plot_dicts):
         table.scale(1, 4)
         plt.savefig("{}_p_values_hypothesis_1.png".format(maze_name), format = "png", bbox_inches = "tight")
         plt.close()
+        
+        total_epochs += epochs
              
              
-                
+    total_epochs = 0
     for (maze_name, epochs), p_value_dict in p_value_dicts.items():
-        data = [["", "Good Exits", "with Traps", "P-Value"]]     
+        data = [["Hyperparameter", "Good Exits", "Good Exits\nwith Traps", "P-Value"]]     
         p_vals = []
         for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
             if(("n" in arg_1.split("_")[0] or "f" in arg_1.split("_")[0]) and arg_2 == arg_1 + "_rand"):
@@ -200,6 +208,8 @@ def hard_p_values(complete_order, plot_dicts):
         table.scale(1, 4)
         plt.savefig("{}_p_values_hypothesis_2.png".format(maze_name), format = "png", bbox_inches = "tight")
         plt.close()
+        
+        total_epochs += epochs
         
 
 

@@ -91,20 +91,20 @@ add_this("many",   {
     "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           200,
-    "naive_eta" :           [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3], 
-    "free_eta" :            1, 
-    "beta" :                [{"curiosity" : "free"}, .01], 
+    "naive_eta" :           1,  # 1.25
+    "free_eta" :            .5, # 1
+    "beta" :                [{"curiosity" : "free"}, .001],  # .01
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      ["\"[(1,{})]\"".format(i) for i in [-.5, 0, .5]], 
+    "default_reward" :      "\"[(1,0)]\"", 
     "better_reward" :       "\"[(1,10)]\"",
     "wall_punishment" :     -1,
     "step_lim_punishment" : -.1,
-    "target_entropy" :      0,
-    "retroactive_reward" :    [False, True]
+    "target_entropy" :      0
     })
 
-add_this("rand",   {"randomness" : .5})
+#add_this("rand",   {"randomness" :          .5})
+add_this("rand",   {"random_by_choice" :  True})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():
@@ -125,8 +125,8 @@ def all_like_this(this):
 
         
 if(__name__ == "__main__" and args.arg_list == []):
-    for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["ef_many"]
+    #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
+    interesting = ["ef_hard", "ef_hard_rand_1", "ef_hard_rand_2"]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 
