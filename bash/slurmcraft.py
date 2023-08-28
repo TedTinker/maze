@@ -45,7 +45,7 @@ def expand_args(name, args):
 
 slurm_dict = {
     "d"    : {}, 
-    "e"    : {"alpha" : "None"},
+    "e"    : {"alpha" : "None", "curiosity" : "none"},
     "n"    : {                  "curiosity" : "naive"},
     "en"   : {"alpha" : "None", "curiosity" : "naive"},
     "f"    : {                  "curiosity" : "free",  "beta" : .05},
@@ -64,23 +64,26 @@ def add_this(name, args):
         new_key = key + "_" + name 
         new_value = deepcopy(value)
         for arg_name, arg in args.items():
-            if(type(arg) != list or type(arg[0]) != dict): new_value[arg_name] = arg
+            if(type(arg) != list or type(arg[0][0]) != dict): new_value[arg_name] = arg
             else:
-                for if_arg_name, if_arg in arg[0].items():
-                    if(if_arg_name in value and value[if_arg_name] == if_arg):
-                        new_value[arg_name] = arg[1]
+                for condition in arg:
+                    for if_arg_name, if_arg in condition[0].items():
+                        if(if_arg_name in value and value[if_arg_name] == if_arg):
+                            new_value[arg_name] = condition[1]
         slurm_dict[new_key] = new_value
 
 add_this("hard",   {
     "hard_maze" :           True, 
-    "maze_list" :           "\"['t']\"",        
-    "max_steps" :           30, 
-    "steps_per_epoch" :     30, 
+    "maze_list" :           "\"['t']\"",   
+    "epochs" :              "\"[500]\"",      
+    "max_steps" :           25, 
+    "steps_per_epoch" :     25, 
     "min_speed" :           0,
-    "max_speed" :           70,
+    "max_speed" :           100,
     "naive_eta" :           1, 
-    "free_eta" :            .5, 
-    "beta" :                [{"curiosity" : "free"}, .001], 
+    "free_eta" :            1, 
+    "beta" :                [[{"curiosity" : "free"}, .001]], 
+    "target_entropy" :      -2,
     "agents_per_pos_list" : 36}) 
 
 add_this("many",   {
@@ -91,20 +94,20 @@ add_this("many",   {
     "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           200,
-    "naive_eta" :           1,  # 1.25
-    "free_eta" :            .5, # 1
-    "beta" :                [{"curiosity" : "free"}, .001],  # .01
+    "naive_eta" :           1, 
+    "free_eta" :            1,
+    "beta" :                [[{"curiosity" : "free"}, .001]], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
     "default_reward" :      "\"[(1,0)]\"", 
-    "better_reward" :       "\"[(1,10)]\"",
+    "better_reward" :       "\"[(1,50)]\"",
     "wall_punishment" :     -1,
-    "step_lim_punishment" : -.1,
+    "step_lim_punishment" : -.25,
     "target_entropy" :      0
     })
 
-#add_this("rand",   {"randomness" :          .5})
-add_this("rand",   {"random_by_choice" :  True})
+add_this("rand",   {"randomness" :          .5})
+#add_this("rand",   {"random_by_choice" :  True})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():
@@ -126,7 +129,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["ef_hard", "ef_hard_rand_1", "ef_hard_rand_2"]
+    interesting = ["e_hard"]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 

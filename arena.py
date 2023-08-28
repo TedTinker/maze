@@ -1,5 +1,5 @@
 #%%
-from random import choices, random
+from random import choices, random, sample
 import pandas as pd
 import numpy as np
 import pybullet as p
@@ -31,11 +31,18 @@ arena_dict = {
         Exit(   "RIGHT",    (2,4), "better")],
         [(1, 0), (3, 0)]
         ),
+    
+    "alt.png" : Arena_Description(
+        (3, 2),
+        [Exit(   "RIGHT",    (2,5), "better")],
+        [(2, 0)]   # (y, x)
+        ),
+    
     "1.png" : Arena_Description(
         (2,2), 
         [Exit(  "LEFT",    (1,0), "default"),
         Exit(   "RIGHT",    (1,4), "better")],
-        [(0, 1), (2, 1)]
+        #[(2, 1), (2, 3), (3, 2)]
         ),
     "2.png" : Arena_Description(
         (3,3), 
@@ -43,7 +50,7 @@ arena_dict = {
         Exit(   "LEFT\nRIGHT",  (0,1), "default"),
         Exit(   "RIGHT\nLEFT",  (0,5), "default"),
         Exit(   "RIGHT\nRIGHT", (4,5), "default")],
-        [(1, 4), (3, 4), (2, 6)]
+        [(4,4),(4,6)]#[(3, 2), (3, 4), (4, 3)]
         ),
     "3.png" : Arena_Description(
         (4,4), 
@@ -55,7 +62,7 @@ arena_dict = {
         Exit(   "RIGHT\nLEFT\nRIGHT",  (0,7), "default"),
         Exit(   "RIGHT\nRIGHT\nLEFT",  (6,7), "default"),
         Exit(   "RIGHT\nRIGHT\nRIGHT", (6,5), "default")],
-        [(2, 3), (4, 3), (3, 1)]
+        [(6,4), (6,6), (6,8)]#[(4, 3), (4, 5), (5, 4)]
         )}
 
 
@@ -63,7 +70,7 @@ arena_dict = {
 def get_physics(GUI, w, h):
     if(GUI):
         physicsClient = p.connect(p.GUI)
-        p.resetDebugVisualizerCamera(1,90,-89,(w/2,h/2,w), physicsClientId = physicsClient)
+        p.resetDebugVisualizerCamera(1,90,-89,(w/2,h/2-.5,w), physicsClientId = physicsClient)
     else:   
         physicsClient = p.connect(p.DIRECT)
     p.setAdditionalSearchPath("pybullet_data/")
@@ -98,12 +105,12 @@ class Arena():
         name = arena_name.split(".")[0]
         self.random_pos = []
 
-        plane_positions = [[0, 0, 0], [10, 0, 0], [0, 10, 0], [10, 10, 0]]
-        plane_ids = []
-        for position in plane_positions:
-            plane_id = p.loadURDF("plane.urdf", position, globalScaling=.5, useFixedBase=True, physicsClientId=self.physicsClient)
-            p.changeVisualShape(plane_id, -1, rgbaColor=(0,0,0,1), physicsClientId = self.physicsClient)
-            plane_ids.append(plane_id)
+        #plane_positions = [[0, 0, 0], [10, 0, 0], [0, 10, 0], [10, 10, 0]]
+        #plane_ids = []
+        #for position in plane_positions:
+        #    plane_id = p.loadURDF("plane.urdf", position, globalScaling=.5, useFixedBase=True, physicsClientId=self.physicsClient)
+        #    p.changeVisualShape(plane_id, -1, rgbaColor=(.5,.5,.5,1), physicsClientId = self.physicsClient)
+        #    plane_ids.append(plane_id)
 
         self.ends = {} ; self.colors = {} ; cube_locs = []
         for loc in ((x, y) for x in range(w) for y in range(h)):
@@ -121,11 +128,13 @@ class Arena():
                                   useFixedBase=True, physicsClientId=self.physicsClient)
                 self.colors[cube] = color
                 cube_locs.append(loc)
-            self.random_pos = choices(cube_locs, k = int(len(cube_locs) * args.randomness))
+        
             
-        print(args.randomness, args.random_by_choice)
         if(args.random_by_choice):
             self.random_pos = arena_dict[arena_name].random_by_choice
+        else:
+            self.random_pos = sample(cube_locs, k=int(len(cube_locs) * args.randomness))
+        print(args.randomness, args.random_by_choice)
         print("\n\nRandom positions:", self.random_pos, "\n\n")
         
         for cube, color in self.colors.items():

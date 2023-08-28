@@ -89,7 +89,7 @@ class Hard_Maze:
             (self.args.max_speed - self.args.min_speed)
         spe = [self.args.min_speed, self.args.max_speed, spe] ; spe.sort() ; spe = spe[1]
         if(verbose): print("updated: yaw {}, spe {}.".format(yaw, spe))
-        action_name = "Yaw: {}. Speed: {}.".format(round(degrees(yaw)), round(spe))
+        action_name = "Yaw: {}. Speed: {}.".format(-1*round(degrees(yaw)), round(spe))
         
         for _ in range(self.args.steps_per_step):
             self.change_velocity(yaw/self.args.steps_per_step, spe/self.args.steps_per_step, verbose = verbose)
@@ -120,13 +120,14 @@ if __name__ == "__main__":
 
     default_args.randomness = 0.0
     default_args.random_by_choice = False
-    maze = Hard_Maze("t", True, default_args)
+    maze = Hard_Maze("3", True, default_args)
     done = False
     i = 0
     yaws = [0, 0, -1, 0, 0]
     speeds = [-1, -1, -1, -1, -1]
     while(done == False):
         #reward, wall_punishment, name, done, action_name = maze.action(random(), random(), verbose = True)
+        break
         reward, wall_punishment, name, done, action_name = maze.action(yaws[i], speeds[i], verbose = True)
         rgbd, spe = maze.obs()
         rgb = rgbd.squeeze(0)[:,:,0:3]

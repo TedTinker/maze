@@ -70,7 +70,7 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                         pred = zq_preds[pred_num]
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = torch.tanh(pred), norm = norm)
                                         ax.set_title("ZQ Sample {}".format(pred_num+1))
-                        plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
+                        plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight", dpi=300)
                         plt.close()
                         
         print("{}:\tDone with easy epoch {}.".format(duration(), epoch))
@@ -108,28 +108,28 @@ def hard_plotting_pred(complete_order, plot_dicts):
                                     # Actual obs
                                     if(column == 0):   
                                         ax.imshow(rgbd[:,:,0:3])
-                                        ax.set_title("Step {}\nAction: {}\nSpeed {}".format(row, action_name, steps_per_step*round(spe.item())))
+                                        ax.set_title("Step {}\nAction: {}\nSpeed {}".format(row, action_name, steps_per_step*round(spe.item())), fontsize = 12)
                                     # ZP Mean
                                     elif(column == 1): 
                                         ax.imshow(torch.sigmoid(rgbd_mu_pred_p[:,:,0:3])) 
-                                        ax.set_title("ZP Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_p.item())))
+                                        ax.set_title("p(z) Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_p.item())), fontsize = 12)
                                     # ZP Samples
                                     elif(column in [i+2 for i in range(plot_dict["args"].samples_per_pred)]):
                                         pred_num = column - 2
                                         pred = pred_rgbd_p[pred_num]
                                         ax.imshow(torch.sigmoid(pred[:,:,0:3]))
-                                        ax.set_title("ZP Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_p[pred_num].item())))
+                                        ax.set_title("p(z) Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_p[pred_num].item())), fontsize = 12)
                                     # ZQ Mean
                                     elif(column == 2 + plot_dict["args"].samples_per_pred):
                                         ax.imshow(torch.sigmoid(rgbd_mu_pred_q[:,:,0:3]))
-                                        ax.set_title("ZQ Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_q.item())))
+                                        ax.set_title("q(z) Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_q.item())), fontsize = 12)
                                     # ZQ Samples
                                     else:
                                         pred_num = column - 3 - plot_dict["args"].samples_per_pred
                                         pred = pred_rgbd_q[pred_num]
                                         ax.imshow(torch.sigmoid(pred[:,:,0:3]))
-                                        ax.set_title("ZQ Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_q[pred_num].item())))
-                        plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight")
+                                        ax.set_title("q(z) Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_q[pred_num].item())), fontsize = 12)
+                        plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight", dpi=300)
                         plt.close()
                         
         print("{}:\tDone with hard epoch {}.".format(duration(), epoch))

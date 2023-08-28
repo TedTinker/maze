@@ -6,7 +6,7 @@ import numpy as np
 from math import log
 from itertools import accumulate
 
-from utils import args, duration, load_dicts, print
+from utils import args, duration, load_dicts, print, real_names
 
 print("name:\n{}\n".format(args.arg_name),)
 
@@ -122,6 +122,7 @@ def plots(plot_dicts, min_max_dict):
         if(plot_dict["args"].hard_maze): 
             kinds = ["NONE"]
             if("t" in plot_dict["args"].maze_list): kinds += ["LEFT", "RIGHT"]
+            if("alt" in plot_dict["args"].maze_list): kinds += ["RIGHT"]
             if("1" in plot_dict["args"].maze_list): kinds += ["LEFT", "RIGHT"]
             if("2" in plot_dict["args"].maze_list): kinds += ["LEFT\nLEFT", "LEFT\nRIGHT", "RIGHT\nLEFT", "RIGHT\nRIGHT"]
             if("3" in plot_dict["args"].maze_list): kinds += ["LEFT\nLEFT\nLEFT", "LEFT\nLEFT\nRIGHT", "LEFT\nRIGHT\nLEFT", "LEFT\nRIGHT\nRIGHT", "RIGHT\nLEFT\nLEFT", "RIGHT\nLEFT\nRIGHT", "RIGHT\nRIGHT\nLEFT", "RIGHT\nRIGHT\nRIGHT"]
@@ -172,7 +173,7 @@ def plots(plot_dicts, min_max_dict):
         if(not too_many_plot_dicts): plot_exits(ax)
         fig2, ax2 = plt.subplots(figsize = figsize)   
         plot_exits(ax2)  
-        ax2.set_title("Chosen Exits")
+        ax2.set_title(real_names[plot_dict["arg_name"]] if plot_dict["arg_name"] in real_names else "with Curiosity Traps")
         fig2.savefig("thesis_pics/exits_{}.png".format(plot_dict["arg_name"]), bbox_inches = "tight", dpi=300) 
         plt.close(fig2)
         

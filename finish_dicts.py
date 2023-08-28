@@ -6,7 +6,8 @@ print("name:\n{}".format(args.arg_name))
 
 os.chdir("saved")
 folders = os.listdir() ; folders.sort()
-folders.remove("thesis_pics")
+try: folders.remove("thesis_pics")
+except: pass 
 print("\n{} folders.".format(len(folders)))
 
 plot_dicts = {}

@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import os
 import re
 
-from utils import args, duration, print
+from utils import args, duration, print, real_names
 
 print("name:\n{}".format(args.arg_name))
 
 os.chdir("saved/thesis_pics")
+
 files = os.listdir() ; files.sort()
 rewards_files = [file for file in files if file.startswith("rewards")]
 exits_files = [file for file in files if file.startswith("exits")]
@@ -16,25 +17,10 @@ too_many_plot_dicts = len(arg_names) > 20
 paths_files = []
 for arg_name in arg_names:
     paths_files.append([file for file in files if re.match(r"paths_{}_\d+.png".format(re.escape(arg_name)), file)])
-    
-real_names = {
-    "d"  : "No Entropy, No Curiosity",
-    "e"  : "Entropy",
-    "n"  : "Naive Curiosity",
-    "en" : "Entropy and Naive Curiosity",
-    "f"  : "Aware Curiosity",
-    "ef" : "Entropy and Aware Curiosity",
-}
 
-def add_this(name):
-    keys, values = [], []
-    for key, value in real_names.items(): keys.append(key) ; values.append(value)
-    for key, value in zip(keys, values):  
-        new_key = key + "_" + name 
-        real_names[new_key] = value
-add_this("hard")
-add_this("many")
 
+
+"""
 for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exits_files, paths_files):
     print(arg_name)
     if(len(paths_list) == 1):
@@ -59,13 +45,86 @@ for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exit
     else:                              title = arg_name
     fig.suptitle(title, fontsize=30, y=1.0)
     fig.tight_layout(pad=1.0)
-    plt.savefig("{}.png".format(arg_name), bbox_inches = "tight", dpi=100)
+    plt.savefig("{}.png".format(arg_name), bbox_inches = "tight", dpi=600)
     plt.close(fig)
     
-    os.remove(rewards)
-    os.remove(exits)
-    for paths in paths_list:
-        os.remove(paths)
+    #os.remove(rewards)
+    #os.remove(exits)
+    #for paths in paths_list:
+    #    os.remove(paths)
     print("Done with", arg_name)
+"""
+
+    
+
+names = ["d_hard", "d_hard_rand", "e_hard", "e_hard_rand", "n_hard", "n_hard_rand", "en_hard", "en_hard_rand", "f_hard", "f_hard_rand", "ef_hard", "ef_hard_rand"]
+poses = [(0,0),    (0,1),         (0,2),    (0,3),         (1,0),    (1,1),         (1,2),    (1,3),           (2,0),    (2,1),         (2,2),     (2,3)]
+fig, axs = plt.subplots(3, 4, figsize = (10, 7) if too_many_plot_dicts else (10, 7))
+fig.suptitle("Biased T-Maze Trajectories", y = .9, fontsize = 10)
+
+for i, arg_name in enumerate(names):
+    if(arg_name in arg_names): 
+        (x,y) = poses[names.index(arg_name)]
+        ax = axs[x, y]
+        ax.imshow(plt.imread("paths_{}_0.png".format(arg_name)))       ; ax.axis("off")
+
+plt.subplots_adjust(wspace=0, hspace=0)
+plt.savefig("paths_hard.png", bbox_inches = "tight", dpi=600)
+plt.close(fig)
+
+
+
+names = ["d_hard", "d_hard_rand", "e_hard", "e_hard_rand", "n_hard", "n_hard_rand", "en_hard", "en_hard_rand", "f_hard", "f_hard_rand", "ef_hard", "ef_hard_rand"]
+poses = [(0,0),    (0,1),         (0,2),    (0,3),         (1,0),    (1,1),         (1,2),    (1,3),           (2,0),    (2,1),         (2,2),     (2,3)]
+fig, axs = plt.subplots(3, 4, figsize = (10, 7) if too_many_plot_dicts else (10, 7))
+fig.suptitle("Biased T-Maze Exit Choices", y = .9, fontsize = 10)
+
+for i, arg_name in enumerate(names):
+    if(arg_name in arg_names): 
+        (x,y) = poses[names.index(arg_name)]
+        ax = axs[x, y]
+        ax.imshow(plt.imread("exits" + "_" + arg_name + ".png"))              ; ax.axis("off")
+
+plt.subplots_adjust(wspace=0, hspace=0)
+plt.savefig("exits_hard.png", bbox_inches = "tight", dpi=600)
+plt.close(fig)
+
+
+
+names = ["d_many", "d_many_rand", "e_many", "e_many_rand", "n_many", "n_many_rand", "en_many", "en_many_rand", "f_many", "f_many_rand", "ef_many", "ef_many_rand"]
+poses = [(0,0),    (0,1),         (0,2),    (0,3),         (1,0),    (1,1),         (1,2),    (1,3),           (2,0),    (2,1),         (2,2),     (2,3)]
+fig, axs = plt.subplots(9, 4, figsize = (7, 10) if too_many_plot_dicts else (7, 10))
+fig.suptitle("T-Maze, Double T-Maze, Triple T-Maze Trajectories", y = .9, fontsize = 10)
+
+for i, arg_name in enumerate(names):
+    if(arg_name in arg_names): 
+        (x,y) = poses[names.index(arg_name)]
+        all_paths = ["paths_{}_{}.png".format(arg_name, j) for j in range(3)]
+        for j in range(3):
+            ax = axs[3*x + j, y]
+            ax.imshow(plt.imread(all_paths[j]))       ; ax.axis("off")
+            
+plt.subplots_adjust(wspace=0, hspace=0)
+plt.savefig("paths_many.png", bbox_inches = "tight", dpi=600)
+plt.close(fig)
+
+
+
+names = ["d_many", "d_many_rand", "e_many", "e_many_rand", "n_many", "n_many_rand", "en_many", "en_many_rand", "f_many", "f_many_rand", "ef_many", "ef_many_rand"]
+poses = [(0,0),    (0,1),         (0,2),    (0,3),         (1,0),    (1,1),         (1,2),    (1,3),           (2,0),    (2,1),         (2,2),     (2,3)]
+fig, axs = plt.subplots(3, 4, figsize = (10, 7) if too_many_plot_dicts else (10, 7))
+fig.suptitle("T-Maze, Double T-Maze, Triple T-Maze Exit Choices", y = .9, fontsize = 10)
+
+for i, arg_name in enumerate(names):
+    if(arg_name in arg_names): 
+        (x,y) = poses[names.index(arg_name)]
+        ax = axs[x, y]
+        ax.imshow(plt.imread("exits" + "_" + arg_name + ".png"))              ; ax.axis("off")
+
+plt.subplots_adjust(wspace=0, hspace=0)
+plt.savefig("exits_many.png", bbox_inches = "tight", dpi=600)
+plt.close(fig)
+    
+    
 
 print("\nDuration: {}. Done!".format(duration()))

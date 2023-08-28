@@ -8,7 +8,7 @@ import numpy as np
 from skimage.transform import resize
 from itertools import product
 
-from utils import args, duration, load_dicts, print
+from utils import args, duration, load_dicts, print, real_names, maze_real_names
 from arena import arena_dict
 
 print("name:\n{}".format(args.arg_name))
@@ -100,15 +100,6 @@ def easy_plotting_pos(complete_order, plot_dicts):
     resized = []
     for image in images: resized.append(resize(image, (x_max, y_max, 4)))
     imageio.mimwrite("easy_video.mp4", resized, fps = 3)
-    
-    
-    
-real_names = {
-    "t" : "Biased T-Maze",
-    "1" : "T-Maze",
-    "2" : "Double T-Maze",
-    "3" : "Triple T-Maze",
-}
             
             
         
@@ -178,10 +169,11 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     for exit in exits:
                         y, x = exit.pos
                         y = -y
-                        if(exit.rew == "default"): text = "Bad\nExit" ; color = (1,.25,.25,1)
-                        if(exit.rew == "better"):  text = "Good\nExit"; color = (.25,1,.25,1)
-                        here.fill([x - .25, x + .25, x + .25, x - .25], [y - .25, y - .25, y + .25, y + .25], color=color, zorder=3)
-                        here.text(x, y, text, fontsize = 12 if too_many_plot_dicts else 12, ha='center', va='center', zorder = 4)
+                        if(exit.rew == "default"): text = "X" ; fontsize = 40 # text = "Bad\nExit" ; color = (1,.25,.25,1)
+                        if(exit.rew == "better"):  text = "✓" ; fontsize = 50 #text = "Good\nExit"; color = (.25,1,.25,1)
+                        #here.fill([x - .25, x + .25, x + .25, x - .25], [y - .25, y - .25, y + .25, y + .25], color=color, zorder=3)
+                        #here.text(x, y, text, fontsize = 12 if too_many_plot_dicts else 12, ha='center', va='center', zorder = 4)
+                        here.text(x, y, text, fontsize = fontsize, ha='center', va='center', zorder = 4)
                     here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     here.axis("off")
                 
@@ -191,8 +183,11 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     print("Making thesis_pic")
                     fig2, ax2 = plt.subplots(figsize = (3, 3) if too_many_plot_dicts else (10, 10))  
                     plot_pos(ax2)  
-                    real_name = real_names[maze_name]
-                    ax2.set_title("Agent Trajectories\n(Epoch {}, {})".format(epoch, real_name))
+                    maze_real_name = maze_real_names[maze_name]
+                    title = real_names[arg_name] if arg_name in real_names else "with Curiosity Traps"
+                    if(maze_name in ["1", "t"]): title = title
+                    else:                        title = ""                    
+                    ax2.set_title(title)
                     fig2.savefig("saved/thesis_pics/paths_{}_{}.png".format(plot_dict["arg_name"], saved_paths), bbox_inches = "tight", dpi=300) 
                     plt.close(fig2)
             

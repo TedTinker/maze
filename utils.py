@@ -132,8 +132,8 @@ parser.add_argument('--retro_step_cost',    type=float,      default = .99)
 parser.add_argument('--keep_data',           type=int,        default = 25)
 
 parser.add_argument('--epochs_per_pred_list',type=int,        default = 1000000)#100)
-parser.add_argument('--agents_per_pred_list',type=int,        default = 1)
-parser.add_argument('--episodes_in_pred_list',type=int,       default = 1)
+parser.add_argument('--agents_per_pred_list',type=int,        default = 3)
+parser.add_argument('--episodes_in_pred_list',type=int,       default = 3)
 parser.add_argument('--samples_per_pred',    type=int,        default = 0)
 
 parser.add_argument('--epochs_per_pos_list', type=int,        default = 100)
@@ -207,6 +207,8 @@ if(args.arg_title[:3] != "___" and not args.arg_name in ["default", "finishing_d
     except: pass
     try: os.mkdir("saved/thesis_pics")
     except: pass
+    try: os.mkdir("saved/thesis_pics/final")
+    except: pass
 if(default_args.alpha == "None"): default_args.alpha = None
 if(args.alpha == "None"):         args.alpha = None
 
@@ -269,6 +271,34 @@ def dkl(mu_1, std_1, mu_2, std_2):
     out = (.5 * (term_1 + term_2 - term_3 - 1))
     out = torch.nan_to_num(out)
     return(out)
+
+
+
+real_names = {
+    "d"  : "No Entropy, No Curiosity",
+    "e"  : "Entropy",
+    "n"  : "Naive Curiosity",
+    "en" : "Entropy and Naive Curiosity",
+    "f"  : "Aware Curiosity",
+    "ef" : "Entropy and Aware Curiosity",
+}
+
+maze_real_names = {
+    "t" : "Biased T-Maze",
+    "alt" : "Biased T-Maze",
+    "1" : "T-Maze",
+    "2" : "Double T-Maze",
+    "3" : "Triple T-Maze",
+}
+
+def add_this(name):
+    keys, values = [], []
+    for key, value in real_names.items(): keys.append(key) ; values.append(value)
+    for key, value in zip(keys, values):  
+        new_key = key + "_" + name 
+        real_names[new_key] = value
+add_this("hard")
+add_this("many")
 
 
 

@@ -7,10 +7,11 @@ from matplotlib.lines import Line2D
 from scipy.stats import chi2_contingency
 from statsmodels.stats.proportion import proportions_ztest as ztest
 from scipy.stats import binom_test
+import scipy.stats as stats
 from copy import deepcopy
 import math
 
-from utils import args, duration, load_dicts, print
+from utils import args, duration, load_dicts, print, maze_real_names
 
 print("name:\n{}\n".format(args.arg_name),)
 
@@ -35,12 +36,6 @@ add_this(real_names, "many")
 for i in range(15):
     add_this(real_names, str(i))
 
-real_maze_names = {
-    "t" : "Biased T-Maze",
-    "1" : "T-Maze",
-    "2" : "Double T-Maze",
-    "3" : "Triple T-Maze"}
-
 def format_num(num):
     if num == 0: return "<1e-323"
     elif abs(num) < 0.0001: return '{:.2e}'.format(num)
@@ -48,6 +43,31 @@ def format_num(num):
         decimals = 3 - int(math.floor(math.log10(abs(num)))) # calculate number of decimal places needed
         return '{:.{}f}'.format(num, decimals)
     else: return str(num)
+    
+def fraction_to_float(fraction_str):
+    numerator, denominator = map(int, fraction_str.split('/'))
+    return numerator / denominator
+
+def confidence_interval(fraction_str):
+    numerator, denominator = map(int, fraction_str.split('/'))
+    proportion = numerator / denominator
+    standard_error = math.sqrt((proportion * (1 - proportion)) / denominator)
+    z_score = stats.norm.ppf(1 - (1 - .95) / 2)
+    margin_of_error = z_score * standard_error
+    lower_bound = proportion - margin_of_error
+    upper_bound = proportion + margin_of_error
+    return(lower_bound, upper_bound)
+
+def custom_round(number):
+    str_num = str(number)
+    integer_part, decimal_part = str_num.split('.')
+    non_zero_pos = 0
+    for char in decimal_part:
+        if char != '0':
+            break
+        non_zero_pos += 1
+    rounded_number = round(number, non_zero_pos + 1)
+    return rounded_number
      
 
 
@@ -77,7 +97,6 @@ def hard_p_values(complete_order, plot_dicts):
         # Maybe use cumulative rewards
         for (x, arg_1), (y, arg_2) in product(enumerate(arg_names), repeat = 2):
             for plot_dict in plot_dicts:
-                print("HERE!", maze_name, epochs, total_epochs)
                 if(plot_dict["args"].arg_name == arg_1): spots_1 = sum([spot_names[epochs + total_epochs - 11 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
                 if(plot_dict["args"].arg_name == arg_2): spots_2 = sum([spot_names[epochs + total_epochs - 11 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
             
@@ -97,6 +116,7 @@ def hard_p_values(complete_order, plot_dicts):
             _, p = ztest([good_spots_1, good_spots_2], [len(spots_1), len(spots_2)])
             
             confidence = .999 
+            good_p = "<{}".format(custom_round(1-confidence))
             if(p <= 1-confidence): 
                 if(prop_1 < prop_2): color = "red"
                 else:                color = "green"
@@ -107,10 +127,9 @@ def hard_p_values(complete_order, plot_dicts):
             
         total_epochs += epochs
     
-    
     total_epochs = 0
     for (maze_name, epochs), p_value_dict in p_value_dicts.items():
-        plt.figure(figsize = (3,3) if too_many_plot_dicts else (10, 10))
+        plt.figure(figsize = (10, 10))
         ax = plt.gca()
         for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
             flipped_y = -1*y + len(arg_names) - 1
@@ -125,7 +144,7 @@ def hard_p_values(complete_order, plot_dicts):
         ax.spines['top'].set_visible(False)
         plt.xlim([-.5, len(arg_names)-.5])
         plt.ylim([-.5, len(arg_names)-.5])
-        plt.title("P-Values\n(Epoch {}, {})".format(epochs + total_epochs, real_maze_names[maze_name]))        
+        plt.title("P-Values\n(Epoch {}, {})".format(epochs + total_epochs, maze_real_names[maze_name]))        
         plt.yticks(range(len(arg_names)), reversed_names, rotation='horizontal')
         plt.xticks(range(len(arg_names)), real_arg_names, rotation='vertical')
         plt.savefig("bad_p_value_plot.png".format(maze_name), format = "png", bbox_inches = "tight")
@@ -135,53 +154,52 @@ def hard_p_values(complete_order, plot_dicts):
                 
                 
              
-    pairs = {
-        "d" : ["e", "n", "f"],
-        "e" : ["en", "ef"],
-        "n" : ["en"],
-        "f" : ["ef"]}
+    kinds = ["d", "e", "n", "f", "en", "ef"]
 
     total_epochs = 0
     for (maze_name, epochs), p_value_dict in p_value_dicts.items():
-        data = [["Hyperparameter 1", "Good Exits", "Hyperparameter 2", "Good Exits", "P-Value"]]     
-        p_vals = []
-        for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
-            base_arg_1, base_arg_2 = arg_1.split("_")[0], arg_2.split("_")[0]
-            if(arg_1.split("_")[-1] != "rand" and arg_2.split("_")[-1] != "rand"):
-                if(base_arg_1 in list(pairs.keys())):
-                    if(base_arg_2 in pairs[base_arg_1]):
-                        if arg_1.endswith("rand"): real_name_1 = "with Curiosity Traps"
-                        elif(arg_1 in real_names): real_name_1 = real_names[arg_1]
-                        else:                      real_name_1 = arg_1
-                        if arg_2.endswith("rand"): real_name_2 = "with Curiosity Traps"
-                        elif(arg_2 in real_names): real_name_2 = real_names[arg_2]
-                        else:                      real_name_2 = arg_2
-                        p_vals.append(p)
-                        data.append([real_name_1, "{}/{}".format(good_spots_1, len(spots_1)), real_name_2, "{}/{}".format(good_spots_2, len(spots_2)), format_num(p)])
-        plt.figure(figsize = (10, 7))
-        ax = plt.gca() ; ax.axis("off")
-        plt.title("P-Values: Hypothesis 1\n(Epoch {}, {})".format(epochs + total_epochs, real_maze_names[maze_name]))   
-        table = plt.table(cellText=data, loc='center', cellLoc='center', colWidths=[.3, .2, .3, .2, .2])
-        cells = table.get_celld()
-        for i in range(1, len(data)):
-            p_value = p_vals[i-1]
-            col_1 = int(data[i][1].split("/")[0])
-            col_2 = int(data[i][3].split("/")[0])
-            if p_value <= 0.05:  
-                if(col_1 > col_2): cells[i, 1].set_facecolor('green') ; cells[i, 3].set_facecolor('red')
-                else:              cells[i, 1].set_facecolor('red') ;   cells[i, 3].set_facecolor('green')
+        all_vals = []
+        for kind in kinds:
+            for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
+                base_arg_1 = arg_1.split("_")[0]
+                if(arg_1.split("_")[-1] != "rand" and base_arg_1 == kind):
+                    if(arg_1 in real_names): real_name_1 = real_names[arg_1]
+                    all_vals.append([real_name_1, "{}/{}".format(good_spots_1, len(spots_1))])
+                    break
+        all_names = [val[0] for val in all_vals]
+        all_heights = [fraction_to_float(val[1]) for val in all_vals]
+        all_conf = [confidence_interval(val[1]) for val in all_vals]
+        all_colors = ["white" for val in all_vals]
+        fig, ax = plt.subplots()
 
-        table.scale(1, 4)
-        plt.savefig("{}_p_values_hypothesis_1.png".format(maze_name), format = "png", bbox_inches = "tight")
+        x = .1
+        bar_width = 0.4  
+        spacing = 0.5  
+
+        for i in range(len(all_heights)):
+            bar_center = x + bar_width / 2
+            ax.add_patch(patches.Rectangle((x, 0), bar_width, all_heights[i], facecolor=all_colors[i], edgecolor="black"))
+            ax.text(x + bar_width/2, -0.2, all_names[i], ha='center', va='center', rotation=90, fontsize=10)
+            ax.plot([bar_center, bar_center], [all_conf[i][0], all_conf[i][1]], color="black")
+            ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][0], all_conf[i][0]], color="black")
+            ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][1], all_conf[i][1]], color="black")
+            x += spacing  
+
+        ax.set_xlim(0, x)
+        ax.set_ylim(0, 1)  # Adding 1 for a bit of padding at the top
+        ax.set_ylabel('Proportion of Good Exits')
+        plt.title("Hypothesis 1\n(Epoch {}, {})".format(epochs + total_epochs, maze_real_names[maze_name])) 
+        ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis
+
+        plt.savefig("{}_p_values_hypothesis_1.png".format(maze_name), format = "png", bbox_inches = "tight", dpi=300)
         plt.close()
-        
         total_epochs += epochs
-             
-             
+                
+        
+        
     total_epochs = 0
     for (maze_name, epochs), p_value_dict in p_value_dicts.items():
-        data = [["Hyperparameter", "Good Exits", "Good Exits\nwith Traps", "P-Value"]]     
-        p_vals = []
+        all_vals = []
         for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
             if(("n" in arg_1.split("_")[0] or "f" in arg_1.split("_")[0]) and arg_2 == arg_1 + "_rand"):
                 if arg_1.endswith("rand"): real_name_1 = "with Curiosity Traps"
@@ -190,25 +208,37 @@ def hard_p_values(complete_order, plot_dicts):
                 if arg_2.endswith("rand"): real_name_2 = "with Curiosity Traps"
                 elif(arg_2 in real_names): real_name_2 = real_names[arg_2]
                 else:                      real_name_2 = arg_2
-                p_vals.append(p)
-                data.append([real_name_1, "{}/{}".format(good_spots_1, len(spots_1)), "{}/{}".format(good_spots_2, len(spots_2)), format_num(p)])
-        plt.figure(figsize = (10, 5))
-        ax = plt.gca() ; ax.axis("off")
-        plt.title("P-Values: Hypothesis 2\n(Epoch {}, {})".format(epochs + total_epochs, real_maze_names[maze_name]))   
-        table = plt.table(cellText=data, loc='center', cellLoc='center', colWidths=[.3, .2, .2, .2])
-        cells = table.get_celld()
-        for i in range(1, len(data)):
-            p_value = p_vals[i-1] 
-            col_1 = int(data[i][1].split("/")[0])
-            col_2 = int(data[i][2].split("/")[0])
-            if p_value <= 0.05:  
-                if(col_1 > col_2): cells[i, 1].set_facecolor('green') ; cells[i, 2].set_facecolor('red')
-                else:              cells[i, 1].set_facecolor('red') ;   cells[i, 2].set_facecolor('green')
+                all_vals.append([real_name_1, "{}/{}".format(good_spots_1, len(spots_1)), "{}/{}".format(good_spots_2, len(spots_2)), good_p if p < 1-confidence else str(p)])
+        all_names = sum([[val[0], "with Curiosity Traps"] for val in all_vals], [])
+        all_heights = sum([[fraction_to_float(val[1]), fraction_to_float(val[2])] for val in all_vals], [])
+        all_conf = sum([[confidence_interval(val[1]), confidence_interval(val[2])] for val in all_vals], [])
+        all_colors = sum([["white", "white"] if val[-1] != good_p else ["green", "red"] if fraction_to_float(val[1]) > fraction_to_float(val[2]) else ["red", "green"] for val in all_vals], [])
+        fig, ax = plt.subplots()
 
-        table.scale(1, 4)
-        plt.savefig("{}_p_values_hypothesis_2.png".format(maze_name), format = "png", bbox_inches = "tight")
+        x = .1
+        bar_width = 0.4  
+        spacing = 0.5  
+
+        for i in range(len(all_heights)):
+            bar_center = x + bar_width / 2
+            ax.add_patch(patches.Rectangle((x, 0), bar_width, all_heights[i], facecolor=all_colors[i], edgecolor="black"))
+            ax.text(x + bar_width/2, -0.2, all_names[i], ha='center', va='center', rotation=90, fontsize=10)
+            ax.plot([bar_center, bar_center], [all_conf[i][0], all_conf[i][1]], color="black")
+            ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][0], all_conf[i][0]], color="black")
+            ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][1], all_conf[i][1]], color="black")
+            if(i % 2 != 0):
+                x += spacing  
+            else:
+                x += bar_width
+
+        ax.set_xlim(0, x)
+        ax.set_ylim(0, 1)  # Adding 1 for a bit of padding at the top
+        ax.set_ylabel('Proportion of Good Exits')
+        plt.title("Hypothesis 2\n(Epoch {}, {})".format(epochs + total_epochs, maze_real_names[maze_name]))   
+        ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis
+
+        plt.savefig("{}_p_values_hypothesis_2.png".format(maze_name), format = "png", bbox_inches = "tight", dpi=300)
         plt.close()
-        
         total_epochs += epochs
         
 
