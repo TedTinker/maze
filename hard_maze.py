@@ -118,7 +118,7 @@ if __name__ == "__main__":
     from time import sleep
     import matplotlib.pyplot as plt
 
-    default_args.randomness = 0.0
+    default_args.randomness = 0.25
     default_args.random_by_choice = False
     maze = Hard_Maze("3", True, default_args)
     done = False
@@ -127,7 +127,6 @@ if __name__ == "__main__":
     speeds = [-1, -1, -1, -1, -1]
     while(done == False):
         #reward, wall_punishment, name, done, action_name = maze.action(random(), random(), verbose = True)
-        break
         reward, wall_punishment, name, done, action_name = maze.action(yaws[i], speeds[i], verbose = True)
         rgbd, spe = maze.obs()
         rgb = rgbd.squeeze(0)[:,:,0:3]

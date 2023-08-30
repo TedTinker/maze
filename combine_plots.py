@@ -1,4 +1,7 @@
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from matplotlib.lines import Line2D
+
 import os
 import re
 
@@ -55,6 +58,19 @@ for (arg_name, rewards, exits, paths_list) in zip(arg_names, rewards_files, exit
     print("Done with", arg_name)
 """
 
+
+
+def draw_lines(fig, x_start = .15, x_end = .88, x_off_1 = .035, x_off_2 = -.0425, y_start = .13, y_end = .87, y_off = .0125):
+    # Drawing black lines between every row
+    line = Line2D([x_start, x_end], [1/3 + x_off_1, 1/3 + x_off_1], transform=fig.transFigure, color='black', linewidth=1)
+    fig.add_artist(line)
+    line = Line2D([x_start, x_end], [2/3 + x_off_2, 2/3 + x_off_2], transform=fig.transFigure, color='black', linewidth=1)
+    fig.add_artist(line)
+
+    # Drawing black lines between every other column
+    line = Line2D([1/2 + y_off, 1/2 + y_off], [y_start, y_end], transform=fig.transFigure, color='black', linewidth=1)
+    fig.add_artist(line)
+
     
 
 names = ["d_hard", "d_hard_rand", "e_hard", "e_hard_rand", "n_hard", "n_hard_rand", "en_hard", "en_hard_rand", "f_hard", "f_hard_rand", "ef_hard", "ef_hard_rand"]
@@ -67,9 +83,11 @@ for i, arg_name in enumerate(names):
         (x,y) = poses[names.index(arg_name)]
         ax = axs[x, y]
         ax.imshow(plt.imread("paths_{}_0.png".format(arg_name)))       ; ax.axis("off")
+        
+draw_lines(fig)
 
 plt.subplots_adjust(wspace=0, hspace=0)
-plt.savefig("paths_hard.png", bbox_inches = "tight", dpi=600)
+plt.savefig("final/paths_hard.png", bbox_inches = "tight", dpi=300)
 plt.close(fig)
 
 
@@ -84,9 +102,11 @@ for i, arg_name in enumerate(names):
         (x,y) = poses[names.index(arg_name)]
         ax = axs[x, y]
         ax.imshow(plt.imread("exits" + "_" + arg_name + ".png"))              ; ax.axis("off")
+        
+draw_lines(fig)
 
 plt.subplots_adjust(wspace=0, hspace=0)
-plt.savefig("exits_hard.png", bbox_inches = "tight", dpi=600)
+plt.savefig("final/exits_hard.png", bbox_inches = "tight", dpi=300)
 plt.close(fig)
 
 
@@ -104,8 +124,10 @@ for i, arg_name in enumerate(names):
             ax = axs[3*x + j, y]
             ax.imshow(plt.imread(all_paths[j]))       ; ax.axis("off")
             
+draw_lines(fig)
+            
 plt.subplots_adjust(wspace=0, hspace=0)
-plt.savefig("paths_many.png", bbox_inches = "tight", dpi=600)
+plt.savefig("final/paths_many.png", bbox_inches = "tight", dpi=300)
 plt.close(fig)
 
 
@@ -119,10 +141,14 @@ for i, arg_name in enumerate(names):
     if(arg_name in arg_names): 
         (x,y) = poses[names.index(arg_name)]
         ax = axs[x, y]
-        ax.imshow(plt.imread("exits" + "_" + arg_name + ".png"))              ; ax.axis("off")
+        image = plt.imread("exits" + "_" + arg_name + ".png")
+        height, width = image.shape[:2]
+        ax.imshow(image)              ; ax.axis("off")
+        
+draw_lines(fig)
 
 plt.subplots_adjust(wspace=0, hspace=0)
-plt.savefig("exits_many.png", bbox_inches = "tight", dpi=600)
+plt.savefig("final/exits_many.png", bbox_inches = "tight", dpi=300)
 plt.close(fig)
     
     
