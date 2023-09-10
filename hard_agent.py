@@ -379,9 +379,8 @@ class Agent:
         critic2_loss.backward()
         self.critic2_opt.step()
         
-        if(not self.args.d_critic):
-            self.soft_update(self.critic1, self.critic1_target, self.args.tau)
-            self.soft_update(self.critic2, self.critic2_target, self.args.tau)
+        self.soft_update(self.critic1, self.critic1_target, self.args.tau)
+        self.soft_update(self.critic2, self.critic2_target, self.args.tau)
                         
         
         
@@ -422,10 +421,6 @@ class Agent:
             self.actor_opt.zero_grad()
             actor_loss.backward()
             self.actor_opt.step()
-
-            if(self.args.d_critic):
-                self.soft_update(self.critic1, self.critic1_target, self.args.tau)
-                self.soft_update(self.critic2, self.critic2_target, self.args.tau)
             
         else:
             intrinsic_entropy = None

@@ -98,7 +98,7 @@ parser.add_argument('--alpha_lr',           type=float,      default = .01)
 parser.add_argument('--actor_lr',           type=float,      default = .01)
 parser.add_argument('--critic_lr',          type=float,      default = .01)
 parser.add_argument('--action_prior',       type=str,        default = "normal")
-parser.add_argument("--tau",                type=float,      default = 1)      # For soft-updating target critics
+parser.add_argument("--tau",                type=float,      default = .75)      # For soft-updating target critics
 
 # Complexity 
 parser.add_argument('--std_min',            type=int,        default = exp(-20))
@@ -125,7 +125,6 @@ parser.add_argument('--batch_size',         type=int,        default = 128)
 parser.add_argument('--elbo_num',           type=int,        default = 1)
 parser.add_argument('--GAMMA',              type=float,      default = .9)
 parser.add_argument("--d",                  type=int,        default = 2)        # Delay to train actors
-parser.add_argument("--d_critic",           type=literal,    default = True)
 parser.add_argument('--retroactive_reward', type=literal,    default = False)
 parser.add_argument('--retro_step_cost',    type=float,      default = .99)
 

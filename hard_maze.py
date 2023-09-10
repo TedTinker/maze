@@ -119,7 +119,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     default_args.randomness = 0.25
-    default_args.random_by_choice = False
+    default_args.random_by_choice = True
     maze = Hard_Maze("3", True, default_args)
     done = False
     i = 0

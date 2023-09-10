@@ -187,7 +187,7 @@ def hard_p_values(complete_order, plot_dicts):
 
         ax.set_xlim(0, x)
         ax.set_ylim(0, 1)  # Adding 1 for a bit of padding at the top
-        ax.set_ylabel('Proportion of Good Exits')
+        ax.set_ylabel('Proportion of Correct Exits')
         plt.title("Hypothesis 1\n(Epoch {}, {})".format(epochs + total_epochs, maze_real_names[maze_name])) 
         ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis
 
@@ -233,7 +233,7 @@ def hard_p_values(complete_order, plot_dicts):
 
         ax.set_xlim(0, x)
         ax.set_ylim(0, 1)  # Adding 1 for a bit of padding at the top
-        ax.set_ylabel('Proportion of Good Exits')
+        ax.set_ylabel('Proportion of Correct Exits')
         plt.title("Hypothesis 2\n(Epoch {}, {})".format(epochs + total_epochs, maze_real_names[maze_name]))   
         ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis
 

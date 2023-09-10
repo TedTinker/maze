@@ -72,26 +72,7 @@ def add_this(name, args):
                             new_value[arg_name] = condition[1]
         slurm_dict[new_key] = new_value
 
-"""
 add_this("hard",   {
-    "hard_maze" :           True, 
-    "maze_list" :           "\"['t']\"",   
-    "epochs" :              "\"[500]\"",      
-    "max_steps" :           25, 
-    "steps_per_epoch" :     25, 
-    "min_speed" :           0,
-    "max_speed" :           100,
-    "naive_eta" :           1, 
-    "free_eta" :            1, 
-    "beta" :                [[{"curiosity" : "free"}, .001]], 
-    "target_entropy" :      -2,
-    "agents_per_pos_list" : 36})
-"""
-
-#""" This also works, without delaying the target critic
-add_this("hard",   {
-    "d_critic"  :           False, 
-    "tau"       :           .75,
     "hard_maze" :           True, 
     "maze_list" :           "\"['t']\"",   
     "epochs" :              "\"[500]\"",      
@@ -104,31 +85,8 @@ add_this("hard",   {
     "beta" :                [[{"curiosity" : "free"}, .001]], 
     "target_entropy" :      -2,
     "agents_per_pos_list" : 36}) 
-#"""
 
-"""add_this("many",   {
-    "GAMMA"     :           .9,
-    "hard_maze" :           True, 
-    "maze_list" :           "\"['1', '2', '3']\"", 
-    "max_steps" :           30, 
-    "steps_per_epoch" :     30, 
-    "min_speed" :           0,
-    "max_speed" :           200,
-    "naive_eta" :           2.25, 
-    "free_eta" :            2,
-    "beta" :                [[{"curiosity" : "free"}, .01]], 
-    "agents_per_pos_list" : 36, 
-    "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      "\"[(1,-.25)]\"", 
-    "better_reward" :       "\"[(1,50)]\"",
-    "wall_punishment" :     -1,
-    "step_lim_punishment" : -.5,
-    "target_entropy" :      0
-    })"""
-    
 add_this("many",   {
-    "d_critic"  :           False, 
-    "tau"       :           .75,
     "GAMMA"     :           .9,
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', '2', '3']\"", 
@@ -136,7 +94,7 @@ add_this("many",   {
     "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           200,
-    "naive_eta" :           2.25, 
+    "naive_eta" :           2, 
     "free_eta" :            2,
     "beta" :                [[{"curiosity" : "free"}, .01]], 
     "agents_per_pos_list" : 36, 
@@ -148,7 +106,27 @@ add_this("many",   {
     "target_entropy" :      0
     })
 
-add_this("rand",   {"randomness" :          .5}) # .5 for hard, .25 for many
+add_this("flip",   {
+    "GAMMA"     :           .9,
+    "hard_maze" :           True, 
+    "maze_list" :           "\"['1', 'inverted_1']\"", 
+    "max_steps" :           30, 
+    "steps_per_epoch" :     30, 
+    "min_speed" :           0,
+    "max_speed" :           100,
+    "naive_eta" :           2, 
+    "free_eta" :            2,
+    "beta" :                [[{"curiosity" : "free"}, .001]], 
+    "agents_per_pos_list" : 36, 
+    "epochs" :              "\"[500, 500]\"", 
+    "default_reward" :      "\"[(1,1)]\"", 
+    "better_reward" :       "\"[(1,50)]\"",
+    "wall_punishment" :     -1,
+    "step_lim_punishment" : 0,
+    "target_entropy" :      0
+    })
+
+add_this("rand",   {"randomness" :          .25}) # .5 for hard, .25 for many
 #add_this("rand",   {"random_by_choice" :  True})
 
 new_slurm_dict = {}
@@ -171,7 +149,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["en_many_{}".format(i) for i in [2, 3, 8, 61, 62, 63, 77]]
+    interesting = ["ef_hard_{}".format(i) for i in [1, 4]]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 

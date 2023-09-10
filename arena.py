@@ -42,15 +42,23 @@ arena_dict = {
         (2,2), 
         [Exit(  "LEFT",    (1,0), "default"),
         Exit(   "RIGHT",    (1,4), "better")],
-        #[(2, 1), (2, 3), (3, 2)]
+        [(0, 0), (2, 0)]
         ),
+    
+    "inverted_1.png" : Arena_Description(
+        (2,2), 
+        [Exit(  "LEFT",    (1,0), "better"),
+        Exit(   "RIGHT",    (1,4), "default")],
+        [(0, 0), (2, 0)]
+        ),
+    
     "2.png" : Arena_Description(
         (3,3), 
         [Exit(  "LEFT\nLEFT",   (4,1), "better"),
         Exit(   "LEFT\nRIGHT",  (0,1), "default"),
         Exit(   "RIGHT\nLEFT",  (0,5), "default"),
         Exit(   "RIGHT\nRIGHT", (4,5), "default")],
-        [(4,4),(4,6)]#[(3, 2), (3, 4), (4, 3)]
+        [(0,0),(0,2)]
         ),
     "3.png" : Arena_Description(
         (4,4), 
@@ -62,7 +70,7 @@ arena_dict = {
         Exit(   "RIGHT\nLEFT\nRIGHT",  (0,7), "default"),
         Exit(   "RIGHT\nRIGHT\nLEFT",  (6,7), "default"),
         Exit(   "RIGHT\nRIGHT\nRIGHT", (6,5), "default")],
-        [(6,4), (6,6), (6,8)]#[(4, 3), (4, 5), (5, 4)]
+        [(0,0),(0,2)]#[(4, 3), (4, 5), (5, 4)]
         )}
 
 
