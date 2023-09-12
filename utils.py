@@ -98,7 +98,7 @@ parser.add_argument('--alpha_lr',           type=float,      default = .01)
 parser.add_argument('--actor_lr',           type=float,      default = .01)
 parser.add_argument('--critic_lr',          type=float,      default = .01)
 parser.add_argument('--action_prior',       type=str,        default = "normal")
-parser.add_argument("--tau",                type=float,      default = .75)      # For soft-updating target critics
+parser.add_argument("--tau",                type=float,      default = .1)      # For soft-updating target critics
 
 # Complexity 
 parser.add_argument('--std_min',            type=int,        default = exp(-20))
@@ -324,7 +324,7 @@ def load_dicts(args):
     
     min_max_dict = {}
     for key in plot_dicts[0].keys():
-        if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "agents_lists", "spot_names"]):
+        if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "agents_lists", "spot_names", "steps"]):
             minimum = None ; maximum = None
             for mm_dict in min_max_dicts:
                 if(mm_dict[key] != (None, None)):

@@ -64,7 +64,7 @@ class Agent:
             "arg_name" : args.arg_name,
             "pred_lists" : {}, "pos_lists" : {}, 
             "agent_lists" : {"forward" : Forward, "actor" : Actor_HQ if args.actor_hq else Actor, "critic" : Critic_HQ if args.critic_hq else Critic},
-            "rewards" : [], "spot_names" : [], 
+            "rewards" : [], "spot_names" : [], "steps" : [],
             "accuracy" : [], "complexity" : [],
             "alpha" : [], "actor" : [], 
             "critic_1" : [], "critic_2" : [], 
@@ -106,7 +106,7 @@ class Agent:
         
         self.min_max_dict = {key : [] for key in self.plot_dict.keys()}
         for key in self.min_max_dict.keys():
-            if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "agent_lists", "spot_names"]):
+            if(not key in ["args", "arg_title", "arg_name", "pred_lists", "pos_lists", "agent_lists", "spot_names", "steps"]):
                 minimum = None ; maximum = None 
                 l = self.plot_dict[key]
                 l = deepcopy(l)
@@ -257,13 +257,14 @@ class Agent:
     
     def training_episode(self, push = True, verbose = False):
         done = False ; prev_a = torch.zeros((1, 1, 2)) ; cumulative_r = 0
-        h = torch.zeros((1, 1, self.args.hidden_size))
+        h = torch.zeros((1, 1, self.args.hidden_size)) ; steps = 0
         self.maze.begin()
         if(verbose): print("\n\n\n\n\nSTART!\n")
         
         for step in range(self.args.max_steps):
-            self.steps += 1
+            self.steps += 1 
             if(not done):
+                steps += 1
                 prev_a, h, r, spot_name, done, _ = self.step_in_episode_hq(prev_a, h, push, verbose) if self.args.actor_hq else self.step_in_episode(prev_a, h, push, verbose)
                 cumulative_r += r
                 
@@ -285,6 +286,8 @@ class Agent:
                         self.plot_dict["intrinsic_entropy"].append(ie)
                         self.plot_dict["naive"].append(naive)
                         self.plot_dict["free"].append(free)    
+        
+        self.plot_dict["steps"].append(steps)
         self.plot_dict["rewards"].append(r)
         self.plot_dict["spot_names"].append(spot_name)
         self.episodes += 1

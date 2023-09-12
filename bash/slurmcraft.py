@@ -72,14 +72,30 @@ def add_this(name, args):
                             new_value[arg_name] = condition[1]
         slurm_dict[new_key] = new_value
 
+"""
 add_this("hard",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['t']\"",   
-    "epochs" :              "\"[500]\"",      
-    "max_steps" :           25, 
-    "steps_per_epoch" :     25, 
+    "epochs" :              "\"[500]\"",     
+    "max_steps" :           30, 
+    "steps_per_epoch" :     30, 
     "min_speed" :           0,
-    "max_speed" :           100,
+    "max_speed" :           75,
+    "naive_eta" :           1, 
+    "free_eta" :            1, 
+    "beta" :                [[{"curiosity" : "free"}, .001]], 
+    "target_entropy" :      -2,
+    "agents_per_pos_list" : 36}) 
+"""
+
+add_this("hard",   {
+    "hard_maze" :           True, 
+    "maze_list" :           "\"['t']\"",   
+    "epochs" :              "\"[500]\"",     
+    "max_steps" :           30, 
+    "steps_per_epoch" :     30, 
+    "min_speed" :           0,
+    "max_speed" :           70,
     "naive_eta" :           1, 
     "free_eta" :            1, 
     "beta" :                [[{"curiosity" : "free"}, .001]], 
@@ -87,7 +103,6 @@ add_this("hard",   {
     "agents_per_pos_list" : 36}) 
 
 add_this("many",   {
-    "GAMMA"     :           .9,
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', '2', '3']\"", 
     "max_steps" :           30, 
@@ -107,7 +122,6 @@ add_this("many",   {
     })
 
 add_this("flip",   {
-    "GAMMA"     :           .9,
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', 'inverted_1']\"", 
     "max_steps" :           30, 
@@ -126,8 +140,8 @@ add_this("flip",   {
     "target_entropy" :      0
     })
 
-add_this("rand",   {"randomness" :          .25}) # .5 for hard, .25 for many
-#add_this("rand",   {"random_by_choice" :  True})
+#add_this("rand",   {"randomness" :          .25}) # .5 for hard, .25 for many
+add_this("rand",   {"random_by_choice" :  True})
 
 new_slurm_dict = {}
 for key, value in slurm_dict.items():

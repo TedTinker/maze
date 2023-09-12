@@ -175,6 +175,9 @@ def hard_p_values(complete_order, plot_dicts):
         x = .1
         bar_width = 0.4  
         spacing = 0.5  
+        
+        plt.figure(figsize = (6, 5))
+        ax = plt.gca()
 
         for i in range(len(all_heights)):
             bar_center = x + bar_width / 2
@@ -218,6 +221,9 @@ def hard_p_values(complete_order, plot_dicts):
         x = .1
         bar_width = 0.4  
         spacing = 0.5  
+        
+        plt.figure(figsize = (6, 5))
+        ax = plt.gca()
 
         for i in range(len(all_heights)):
             bar_center = x + bar_width / 2
@@ -240,6 +246,50 @@ def hard_p_values(complete_order, plot_dicts):
         plt.savefig("{}_p_values_hypothesis_2.png".format(maze_name), format = "png", bbox_inches = "tight", dpi=300)
         plt.close()
         total_epochs += epochs
+        
+        
+        
+    step_dicts = {}
+    for plot_dict in plot_dicts:
+        cumulative_epochs = 0
+        for maze_name, epochs in zip(plot_dict["args"].maze_list, plot_dict["args"].epochs):
+            if(not plot_dict["arg_name"] in step_dicts): step_dicts[plot_dict["arg_name"]] = []
+            step_dicts[plot_dict["arg_name"]].append([])
+            cumulative_epochs += epochs
+            for exits, steps in zip(plot_dict["spot_names"], plot_dict["steps"]):
+                # Should only use correct exit!
+                step_dicts[plot_dict["arg_name"]][-1].append(sum(steps[cumulative_epochs - 11 : cumulative_epochs - 1])/10)
+            step_dicts[plot_dict["arg_name"]][-1] = sum(step_dicts[plot_dict["arg_name"]][-1]) / len(step_dicts[plot_dict["arg_name"]][-1])
+                
+    print(step_dicts)
+    
+    for i, maze_name in enumerate(plot_dict["args"].maze_list):
+        x = .1
+        bar_width = 0.4  
+        spacing = 0.5  
+        
+        plt.figure(figsize = (6, 5))
+        ax = plt.gca()
+
+        for arg_name, step_list in step_dicts.items():
+            if arg_name.endswith("rand"): real_name = "with Curiosity Traps"
+            elif(arg_name in real_names): real_name = real_names[arg_name]
+            else:                         real_name = arg_name
+            steps = step_list[i]
+            print(steps)
+            bar_center = x + bar_width / 2
+            ax.add_patch(patches.Rectangle((x, 0), bar_width, steps, edgecolor="black"))
+            ax.text(x + bar_width/2, -0.2, real_name, ha='center', va='center', rotation=90, fontsize=10)
+            x += spacing  
+            
+        ax.set_xlim(0, x)
+        ax.set_ylim(0, max([max(step_list) for step_list in step_dicts.values()]))
+        ax.set_ylabel('Steps to Real Correct Exit')
+        plt.title("Hypothesis 2\n(Epoch {}, {})".format(cumulative_epochs, maze_real_names[maze_name]))  
+        ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis
+
+        plt.savefig("{}_steps.png".format(maze_name), format = "png", bbox_inches = "tight", dpi=300)
+        plt.close()
         
 
 
