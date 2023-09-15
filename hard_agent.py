@@ -34,24 +34,24 @@ class Agent:
         self.target_entropy = args.target_entropy # -dim(A)
         self.alpha = 1
         self.log_alpha = torch.tensor([0.0], requires_grad=True)
-        self.alpha_opt = optim.Adam(params=[self.log_alpha], lr=args.alpha_lr, weight_decay=0) 
+        self.alpha_opt = optim.Adam(params=[self.log_alpha], lr=args.alpha_lr) 
         
         self.eta = 1
         self.log_eta = torch.tensor([0.0], requires_grad=True)
         
         self.forward = Forward(args)
-        self.forward_opt = optim.Adam(self.forward.parameters(), lr=args.forward_lr, weight_decay=0)   
+        self.forward_opt = optim.Adam(self.forward.parameters(), lr=args.forward_lr)
                            
         self.actor = Actor_HQ(args) if args.actor_hq else Actor(args)
-        self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr, weight_decay=0)     
+        self.actor_opt = optim.Adam(self.actor.parameters(), lr=args.actor_lr) 
         
         self.critic1 = Critic_HQ(args) if args.critic_hq else Critic(args)
-        self.critic1_opt = optim.Adam(self.critic1.parameters(), lr=args.critic_lr, weight_decay=0)
+        self.critic1_opt = optim.Adam(self.critic1.parameters(), lr=args.critic_lr)
         self.critic1_target = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic1_target.load_state_dict(self.critic1.state_dict())
 
         self.critic2 = Critic_HQ(args) if args.critic_hq else Critic(args)
-        self.critic2_opt = optim.Adam(self.critic2.parameters(), lr=args.critic_lr, weight_decay=0) 
+        self.critic2_opt = optim.Adam(self.critic2.parameters(), lr=args.critic_lr)
         self.critic2_target = Critic_HQ(args) if args.critic_hq else Critic(args)
         self.critic2_target.load_state_dict(self.critic2.state_dict())
         

@@ -2,13 +2,12 @@
 from itertools import product
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.patches import Polygon
 from matplotlib.lines import Line2D
-from scipy.stats import chi2_contingency
 from statsmodels.stats.proportion import proportions_ztest as ztest
-from scipy.stats import binom_test
+from scipy.stats import norm
 import scipy.stats as stats
 from copy import deepcopy
+import statistics
 import math
 
 from utils import args, duration, load_dicts, print, maze_real_names
@@ -57,6 +56,16 @@ def confidence_interval(fraction_str):
     lower_bound = proportion - margin_of_error
     upper_bound = proportion + margin_of_error
     return(lower_bound, upper_bound)
+
+def confidence_interval_list(data, confidence=0.95):
+    mean = statistics.mean(data)
+    std_dev = statistics.stdev(data)
+    n = len(data)
+    z = norm.ppf(1 - (1 - confidence) / 2)
+    margin_of_error = z * (std_dev / math.sqrt(n))
+    lower_bound = mean - margin_of_error
+    upper_bound = mean + margin_of_error
+    return (lower_bound, upper_bound)
 
 def custom_round(number):
     str_num = str(number)
@@ -215,7 +224,7 @@ def hard_p_values(complete_order, plot_dicts):
         all_names = sum([[val[0], "with Curiosity Traps"] for val in all_vals], [])
         all_heights = sum([[fraction_to_float(val[1]), fraction_to_float(val[2])] for val in all_vals], [])
         all_conf = sum([[confidence_interval(val[1]), confidence_interval(val[2])] for val in all_vals], [])
-        all_colors = sum([["white", "white"] if val[-1] != good_p else ["green", "red"] if fraction_to_float(val[1]) > fraction_to_float(val[2]) else ["red", "green"] for val in all_vals], [])
+        all_colors = sum([["white", "white"] if val[-1] != good_p else ["green", "red"] if fraction_to_float(val[1]) > fraction_to_float(val[2]) else ["white", "white"] for val in all_vals], []) # Ignore when curiosity traps improve performance.
         fig, ax = plt.subplots()
 
         x = .1
@@ -257,33 +266,41 @@ def hard_p_values(complete_order, plot_dicts):
             step_dicts[plot_dict["arg_name"]].append([])
             cumulative_epochs += epochs
             for exits, steps in zip(plot_dict["spot_names"], plot_dict["steps"]):
-                # Should only use correct exit!
-                step_dicts[plot_dict["arg_name"]][-1].append(sum(steps[cumulative_epochs - 11 : cumulative_epochs - 1])/10)
-            step_dicts[plot_dict["arg_name"]][-1] = sum(step_dicts[plot_dict["arg_name"]][-1]) / len(step_dicts[plot_dict["arg_name"]][-1])
-                
-    print(step_dicts)
-    
+                correct = 0
+                good_steps = []
+                for i, exit in enumerate(exits[cumulative_epochs - 11 : cumulative_epochs - 1]):
+                    if exit in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"]:
+                        good_steps.append(steps[cumulative_epochs - 11 + i + 1])
+                step_dicts[plot_dict["arg_name"]][-1].append(good_steps)
+            step_dicts[plot_dict["arg_name"]][-1] = sum(step_dicts[plot_dict["arg_name"]][-1], [])
+                    
     for i, maze_name in enumerate(plot_dict["args"].maze_list):
         x = .1
         bar_width = 0.4  
         spacing = 0.5  
+        max_height = 0
         
         plt.figure(figsize = (6, 5))
         ax = plt.gca()
 
-        for arg_name, step_list in step_dicts.items():
+        for arg_name, step_list_list in step_dicts.items():
             if arg_name.endswith("rand"): real_name = "with Curiosity Traps"
             elif(arg_name in real_names): real_name = real_names[arg_name]
             else:                         real_name = arg_name
-            steps = step_list[i]
-            print(steps)
+            step_list = step_list_list[i]
+            average = sum(step_list) / len(step_list)
+            conf = confidence_interval_list(step_list, .9)
+            if(conf[1] > max_height): max_height = conf[1]
             bar_center = x + bar_width / 2
-            ax.add_patch(patches.Rectangle((x, 0), bar_width, steps, edgecolor="black"))
+            ax.add_patch(patches.Rectangle((x, 0), bar_width, average, edgecolor="black"))
             ax.text(x + bar_width/2, -0.2, real_name, ha='center', va='center', rotation=90, fontsize=10)
+            ax.plot([bar_center, bar_center], [conf[0], conf[1]], color="black")
+            ax.plot([bar_center - 0.02, bar_center + 0.02], [conf[0], conf[0]], color="black")
+            ax.plot([bar_center - 0.02, bar_center + 0.02], [conf[1], conf[1]], color="black")
             x += spacing  
             
         ax.set_xlim(0, x)
-        ax.set_ylim(0, max([max(step_list) for step_list in step_dicts.values()]))
+        ax.set_ylim(0, max_height)
         ax.set_ylabel('Steps to Real Correct Exit')
         plt.title("Hypothesis 2\n(Epoch {}, {})".format(cumulative_epochs, maze_real_names[maze_name]))  
         ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis

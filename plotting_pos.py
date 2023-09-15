@@ -174,6 +174,13 @@ def hard_plotting_pos(complete_order, plot_dicts):
                         #here.fill([x - .25, x + .25, x + .25, x - .25], [y - .25, y - .25, y + .25, y + .25], color=color, zorder=3)
                         #here.text(x, y, text, fontsize = 12 if too_many_plot_dicts else 12, ha='center', va='center', zorder = 4)
                         here.text(x, y, text, fontsize = fontsize, ha='center', va='center', zorder = 4)
+                    if(plot_dict["args"].random_by_choice):
+                        traps = arena_dict[maze_name + ".png"].random_by_choice
+                        print("PLACE ???")
+                        text = "?" ; fontsize = 40
+                        for y, x in traps:
+                            here.text(x, -y, text, fontsize = fontsize, ha='center', va='center', zorder = 4)
+                    
                     here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     here.axis("off")
                 
