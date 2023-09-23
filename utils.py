@@ -87,6 +87,7 @@ parser.add_argument('--min_speed',          type=float,      default = 75)
 parser.add_argument('--max_speed',          type=float,      default = 150)
 parser.add_argument('--steps_per_step',     type=int,        default = 5)
 parser.add_argument('--speed_scalar',       type=float,      default = .0001)
+parser.add_argument('--boxes_high',         type=int,        default = 1)
 
 # Module 
 parser.add_argument('--hidden_size',        type=int,        default = 32)   
@@ -165,6 +166,9 @@ for arg in vars(default_args):
     if(getattr(args, arg) == "None"):  args.arg = None
     if(getattr(args, arg) == "True"):  args.arg = True
     if(getattr(args, arg) == "False"): args.arg = False
+    
+default_args.steps_per_epoch = default_args.max_steps
+args.steps_per_epoch = args.max_steps
 
 
 

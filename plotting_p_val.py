@@ -16,6 +16,10 @@ print("name:\n{}\n".format(args.arg_name),)
 
 
 
+confidence = .999
+
+
+
 real_names = {
     "d"  : "No Entropy,\nNo Curiosity",
     "e"  : "Entropy",
@@ -109,8 +113,8 @@ def hard_p_values(complete_order, plot_dicts):
                 if(plot_dict["args"].arg_name == arg_1): spots_1 = sum([spot_names[epochs + total_epochs - 11 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
                 if(plot_dict["args"].arg_name == arg_2): spots_2 = sum([spot_names[epochs + total_epochs - 11 : epochs + total_epochs - 1] for spot_names in plot_dict["spot_names"]], [])
             
-            spots_1 = ["good" if spot in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_1]
-            spots_2 = ["good" if spot in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_2]
+            spots_1 = ["good" if spot in ["RIGHT", "LEFT\nRIGHT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_1]
+            spots_2 = ["good" if spot in ["RIGHT", "LEFT\nRIGHT", "RIGHT\nLEFT\nLEFT"] else "bad" for spot in spots_2]
             
             good_spots_1 = spots_1.count("good")
             good_spots_2 = spots_2.count("good")
@@ -124,7 +128,6 @@ def hard_p_values(complete_order, plot_dicts):
             # This line gives warning
             _, p = ztest([good_spots_1, good_spots_2], [len(spots_1), len(spots_2)])
             
-            confidence = .999 
             good_p = "<{}".format(custom_round(1-confidence))
             if(p <= 1-confidence): 
                 if(prop_1 < prop_2): color = "red"
@@ -198,7 +201,7 @@ def hard_p_values(complete_order, plot_dicts):
             x += spacing  
 
         ax.set_xlim(0, x)
-        ax.set_ylim(0, 1)  # Adding 1 for a bit of padding at the top
+        ax.set_ylim(0, 1.1)  # Adding 1 for a bit of padding at the top
         ax.set_ylabel('Proportion of Correct Exits')
         plt.title("Hypothesis 1\n(Epoch {}, {})".format(epochs + total_epochs, maze_real_names[maze_name])) 
         ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis
@@ -247,7 +250,7 @@ def hard_p_values(complete_order, plot_dicts):
                 x += bar_width
 
         ax.set_xlim(0, x)
-        ax.set_ylim(0, 1)  # Adding 1 for a bit of padding at the top
+        ax.set_ylim(0, 1.1)  # Adding 1 for a bit of padding at the top
         ax.set_ylabel('Proportion of Correct Exits')
         plt.title("Hypothesis 2\n(Epoch {}, {})".format(epochs + total_epochs, maze_real_names[maze_name]))   
         ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis
@@ -269,7 +272,7 @@ def hard_p_values(complete_order, plot_dicts):
                 correct = 0
                 good_steps = []
                 for i, exit in enumerate(exits[cumulative_epochs - 11 : cumulative_epochs - 1]):
-                    if exit in ["RIGHT", "LEFT\nLEFT", "RIGHT\nLEFT\nLEFT"]:
+                    if exit in ["RIGHT", "LEFT\nRIGHT", "RIGHT\nLEFT\nLEFT"]:
                         good_steps.append(steps[cumulative_epochs - 11 + i + 1])
                 step_dicts[plot_dict["arg_name"]][-1].append(good_steps)
             step_dicts[plot_dict["arg_name"]][-1] = sum(step_dicts[plot_dict["arg_name"]][-1], [])
@@ -300,7 +303,7 @@ def hard_p_values(complete_order, plot_dicts):
             x += spacing  
             
         ax.set_xlim(0, x)
-        ax.set_ylim(0, max_height)
+        ax.set_ylim(0, max_height+1)
         ax.set_ylabel('Steps to Real Correct Exit')
         plt.title("Hypothesis 2\n(Epoch {}, {})".format(cumulative_epochs, maze_real_names[maze_name]))  
         ax.axes.get_xaxis().set_visible(False)  # Hide the x-axis

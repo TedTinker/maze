@@ -53,7 +53,7 @@ class Hard_Maze:
         rgbd = torch.from_numpy(rgbd).float().unsqueeze(0)
         spe = torch.tensor(self.agent_spe).unsqueeze(0).unsqueeze(0)
         
-        #if(self.maze.in_random() and self.args.randomness > 0):
+        #if(self.maze.in_random()):
         #    rgbd = torch.randint(2, size = rgbd.size(), dtype = rgbd.dtype)
         #    spe = torch.randint(2, size = spe.size(), dtype = spe.dtype)
         #    spe[spe == 0] = 0 ; spe[spe == 1] = self.args.max_speed
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     default_args.randomness = 0
     default_args.random_by_choice = True
-    maze = Hard_Maze("2", True, default_args)
+    maze = Hard_Maze("3", True, default_args)
     done = False
     i = 0
     yaws = [0, 0, -1, 0, 0]

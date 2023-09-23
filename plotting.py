@@ -132,7 +132,7 @@ def plots(plot_dicts, min_max_dict):
             so_far = 0
             for maze, epochs in zip(plot_dict["args"].maze_list, plot_dict["args"].epochs):
                 for j, kind in enumerate(kinds):
-                    if((maze, kind) in [("t", "RIGHT"), ("1", "RIGHT"), ("2", "LEFT\nLEFT"), ("3", "RIGHT\nLEFT\nLEFT")]):
+                    if((maze, kind) in [("t", "RIGHT"), ("1", "RIGHT"), ("2", "LEFT\nRIGHT"), ("3", "RIGHT\nLEFT\nLEFT")]):
                         these_xs = [x for x in xs if x >= so_far and x <= so_far + epochs]
                         here.fill_between(these_xs, [j*agents*1.1 for _ in these_xs], [j*agents*1.1 + agents for _ in these_xs], color = (.9, .9, .9, 1), linewidth = 0)
                         so_far += epochs

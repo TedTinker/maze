@@ -80,9 +80,9 @@ add_this("hard",   {
     "maze_list" :           "\"['t']\"",   
     "epochs" :              "\"[500]\"",     
     "max_steps" :           30, 
-    "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           75,
+    "better_reward" :       "\"[(1,0),(1,10)]\"",
     "step_lim_punishment" : -2,
     "step_cost" :           .99, 
     "naive_eta" :           1, 
@@ -90,14 +90,11 @@ add_this("hard",   {
     "beta" :                [[{"curiosity" : "free"}, .001]], 
     "target_entropy" :      [[{"curiosity" : "none"}, -2.5]],
     "agents_per_pos_list" : 36}) 
-    
-
 
 add_this("many",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', '2', '3']\"", 
     "max_steps" :           30, 
-    "steps_per_epoch" :     30, 
     "min_speed" :           0,
     "max_speed" :           200,
     "naive_eta" :           2, 
@@ -105,10 +102,10 @@ add_this("many",   {
     "beta" :                [[{"curiosity" : "free"}, .01]], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
-    "default_reward" :      "\"[(1,-.25)]\"", 
-    "better_reward" :       "\"[(1,50)]\"",
+    "default_reward" :      "\"[(1,0)]\"", 
+    "better_reward" :       "\"[(1,30)]\"",
     "wall_punishment" :     -1,
-    "step_lim_punishment" : -.5,
+    "step_lim_punishment" : 0,
     "target_entropy" :      0
     })
 
@@ -135,7 +132,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["ef_hard_{}".format(4)]
+    interesting = ["ef_many_{}".format(i) for i in [4, 6, 9]]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 
