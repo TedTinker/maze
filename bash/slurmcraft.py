@@ -108,6 +108,8 @@ add_this("many",   {
     "step_lim_punishment" : 0,
     "target_entropy" :      0
     })
+    
+
 
 #add_this("rand",   {"randomness" :          .25}) # .5 for hard, .25 for many
 add_this("rand",   {"random_by_choice" :  True})
@@ -132,7 +134,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["ef_many_{}".format(i) for i in [4, 6, 9]]
+    interesting = ["ef_many_{}".format(i) for i in [3]]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 

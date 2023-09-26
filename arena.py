@@ -46,10 +46,9 @@ arena_dict = {
         Exit(   "LEFT\nRIGHT",  (0,1), "better"),
         Exit(   "RIGHT\nLEFT",  (0,5), "default"),
         Exit(   "RIGHT\nRIGHT", (4,5), "default")],
-        [(3, 0), (3, 2), 
-         (4, 0), (4, 2)] # Left Left. This one works, it's in the paper.
-        #[(0, 4), (0, 6), (1, 4), (1, 6), (2, 6), (3, 4), (3, 6), (4, 4), (4, 6)] # Right Right and Right Left. This one would be easier to explain
-        #[(3, 4), (3, 6), (4, 4), (4, 6)] # Right Right
+        #[(3, 0), (3, 2), 
+        # (4, 0), (4, 2)] # Left Left. This one works, it's in the paper.
+        #[(3, 4), (3, 6), (4, 4), (4, 6)] # Right Right. This one would be easier to explain.
         ),
     "3.png" : Arena_Description(
         (4,4), 
@@ -61,19 +60,10 @@ arena_dict = {
         Exit(   "RIGHT\nLEFT\nRIGHT",  (0,7), "default"),
         Exit(   "RIGHT\nRIGHT\nLEFT",  (6,7), "default"),
         Exit(   "RIGHT\nRIGHT\nRIGHT", (6,5), "default")],
-        #[(0, 0), (0, 2), 
-        # (1, 0), 
-        # (2, 1), (2, 3),
-        # (3, 1),
-        # (4, 1), (4, 3),
-        # (5, 0),
-        # (6, 0), (6, 2)] # Everything on Left
         [(4, 1), (4, 3), 
          (5, 0), 
          (6, 0), (6, 2)] # Left, Left, Right
-        #[(0, 8),
-        # (1, 8),
-        # (2, 7)] # Right, Left, Right
+        #[(0, 8), (1, 8)]
         )}
 
 

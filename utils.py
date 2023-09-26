@@ -133,8 +133,8 @@ parser.add_argument('--retro_step_cost',    type=float,      default = .99)
 parser.add_argument('--keep_data',           type=int,        default = 25)
 
 parser.add_argument('--epochs_per_pred_list',type=int,        default = 1000000)#100)
-parser.add_argument('--agents_per_pred_list',type=int,        default = 3)
-parser.add_argument('--episodes_in_pred_list',type=int,       default = 3)
+parser.add_argument('--agents_per_pred_list',type=int,        default = 1)
+parser.add_argument('--episodes_in_pred_list',type=int,       default = 1)
 parser.add_argument('--samples_per_pred',    type=int,        default = 0)
 
 parser.add_argument('--epochs_per_pos_list', type=int,        default = 100)
