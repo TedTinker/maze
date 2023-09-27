@@ -46,8 +46,8 @@ arena_dict = {
         Exit(   "LEFT\nRIGHT",  (0,1), "better"),
         Exit(   "RIGHT\nLEFT",  (0,5), "default"),
         Exit(   "RIGHT\nRIGHT", (4,5), "default")],
-        #[(3, 0), (3, 2), 
-        # (4, 0), (4, 2)] # Left Left. This one works, it's in the paper.
+        [(3, 0), (3, 2), 
+         (4, 0), (4, 2)] # Left Left. This one works, it's in the paper.
         #[(3, 4), (3, 6), (4, 4), (4, 6)] # Right Right. This one would be easier to explain.
         ),
     "3.png" : Arena_Description(

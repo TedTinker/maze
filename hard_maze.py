@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     default_args.randomness = 0
     default_args.random_by_choice = True
-    maze = Hard_Maze("3", True, default_args)
+    maze = Hard_Maze("2", True, default_args)
     done = False
     i = 0
     yaws = [0, 0, -1, 0, 0]

@@ -1,5 +1,6 @@
 #%% 
 
+from math import log2
 import torch
 from torch import nn 
 from torch.distributions import Normal
@@ -37,6 +38,39 @@ class RGBD_IN(nn.Module):
         rgbd_size = (1, 4, args.image_size, args.image_size)
         example = torch.zeros(rgbd_size)
         
+        """
+        n_blocks = int(log2(args.image_size) - 2)
+        modules = []
+        modules.extend([
+            ConstrainedConv2d(
+                in_channels=4,
+                out_channels=16,
+                kernel_size=(3, 3),
+                padding=(1, 1),
+                padding_mode="reflect"),
+            nn.PReLU(),
+            nn.AvgPool2d(
+                kernel_size=(3, 3),
+                stride=(2, 2),
+                padding=(1, 1))
+        ])
+        for i in range(n_blocks):
+            modules.extend([
+                ConstrainedConv2d(
+                    in_channels=16,
+                    out_channels=16,
+                    kernel_size=(3, 3),
+                    padding=(1, 1),
+                    padding_mode="reflect"),
+                nn.PReLU(),
+                nn.AvgPool2d(
+                    kernel_size=(3, 3),
+                    stride=(2, 2),
+                    padding=(1, 1))
+            ])
+        self.rgbd_in = nn.Sequential(*modules)
+        """
+        
         self.rgbd_in = nn.Sequential(
             ConstrainedConv2d(
                 in_channels = 4,
@@ -61,6 +95,7 @@ class RGBD_IN(nn.Module):
                 stride = (2,2),
                 padding = (1,1)),
             )
+        
         example = self.rgbd_in(example)
         rgbd_latent_size = example.flatten(1).shape[1]
         
@@ -134,6 +169,32 @@ class Forward(nn.Module):
         self.rgbd_out_lin = nn.Sequential(
             nn.Linear(2 * args.hidden_size, self.gen_shape[0] * self.gen_shape[1] * self.gen_shape[2]),
             nn.PReLU())
+        
+        """
+        n_blocks = int(log2(args.image_size))
+        modules = []
+        for i in range(n_blocks):
+            modules.extend([
+            ConstrainedConv2d(
+                in_channels = self.gen_shape[0] if i == 0 else 16,
+                out_channels = 16,
+                kernel_size = (3,3),
+                padding = (1,1),
+                padding_mode = "reflect"),
+            nn.PReLU()
+            ])
+            if i != n_blocks - 1:
+                modules.extend([
+                    nn.Upsample(scale_factor = 2, mode = "bilinear", align_corners = True),
+                ])
+        modules.extend([
+            ConstrainedConv2d(
+                in_channels = 16,
+                out_channels = 4,
+                kernel_size = (1,1))
+        ])
+        self.rgbd_out = nn.Sequential(*modules)
+        """
         
         self.rgbd_out = nn.Sequential(
             ConstrainedConv2d(
@@ -377,6 +438,7 @@ if __name__ == "__main__":
     
     args = default_args
     args.dkl_rate = 1
+    args.image_size = 8
     
     
     

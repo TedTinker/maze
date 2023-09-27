@@ -281,10 +281,10 @@ def dkl(mu_1, std_1, mu_2, std_2):
 real_names = {
     "d"  : "No Entropy, No Curiosity",
     "e"  : "Entropy",
-    "n"  : "Naive Curiosity",
-    "en" : "Entropy and Naive Curiosity",
-    "f"  : "Aware Curiosity",
-    "ef" : "Entropy and Aware Curiosity",
+    "n"  : "Prediction Error Curiosity",
+    "en" : "Entropy and Prediction Error Curiosity",
+    "f"  : "Hidden State Curiosity",
+    "ef" : "Entropy and Hidden State Curiosity",
 }
 
 maze_real_names = {

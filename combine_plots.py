@@ -114,7 +114,7 @@ plt.close(fig)
 names = ["d_many", "d_many_rand", "e_many", "e_many_rand", "n_many", "n_many_rand", "en_many", "en_many_rand", "f_many", "f_many_rand", "ef_many", "ef_many_rand"]
 poses = [(0,0),    (0,1),         (0,2),    (0,3),         (1,0),    (1,1),         (1,2),    (1,3),           (2,0),    (2,1),         (2,2),     (2,3)]
 fig, axs = plt.subplots(9, 4, figsize = (7, 10) if too_many_plot_dicts else (7, 10))
-fig.suptitle("T-Maze, Double T-Maze, Triple T-Maze Trajectories", y = .9, fontsize = 10)
+fig.suptitle("Expanding T-Maze Trajectories", y = .9, fontsize = 10)
 
 for i, arg_name in enumerate(names):
     if(arg_name in arg_names): 
@@ -135,7 +135,7 @@ plt.close(fig)
 names = ["d_many", "d_many_rand", "e_many", "e_many_rand", "n_many", "n_many_rand", "en_many", "en_many_rand", "f_many", "f_many_rand", "ef_many", "ef_many_rand"]
 poses = [(0,0),    (0,1),         (0,2),    (0,3),         (1,0),    (1,1),         (1,2),    (1,3),           (2,0),    (2,1),         (2,2),     (2,3)]
 fig, axs = plt.subplots(3, 4, figsize = (10, 7) if too_many_plot_dicts else (10, 7))
-fig.suptitle("T-Maze, Double T-Maze, Triple T-Maze Exit Choices", y = .9, fontsize = 10)
+fig.suptitle("Expanding T-Maze Exit Choices", y = .9, fontsize = 10)
 
 for i, arg_name in enumerate(names):
     if(arg_name in arg_names): 

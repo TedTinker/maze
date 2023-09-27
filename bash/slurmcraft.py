@@ -79,6 +79,8 @@ add_this("hard",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['t']\"",   
     "epochs" :              "\"[500]\"",     
+    "image_size" :          8,
+    "boxes_high" :          1,
     "max_steps" :           30, 
     "min_speed" :           0,
     "max_speed" :           75,
@@ -134,7 +136,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["ef_many_{}".format(i) for i in [3]]
+    interesting = ["en_hard_{}".format(i) for i in [3, 4, 5, 23]]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 
