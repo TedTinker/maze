@@ -148,6 +148,7 @@ if(__name__ == "__main__" and args.arg_list != []):
 """
 #!/bin/bash -l
 #SBATCH --partition=compute
+#SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --time 48:00:00
 #SBATCH --mem=50G
@@ -158,6 +159,7 @@ if(__name__ == "__main__" and args.arg_list != []):
 """
 #!/bin/bash -l
 #SBATCH --partition=taniu
+#SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=1
 #SBATCH --time 48:00:00

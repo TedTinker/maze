@@ -10,7 +10,7 @@ from copy import deepcopy
 import statistics
 import math
 
-from utils import args, duration, load_dicts, print, maze_real_names
+from utils import args, duration, load_dicts, print, maze_real_names, short_real_names as real_names
 
 print("name:\n{}\n".format(args.arg_name),)
 
@@ -19,14 +19,6 @@ print("name:\n{}\n".format(args.arg_name),)
 confidence = .999
 
 
-
-real_names = {
-    "d"  : "No Entropy,\nNo Curiosity",
-    "e"  : "Entropy",
-    "n"  : "Naive Curiosity",
-    "en" : "Entropy and\nNaive Curiosity",
-    "f"  : "Aware Curiosity",
-    "ef" : "Entropy and \nAware Curiosity"}
 
 def add_this(dict, name):
     keys, values = [], []
@@ -95,7 +87,8 @@ def hard_p_values(complete_order, plot_dicts):
     arg_names = sorted(arg_names, key=custom_sort)
     real_arg_names = []
     for arg_name in arg_names:
-        if arg_name.endswith("rand"): real_name = "with Curiosity Traps"
+        print(arg_name)
+        if arg_name.endswith("rand"): real_name = "w/ traps"
         elif(arg_name in real_names): real_name = real_names[arg_name]
         else:                         real_name = arg_name
         real_arg_names.append(real_name)
@@ -194,7 +187,14 @@ def hard_p_values(complete_order, plot_dicts):
         for i in range(len(all_heights)):
             bar_center = x + bar_width / 2
             ax.add_patch(patches.Rectangle((x, 0), bar_width, all_heights[i], facecolor=all_colors[i], edgecolor="black"))
-            ax.text(x + bar_width/2, -0.2, all_names[i], ha='center', va='center', rotation=90, fontsize=10)
+            #if all_heights[i] > .55:
+            #    label_y_pos = all_heights[i] / 2  # Center of the bar
+            #    label_va = 'center'
+            #else:
+            #    label_y_pos = (1.1 + all_heights[i]) / 2  # Just above the bar; adjust 0.2 if needed
+            #    label_va = 'center'
+            #ax.text(x + bar_width/2, label_y_pos, all_names[i], ha='center', va=label_va, rotation=90, fontsize=10)
+            ax.text(x + bar_width/2, -.02, all_names[i], ha='center', va='top', rotation=90, fontsize=20)
             ax.plot([bar_center, bar_center], [all_conf[i][0], all_conf[i][1]], color="black")
             ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][0], all_conf[i][0]], color="black")
             ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][1], all_conf[i][1]], color="black")
@@ -217,14 +217,14 @@ def hard_p_values(complete_order, plot_dicts):
         all_vals = []
         for (arg_1, arg_2), (x, y, spots_1, spots_2, good_spots_1, good_spots_2, p, color) in p_value_dict.items():
             if(("n" in arg_1.split("_")[0] or "f" in arg_1.split("_")[0]) and arg_2 == arg_1 + "_rand"):
-                if arg_1.endswith("rand"): real_name_1 = "with Curiosity Traps"
+                if arg_1.endswith("rand"): real_name_1 = "w/ traps"
                 elif(arg_1 in real_names): real_name_1 = real_names[arg_1]
                 else:                      real_name_1 = arg_1
-                if arg_2.endswith("rand"): real_name_2 = "with Curiosity Traps"
+                if arg_2.endswith("rand"): real_name_2 = "w/ traps"
                 elif(arg_2 in real_names): real_name_2 = real_names[arg_2]
                 else:                      real_name_2 = arg_2
                 all_vals.append([real_name_1, "{}/{}".format(good_spots_1, len(spots_1)), "{}/{}".format(good_spots_2, len(spots_2)), good_p if p < 1-confidence else str(p)])
-        all_names = sum([[val[0], "with Curiosity Traps"] for val in all_vals], [])
+        all_names = sum([[val[0], "w/ traps"] for val in all_vals], [])
         all_heights = sum([[fraction_to_float(val[1]), fraction_to_float(val[2])] for val in all_vals], [])
         all_conf = sum([[confidence_interval(val[1]), confidence_interval(val[2])] for val in all_vals], [])
         all_colors = sum([["white", "white"] if val[-1] != good_p else ["green", "red"] if fraction_to_float(val[1]) > fraction_to_float(val[2]) else ["white", "white"] for val in all_vals], []) # Ignore when curiosity traps improve performance.
@@ -240,7 +240,14 @@ def hard_p_values(complete_order, plot_dicts):
         for i in range(len(all_heights)):
             bar_center = x + bar_width / 2
             ax.add_patch(patches.Rectangle((x, 0), bar_width, all_heights[i], facecolor=all_colors[i], edgecolor="black"))
-            ax.text(x + bar_width/2, -0.2, all_names[i], ha='center', va='center', rotation=90, fontsize=10)
+            #if all_heights[i] > .55:
+            #    label_y_pos = all_heights[i] / 2  # Center of the bar
+            #    label_va = 'center'
+            #else:
+            #    label_y_pos = (1.1 + all_heights[i]) / 2  # Just above the bar; adjust 0.2 if needed
+            #    label_va = 'center'
+            #ax.text(x + bar_width/2, label_y_pos, all_names[i], ha='center', va=label_va, rotation=90, fontsize=10)
+            ax.text(x + bar_width/2, -.02, all_names[i], ha='center', va='top', rotation=90, fontsize=20)
             ax.plot([bar_center, bar_center], [all_conf[i][0], all_conf[i][1]], color="black")
             ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][0], all_conf[i][0]], color="black")
             ax.plot([bar_center - 0.02, bar_center + 0.02], [all_conf[i][1], all_conf[i][1]], color="black")
@@ -287,7 +294,7 @@ def hard_p_values(complete_order, plot_dicts):
         ax = plt.gca()
 
         for arg_name, step_list_list in step_dicts.items():
-            if arg_name.endswith("rand"): real_name = "with Curiosity Traps"
+            if arg_name.endswith("rand"): real_name = "w/ traps"
             elif(arg_name in real_names): real_name = real_names[arg_name]
             else:                         real_name = arg_name
             step_list = step_list_list[i]
@@ -296,7 +303,14 @@ def hard_p_values(complete_order, plot_dicts):
             if(conf[1] > max_height): max_height = conf[1]
             bar_center = x + bar_width / 2
             ax.add_patch(patches.Rectangle((x, 0), bar_width, average, edgecolor="black"))
-            ax.text(x + bar_width/2, -0.2, real_name, ha='center', va='center', rotation=90, fontsize=10)
+            #if all_heights[i] > .55:
+            #    label_y_pos = all_heights[i] / 2  # Center of the bar
+            #    label_va = 'center'
+            #else:
+            #    label_y_pos = (1.1 + all_heights[i]) / 2  # Just above the bar; adjust 0.2 if needed
+            #    label_va = 'center'
+            #ax.text(x + bar_width/2, label_y_pos, all_names[i], ha='center', va=label_va, rotation=90, fontsize=10)            
+            ax.text(x + bar_width/2, -.02, all_names[i], ha='center', va='top', rotation=90, fontsize=20)
             ax.plot([bar_center, bar_center], [conf[0], conf[1]], color="black")
             ax.plot([bar_center - 0.02, bar_center + 0.02], [conf[0], conf[0]], color="black")
             ax.plot([bar_center - 0.02, bar_center + 0.02], [conf[1], conf[1]], color="black")

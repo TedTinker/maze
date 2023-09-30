@@ -38,7 +38,6 @@ class RGBD_IN(nn.Module):
         rgbd_size = (1, 4, args.image_size, args.image_size)
         example = torch.zeros(rgbd_size)
         
-        """
         n_blocks = int(log2(args.image_size) - 2)
         modules = []
         modules.extend([
@@ -69,32 +68,6 @@ class RGBD_IN(nn.Module):
                     padding=(1, 1))
             ])
         self.rgbd_in = nn.Sequential(*modules)
-        """
-        
-        self.rgbd_in = nn.Sequential(
-            ConstrainedConv2d(
-                in_channels = 4,
-                out_channels = 16,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            nn.AvgPool2d(
-                kernel_size = (3,3),
-                stride = (2,2),
-                padding = (1,1)),
-            ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 16,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            nn.AvgPool2d(
-                kernel_size = (3,3),
-                stride = (2,2),
-                padding = (1,1)),
-            )
         
         example = self.rgbd_in(example)
         rgbd_latent_size = example.flatten(1).shape[1]
@@ -165,12 +138,13 @@ class Forward(nn.Module):
             hidden_size = args.hidden_size,
             batch_first = True)
         
-        self.gen_shape = (4, args.image_size//4, args.image_size//4)
+        self.gen_shape = (4, 2, 2) # args.image_size//4, args.image_size//4)
         self.rgbd_out_lin = nn.Sequential(
             nn.Linear(2 * args.hidden_size, self.gen_shape[0] * self.gen_shape[1] * self.gen_shape[2]),
             nn.PReLU())
         
-        """
+        print("\n\n", self.gen_shape, "\n\n")
+        
         n_blocks = int(log2(args.image_size))
         modules = []
         for i in range(n_blocks):
@@ -194,36 +168,7 @@ class Forward(nn.Module):
                 kernel_size = (1,1))
         ])
         self.rgbd_out = nn.Sequential(*modules)
-        """
         
-        self.rgbd_out = nn.Sequential(
-            ConstrainedConv2d(
-                in_channels = self.gen_shape[0],
-                out_channels = 16,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            nn.Upsample(scale_factor = 2, mode = "bilinear", align_corners = True),
-            ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 16,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            nn.Upsample(scale_factor = 2, mode = "bilinear", align_corners = True),
-            ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 16,
-                kernel_size = (3,3),
-                padding = (1,1),
-                padding_mode = "reflect"),
-            nn.PReLU(),
-            ConstrainedConv2d(
-                in_channels = 16,
-                out_channels = 4,
-                kernel_size = (1,1)))
         
         self.spe_out = nn.Sequential(
             nn.Linear(2 * args.hidden_size, args.hidden_size), 
@@ -449,8 +394,21 @@ if __name__ == "__main__":
     print()
     print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, args.hidden_size))))
     
+    
+    
+    args.image_size = 16
+    
+    
+    
+    forward = Forward(args)
+    
+    print("\n\n")
+    print(forward)
+    print()
+    print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, args.hidden_size))))
+    
 
-
+"""
     actor = Actor(args)
     
     print("\n\n")
@@ -484,5 +442,6 @@ if __name__ == "__main__":
     print(critic)
     print()
     print(torch_summary(critic, ((3, 1, args.hidden_size), (3, 1, action_size))))
+"""
 
 # %%

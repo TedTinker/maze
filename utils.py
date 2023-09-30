@@ -284,7 +284,16 @@ real_names = {
     "n"  : "Prediction Error Curiosity",
     "en" : "Entropy and Prediction Error Curiosity",
     "f"  : "Hidden State Curiosity",
-    "ef" : "Entropy and Hidden State Curiosity",
+    "ef" : "Entropy and Hidden State Curiosity"
+}
+
+short_real_names = {
+    "d"  : "N",
+    "e"  : "E",
+    "n"  : "P",
+    "en" : "EP",
+    "f"  : "H",
+    "ef" : "EH"
 }
 
 maze_real_names = {
