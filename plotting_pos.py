@@ -44,7 +44,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
         epoch, maze_name = epoch_maze_name.split("_")
         for step in range(steps):
             fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
-            fig.suptitle("Epoch {} (Maze {}) Step {}".format(epoch, maze_name, step), y = 1.1)
+            fig.suptitle("Epoch {} ({}) Step {}".format(epoch, maze_real_names[maze_name], step), y = 1.1)
             plot_position = (0, 0)
             for arg_name in complete_order:
                 if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
@@ -90,7 +90,7 @@ def easy_plotting_pos(complete_order, plot_dicts):
             buf.close()
             plt.close()
             
-        print("{}:\tDone with easy epoch {} (maze {}).".format(duration(), epoch, maze_name))
+        print("{}:\tDone with easy epoch {} (maze {}).".format(duration(), epoch, maze_real_names[maze_name]))
             
     x_max = None ; y_max = None 
     for image in images:
@@ -113,7 +113,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
         else: current_count += 1
     columns = max(columns, current_count)
     if(complete_order[-1] != "break"): rows += 1
-    figsize = (columns * 3, rows * 3) if too_many_plot_dicts else (columns * 10, rows * 10)
+    figsize = (rows * 3, columns * 3) if too_many_plot_dicts else (rows * 10, columns * 10)
     
     epochs_maze_names = list(set(["_".join(key.split("_")[1:]) for key in plot_dicts[0]["pos_lists"].keys()]))
     epochs_maze_names.sort(key=lambda x: (int(x.split('_')[0]), x.split('_')[1]))
@@ -130,24 +130,25 @@ def hard_plotting_pos(complete_order, plot_dicts):
     plt.close()
     
     saved_paths = 0
+    mazes_done = 0
     for i, epoch_maze_name in enumerate(epochs_maze_names):
         epoch, maze_name = epoch_maze_name.split("_")
-        print(epoch, maze_name)
+        print(epoch, maze_name, mazes_done)
         if(i+1 != len(epochs_maze_names)):
             next_epoch_maze_name = epochs_maze_names[i+1]
             _, next_maze_name = next_epoch_maze_name.split("_")
         else:
             next_maze_name = None
-        fig, axs = plt.subplots(rows, columns, figsize = figsize)
-        fig.suptitle("Epoch {} (Maze {})".format(epoch, maze_name), y = 1.05)
+        fig, axs = plt.subplots(columns, rows, figsize = figsize)
+        fig.suptitle("Epoch {} ({})".format(epoch, maze_real_names[maze_name]), y = 1.05)
         plot_position = (0, 0)
         for arg_name in complete_order:
             print(arg_name)
-            if(  arg_name == "break"): plot_position = (plot_position[0] + 1, 0)
+            if(  arg_name == "break"): plot_position = (0, plot_position[1] + 1)
             elif(arg_name == "empty_space"): 
                 ax = axs[plot_position[0], plot_position[1]] if rows > 1 else axs[plot_position[1]]
                 ax.axis("off")
-                plot_position = (plot_position[0], plot_position[1] + 1)
+                plot_position = (plot_position[0] + 1, plot_position[1])
             else:
                 for plot_dict in plot_dicts:
                     if(plot_dict["arg_name"] == arg_name): break
@@ -158,7 +159,7 @@ def hard_plotting_pos(complete_order, plot_dicts):
                 h, w, _ = arena_map.shape
                 extent = [-.5, w-.5, -h+.5, .5]
                 
-                def plot_pos(here):
+                def plot_pos(here, title = True):
                     here.imshow(arena_map, extent = extent, origin = "lower", zorder = 1) 
                     for c, agent in enumerate(agents):
                         for episode in range(episodes):
@@ -169,37 +170,41 @@ def hard_plotting_pos(complete_order, plot_dicts):
                     for exit in exits:
                         y, x = exit.pos
                         y = -y
-                        if(exit.rew == "default"): text = "X" ; fontsize = 40 # text = "Bad\nExit" ; color = (1,.25,.25,1)
-                        if(exit.rew == "better"):  text = "✓" ; fontsize = 50 #text = "Good\nExit"; color = (.25,1,.25,1)
-                        #here.fill([x - .25, x + .25, x + .25, x - .25], [y - .25, y - .25, y + .25, y + .25], color=color, zorder=3)
-                        #here.text(x, y, text, fontsize = 12 if too_many_plot_dicts else 12, ha='center', va='center', zorder = 4)
+                        if(exit.rew == "default"): text = "X" ; fontsize = 40 * (1.7544 if mazes_done == 0 else 1.2626 if mazes_done == 1 else 1)
+                        if(exit.rew == "better"):  text = "✓" ; fontsize = 50 * (1.7544 if mazes_done == 0 else 1.2626 if mazes_done == 1 else 1)
                         here.text(x, y, text, fontsize = fontsize, ha='center', va='center', zorder = 4)
                     if(plot_dict["args"].random_by_choice):
                         traps = arena_dict[maze_name + ".png"].random_by_choice
-                        print("PLACE ???")
-                        text = "?" ; fontsize = 40
+                        text = "?" ; fontsize = 40 * (1.7544 if mazes_done == 0 else 1.2626 if mazes_done == 1 else 1)
                         for y, x in traps:
                             here.text(x, -y, text, fontsize = fontsize, ha='center', va='center', zorder = 4)
                     
-                    here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
+                    if(title):
+                        here.set_title("{}\n{}".format(plot_dict["arg_name"], plot_dict["arg_title"]))
                     here.axis("off")
                 
                 if(not too_many_plot_dicts):                    
                     plot_pos(ax)
-                if(next_maze_name != maze_name):
-                    print("Making thesis_pic")
-                    fig2, ax2 = plt.subplots(figsize = (3, 3) if too_many_plot_dicts else (10, 10))  
-                    plot_pos(ax2)  
-                    maze_real_name = maze_real_names[maze_name]
                     title = real_names[arg_name] if arg_name in real_names else "with Curiosity Traps"
                     if(maze_name in ["1", "t"]): title = title
-                    else:                        title = ""                    
-                    ax2.set_title(title)
+                    else:                        title = ""  
+                    ax.set_title(title)  
+                if(next_maze_name != maze_name):
+                    print("Making thesis_pic")  
+                    fig2, ax2 = plt.subplots(figsize = (3, 3) if too_many_plot_dicts else (10, 10))  
+                    plot_pos(ax2, False)  
+                    title = real_names[arg_name] if arg_name in real_names else "with Curiosity Traps"
+                    if(maze_name in ["1", "t"]): title = title
+                    else:                        title = ""   
+                    if(arg_name.split("_")[0] == "hard"):                   
+                        ax2.set_title(title)
                     fig2.savefig("saved/thesis_pics/paths_{}_{}.png".format(plot_dict["arg_name"], saved_paths), bbox_inches = "tight", dpi=300) 
-                    plt.close(fig2)
-            
-                plot_position = (plot_position[0], plot_position[1] + 1)
-        if(next_maze_name != maze_name): saved_paths += 1
+                    plt.close(fig2)            
+                plot_position = (plot_position[0] + 1, plot_position[1])
+        
+        if(next_maze_name != maze_name): 
+            mazes_done += 1
+            saved_paths += 1
                         
         #fig.legend(loc = "upper left", handles = handles, labels= ["Agent {}".format(agent) for agent in agents])
         buf = BytesIO()

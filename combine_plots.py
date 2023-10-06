@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.lines import Line2D
+import matplotlib.gridspec as gridspec
 
 import os
 import re
@@ -113,16 +114,24 @@ plt.close(fig)
 
 names = ["d_many", "d_many_rand", "e_many", "e_many_rand", "n_many", "n_many_rand", "en_many", "en_many_rand", "f_many", "f_many_rand", "ef_many", "ef_many_rand"]
 poses = [(0,0),    (0,1),         (0,2),    (0,3),         (1,0),    (1,1),         (1,2),    (1,3),           (2,0),    (2,1),         (2,2),     (2,3)]
-fig, axs = plt.subplots(9, 4, figsize = (7, 10) if too_many_plot_dicts else (7, 10))
+fig = plt.figure(figsize=(7, 10))
+small = .57 ; med = .792
+gs = gridspec.GridSpec(12, 4, height_ratios=[.05, small, med, 1, .05, small, med, 1, .05, small, med, 1], width_ratios=[1,1,1,1])
 fig.suptitle("Expanding T-Maze Trajectories", y = .9, fontsize = 10)
 
 for i, arg_name in enumerate(names):
     if(arg_name in arg_names): 
         (x,y) = poses[names.index(arg_name)]
         all_paths = ["paths_{}_{}.png".format(arg_name, j) for j in range(3)]
-        for j in range(3):
-            ax = axs[3*x + j, y]
-            ax.imshow(plt.imread(all_paths[j]))       ; ax.axis("off")
+        for j in range(4):
+            ax = fig.add_subplot(gs[4*x + j, y])
+            if(j == 0): pass 
+            else:
+                ax.imshow(plt.imread(all_paths[j-1]))       
+            if(j == 1):
+                title = real_names[arg_name] if arg_name in real_names else "with Curiosity Traps"
+                ax.set_title(title, fontsize = 5, y = .86)
+            ax.axis("off")
             
 draw_lines(fig)
             

@@ -350,6 +350,7 @@ class Agent:
         # Get curiosity                  
         if(self.args.dkl_max != None):
             complexity_for_free = torch.clamp(complexity_for_free, min = 0, max = self.args.dkl_max)
+            #complexity_for_free = torch.log1p(complexity_for_free)
         naive_curiosity = self.args.naive_eta * accuracy_for_naive  
         free_curiosity = self.args.free_eta * complexity_for_free
         if(self.args.curiosity == "naive"):  curiosity = naive_curiosity

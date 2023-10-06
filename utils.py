@@ -287,6 +287,15 @@ real_names = {
     "ef" : "Entropy and Hidden State Curiosity"
 }
 
+def add_this(name):
+    keys, values = [], []
+    for key, value in real_names.items(): keys.append(key) ; values.append(value)
+    for key, value in zip(keys, values):  
+        new_key = key + "_" + name 
+        real_names[new_key] = value
+add_this("hard")
+add_this("many")
+
 short_real_names = {
     "d"  : "N",
     "e"  : "E",
@@ -296,6 +305,15 @@ short_real_names = {
     "ef" : "EH"
 }
 
+def add_this(name):
+    keys, values = [], []
+    for key, value in short_real_names.items(): keys.append(key) ; values.append(value)
+    for key, value in zip(keys, values):  
+        new_key = key + "_" + name 
+        short_real_names[new_key] = value
+add_this("hard")
+add_this("many")
+
 maze_real_names = {
     "t" : "Biased T-Maze",
     "alt" : "Biased T-Maze",
@@ -303,15 +321,6 @@ maze_real_names = {
     "2" : "Double T-Maze",
     "3" : "Triple T-Maze",
 }
-
-def add_this(name):
-    keys, values = [], []
-    for key, value in real_names.items(): keys.append(key) ; values.append(value)
-    for key, value in zip(keys, values):  
-        new_key = key + "_" + name 
-        real_names[new_key] = value
-add_this("hard")
-add_this("many")
 
 
 

@@ -408,7 +408,6 @@ if __name__ == "__main__":
     print(torch_summary(forward, ((3, 1, args.image_size, args.image_size, 4), (3, 1, spe_size), (3, 1, action_size), (3, 1, args.hidden_size))))
     
 
-"""
     actor = Actor(args)
     
     print("\n\n")
@@ -442,6 +441,5 @@ if __name__ == "__main__":
     print(critic)
     print()
     print(torch_summary(critic, ((3, 1, args.hidden_size), (3, 1, action_size))))
-"""
 
 # %%
