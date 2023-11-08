@@ -87,6 +87,7 @@ add_this("hard",   {
     "better_reward" :       "\"[(1,0),(1,10)]\"",
     "step_lim_punishment" : -2,
     "step_cost" :           .99, 
+    "state_size" :          32,
     "naive_eta" :           1, #.75,
     "free_eta" :            1, #.25, 
     "beta" :                [[{"curiosity" : "free"}, .001]], 
@@ -137,7 +138,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["ef_hard_{}".format(i) for i in [13, 27, 40, 45]]
+    interesting = ["f_many_{}".format(i) for i in [25]]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 

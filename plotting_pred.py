@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
+import matplotlib.patches as patches
 
 import torch
 from torch.distributions import Normal
@@ -37,11 +38,11 @@ def easy_plotting_pred(complete_order, plot_dicts):
                     obs_size = 12 + plot_dict["args"].randomness
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
-                        rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
+                        rows = len(pred_list) ; columns = 3
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 3, rows * 1.5))
                         title = "Agent {}: Epoch {} (Maze {}), Episode {}".format(agent, epoch, maze_name, episode)
                         fig.suptitle(plot_dict["arg_title"] + "\n" + title, y = 1.1)
-                        for row, (action_name, obs, zp_mu_pred, zp_preds, zq_mu_pred, zq_preds) in enumerate(pred_list):
+                        for row, (action_name, obs, zp_pred, zq_pred) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
                                 if(row == 0 and column > 0): pass
@@ -50,26 +51,14 @@ def easy_plotting_pred(complete_order, plot_dicts):
                                     if(column == 0):   
                                         ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = obs, norm = norm)
                                         ax.set_title("Step {}\nAction: {}".format(row, action_name))
-                                    # ZP Mean
+                                    # ZP Sample
                                     elif(column == 1): 
-                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = torch.tanh(zp_mu_pred), norm = norm)
-                                        ax.set_title("ZP Mean")
-                                    # ZP Samples
-                                    elif(column in [i+2 for i in range(plot_dict["args"].samples_per_pred)]):
-                                        pred_num = column - 2
-                                        pred = zp_preds[pred_num]
-                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = torch.tanh(pred), norm = norm)
-                                        ax.set_title("ZP Sample {}".format(pred_num+1))
-                                    # ZQ Mean
-                                    elif(column == 2 + plot_dict["args"].samples_per_pred):
-                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = torch.tanh(zq_mu_pred), norm = norm)
-                                        ax.set_title("ZQ Mean")
-                                    # ZQ Samples
-                                    else:
-                                        pred_num = column - 3 - plot_dict["args"].samples_per_pred
-                                        pred = zq_preds[pred_num]
-                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = torch.tanh(pred), norm = norm)
-                                        ax.set_title("ZQ Sample {}".format(pred_num+1))
+                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = torch.tanh(zp_pred), norm = norm)
+                                        ax.set_title("Prior")
+                                    # ZQ Sample
+                                    elif(column == 2):
+                                        ax.scatter([x for x in range(obs_size)], [0 for _ in range(obs_size)], marker = "s", s = 250, linewidths = 1, edgecolor='blue', cmap = cmap, c = torch.tanh(zq_pred), norm = norm)
+                                        ax.set_title("Posterior")
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight", dpi=300)
                         plt.close()
                         
@@ -95,11 +84,11 @@ def hard_plotting_pred(complete_order, plot_dicts):
                         if(plot_dict["arg_name"] == arg_name): pred_lists = plot_dict["pred_lists"]["{}_{}_{}".format(agent, epoch, maze_name)] ; break 
                     for episode in range(episodes):
                         pred_list = pred_lists[episode]
-                        rows = len(pred_list) ; columns = 3 + 2 * plot_dict["args"].samples_per_pred
+                        rows = len(pred_list) ; columns = 3
                         fig, axs = plt.subplots(rows, columns, figsize = (columns * 2, rows * 2.5))
                         title = "Agent {}: Epoch {} (Maze {}), Episode {}".format( agent, epoch, maze_name, episode)
                         fig.suptitle(plot_dict["arg_title"] + "\n" + title, y = 1.1)
-                        for row, (action_name, (rgbd, spe), ((rgbd_mu_pred_p, pred_rgbd_p), (spe_mu_pred_p, pred_spe_p)), ((rgbd_mu_pred_q, pred_rgbd_q), (spe_mu_pred_q, pred_spe_q))) in enumerate(pred_list):
+                        for row, (action_name, (rgbd, spe), (pred_rgbd_p, pred_spe_p), (pred_rgbd_q, pred_spe_q)) in enumerate(pred_list):
                             for column in range(columns):
                                 ax = axs[row, column] ; ax.axis("off")
                                 if(row == 0 and column > 0): pass
@@ -109,26 +98,21 @@ def hard_plotting_pred(complete_order, plot_dicts):
                                     if(column == 0):   
                                         ax.imshow(rgbd[:,:,0:3])
                                         ax.set_title("Step {}\nAction: {}\nSpeed {}".format(row, action_name, steps_per_step*round(spe.item())), fontsize = 12)
-                                    # ZP Mean
+                                    # ZP Sample
                                     elif(column == 1): 
-                                        ax.imshow(torch.sigmoid(rgbd_mu_pred_p[:,:,0:3])) 
-                                        ax.set_title("p(z) Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_p.item())), fontsize = 12)
-                                    # ZP Samples
-                                    elif(column in [i+2 for i in range(plot_dict["args"].samples_per_pred)]):
-                                        pred_num = column - 2
-                                        pred = pred_rgbd_p[pred_num]
-                                        ax.imshow(torch.sigmoid(pred[:,:,0:3]))
-                                        ax.set_title("p(z) Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_p[pred_num].item())), fontsize = 12)
-                                    # ZQ Mean
-                                    elif(column == 2 + plot_dict["args"].samples_per_pred):
-                                        ax.imshow(torch.sigmoid(rgbd_mu_pred_q[:,:,0:3]))
-                                        ax.set_title("q(z) Mean\nSpeed {}".format(steps_per_step*round(spe_mu_pred_q.item())), fontsize = 12)
-                                    # ZQ Samples
-                                    else:
-                                        pred_num = column - 3 - plot_dict["args"].samples_per_pred
-                                        pred = pred_rgbd_q[pred_num]
-                                        ax.imshow(torch.sigmoid(pred[:,:,0:3]))
-                                        ax.set_title("q(z) Sample {}\nSpeed {}".format(pred_num+1, steps_per_step*round(pred_spe_q[pred_num].item())), fontsize = 12)
+                                        ax.imshow(torch.sigmoid(pred_rgbd_p[:,:,0:3])) 
+                                        ax.set_title("Prior\nSpeed {}".format(steps_per_step*round(pred_spe_p.item())), fontsize = 12)
+                                    # ZQ Sample
+                                    elif(column == 2):
+                                        ax.imshow(torch.sigmoid(pred_rgbd_q[:,:,0:3]))
+                                        ax.set_title("Posterior\nSpeed {}".format(steps_per_step*round(pred_spe_q.item())), fontsize = 12)
+                                    xlim = ax.get_xlim()
+                                    ylim = ax.get_ylim()
+
+                                    # Create a rectangle patch with a black edge that matches the image axes' limits
+                                    # The rectangle is positioned at (0,0) with the width and height matching the image dimensions
+                                    rect = patches.Rectangle((xlim[0], ylim[0]), xlim[1]-xlim[0], ylim[1]-ylim[0], linewidth=2, edgecolor='black', facecolor='none')
+                                    ax.add_patch(rect)
                         plt.savefig("{}/{}.png".format(arg_name, title), format = "png", bbox_inches = "tight", dpi=300)
                         plt.close()
                         
