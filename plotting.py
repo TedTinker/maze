@@ -123,18 +123,18 @@ def plots(plot_dicts, min_max_dict):
             kinds = ["NONE"]
             if("t" in plot_dict["args"].maze_list): kinds += ["LEFT", "RIGHT"]
             if("alt" in plot_dict["args"].maze_list): kinds += ["RIGHT"]
-            if("1" in plot_dict["args"].maze_list): kinds += ["LEFT", "RIGHT"]
-            if("2" in plot_dict["args"].maze_list): kinds += ["LEFT\nLEFT", "LEFT\nRIGHT", "RIGHT\nLEFT", "RIGHT\nRIGHT"]
-            if("3" in plot_dict["args"].maze_list): kinds += ["LEFT\nLEFT\nLEFT", "LEFT\nLEFT\nRIGHT", "LEFT\nRIGHT\nLEFT", "LEFT\nRIGHT\nRIGHT", "RIGHT\nLEFT\nLEFT", "RIGHT\nLEFT\nRIGHT", "RIGHT\nRIGHT\nLEFT", "RIGHT\nRIGHT\nRIGHT"]
+            if("1" in plot_dict["args"].maze_list): kinds += ["L", "R"]
+            if("2" in plot_dict["args"].maze_list): kinds += ["LL", "LR", "RL", "RR"]
+            if("3" in plot_dict["args"].maze_list): kinds += ["LLL", "LLR", "LRL", "LRR", "RLL", "RLR", "RRL", "RRR"]
         else: kinds = ["NONE", "BAD", "GOOD"]
         
         def plot_exits(here):
             so_far = 0
             for maze, epochs in zip(plot_dict["args"].maze_list, plot_dict["args"].epochs):
                 for j, kind in enumerate(kinds):
-                    if((maze, kind) in [("t", "RIGHT"), ("1", "RIGHT"), ("2", "LEFT\nRIGHT"), ("3", "RIGHT\nLEFT\nLEFT")]):
+                    if((maze, kind) in [("t", "RIGHT"), ("1", "R"), ("2", "LR"), ("3", "RLL")]):
                         these_xs = [x for x in xs if x >= so_far and x <= so_far + epochs]
-                        here.fill_between(these_xs, [j*agents*1.1 for _ in these_xs], [j*agents*1.1 + agents for _ in these_xs], color = (.9, .9, .9, 1), linewidth = 0)
+                        here.fill_between(these_xs, [j*agents*1.1 for _ in these_xs], [j*agents*1.1 + agents for _ in these_xs], color = (.8, .8, .8, 1), linewidth = 0)
                         so_far += epochs
             for j, kind in enumerate(kinds):
                 counts = np.count_nonzero(spot_names == kind, 0)
@@ -143,11 +143,11 @@ def plots(plot_dicts, min_max_dict):
                 here.axhline(j*agents*1.1, color=(.5,.5,.5,1))  # 0% line
                 here.axhline(j*agents*1.1 + 0.5*agents, color=(.5,.5,.5,1), linestyle='--')  # 50% line
                 here.axhline(j*agents*1.1 + agents, color=(.5,.5,.5,1))  # 100% line
-            here.set_yticks([j*agents*1.1 + 0.5*agents for j, kind in enumerate(kinds)], kinds, rotation='vertical')
+            rotation = "horizontal" if "L" in kinds else "vertical"
+            here.set_yticks([j*agents*1.1 + 0.5*agents for j, kind in enumerate(kinds)], kinds, rotation=rotation)
             for label in here.get_yticklabels():
                 label.set_va('center')
             if(len(kinds) > 5): 
-                here.tick_params(axis='y', labelsize=10)  
                 labels = ['0%', '', '100%']
                 space = .1
             else:
@@ -166,8 +166,8 @@ def plots(plot_dicts, min_max_dict):
             here2.tick_params(right = False)
             for label in here2.get_yticklabels():
                 label.set_color((0,0,0,.5))
-                if(len(kinds) < 5): label.set_fontsize(14)
-                else:               label.set_fontsize(10)
+                if(len(kinds) < 5): label.set_fontsize(22)
+                else:               label.set_fontsize(12)
             divide_arenas(xs, here)
             
         if(not too_many_plot_dicts): plot_exits(ax)

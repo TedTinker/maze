@@ -69,7 +69,7 @@ def hard_p_values(complete_order, plot_dicts):
                     all_agent_spots = [] 
                     for spot_names in plot_dict["spot_names"]:
                         final_spots = spot_names[epochs + total_epochs - prev_episodes - 1 : epochs + total_epochs - 1]
-                        final_spots = [1 if spot in ["RIGHT", "LEFT\nRIGHT", "RIGHT\nLEFT\nLEFT"] else 0 for spot in final_spots]
+                        final_spots = [1 if spot in ["RIGHT", "R", "LR", "RLL"] else 0 for spot in final_spots]
                         final_spots = sum(final_spots)/prev_episodes
                         all_agent_spots.append(final_spots)
 

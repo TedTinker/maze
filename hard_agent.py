@@ -300,6 +300,7 @@ class Agent:
 
         rgbd, spe, actions, rewards, dones, masks = batch
         actions = torch.cat([torch.zeros(actions[:,0].unsqueeze(1).shape), actions], dim = 1)
+        all_masks = torch.cat([torch.ones(masks.shape[0], 1, 1), masks], dim = 1)    
         episodes = rewards.shape[0] ; steps = rewards.shape[1]
         
         #print("\n\n")
@@ -321,6 +322,9 @@ class Agent:
             zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
             zq_pred_rgbd.append(torch.cat(zq_preds_rgbd, -1)) ; zq_pred_spe.append(torch.cat(zq_preds_spe, -1))
             h_qs.append(h_q_p1)
+        (zp_mu, zp_std), (zq_mu, zq_std), h_q_p1 = self.forward(rgbd[:, step+1], spe[:, step+1], actions[:, step+1], h_qs[-1])
+        zp_mus.append(zp_mu) ; zp_stds.append(zp_std)
+        zq_mus.append(zq_mu) ; zq_stds.append(zq_std)
         h_qs.append(h_qs.pop(0)) ; h_qs = torch.cat(h_qs, dim = 1) ; next_hqs = h_qs[:, 1:] ; hqs = h_qs[:, :-1]
         zp_mus = torch.cat(zp_mus, dim = 1) ; zp_stds = torch.cat(zp_stds, dim = 1)
         zq_mus = torch.cat(zq_mus, dim = 1) ; zq_stds = torch.cat(zq_stds, dim = 1)
@@ -333,8 +337,9 @@ class Agent:
         speed_loss = self.args.speed_scalar * F.mse_loss(zq_pred_spe, next_spe_tiled,  reduction = "none").mean(-1).unsqueeze(-1) * masks / self.args.elbo_num
         accuracy_for_naive = image_loss + speed_loss
         accuracy            = accuracy_for_naive.mean()
-        complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * masks
-        complexity          = self.args.beta * complexity_for_free.mean()        
+        complexity_for_free = dkl(zq_mus, zq_stds, zp_mus, zp_stds).mean(-1).unsqueeze(-1) * all_masks # masks
+        complexity          = self.args.beta * complexity_for_free.mean()     
+        complexity_for_free = complexity_for_free[:,1:]
                         
         self.forward_opt.zero_grad()
         (accuracy + complexity).backward()

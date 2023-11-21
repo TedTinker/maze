@@ -1,0 +1,10 @@
+#!/bin/bash -l
+#SBATCH --partition=compute
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --time 48:00:00
+#SBATCH --mem=50G
+
+#SBATCH --ntasks=36
+module load singularity
+singularity exec maze.sif python maze/main.py --comp deigo --arg_name n_hard_rand_15 --curiosity naive --hard_maze True --maze_list "['t']" --epochs "[500]" --image_size 8 --boxes_high 1 --max_steps 30 --min_speed 0 --max_speed 75 --better_reward "[(1,0),(1,10)]" --step_lim_punishment -2 --step_cost 0.99 --state_size 32 --naive_eta 2 --agents_per_pos_list 36 --random_by_choice True  --agents $agents_per_job --previous_agents $previous_agents

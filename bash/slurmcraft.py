@@ -74,7 +74,7 @@ def add_this(name, args):
         slurm_dict[new_key] = new_value
 
 
-
+    
 add_this("hard",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['t']\"",   
@@ -85,24 +85,26 @@ add_this("hard",   {
     "min_speed" :           0,
     "max_speed" :           75,
     "better_reward" :       "\"[(1,0),(1,10)]\"",
-    "step_lim_punishment" : -2,
+    "step_lim_punishment" : -3,
     "step_cost" :           .99, 
     "state_size" :          32,
-    "naive_eta" :           1, #.75,
-    "free_eta" :            1, #.25, 
-    "beta" :                [[{"curiosity" : "free"}, .001]], 
+    "naive_eta" :           1,
+    "free_eta" :            .5,
+    "beta" :                [[{"curiosity" : "free"},  .001]], 
     "target_entropy" :      [[{"curiosity" : "none"}, -2.5]],
     "agents_per_pos_list" : 36}) 
-
+    
+    
+    
 add_this("many",   {
     "hard_maze" :           True, 
     "maze_list" :           "\"['1', '2', '3']\"", 
     "image_size" :          8,
     "max_steps" :           30, 
     "min_speed" :           0,
-    "max_speed" :           200,
+    "max_speed" :           150,
     "naive_eta" :           2, 
-    "free_eta" :            2,
+    "free_eta" :            1,
     "beta" :                [[{"curiosity" : "free"}, .01]], 
     "agents_per_pos_list" : 36, 
     "epochs" :              "\"[500, 2000, 4000]\"", 
@@ -110,7 +112,7 @@ add_this("many",   {
     "better_reward" :       "\"[(1,30)]\"",
     "wall_punishment" :     -1,
     "step_lim_punishment" : 0,
-    "target_entropy" :      0
+    "target_entropy" :      0,
     })
     
 
@@ -138,7 +140,7 @@ def all_like_this(this):
         
 if(__name__ == "__main__" and args.arg_list == []):
     #for key, value in slurm_dict.items(): print(key, ":", value,"\n")
-    interesting = ["f_many_{}".format(i) for i in [25]]
+    interesting = ["en_hard_{}".format(i) for i in [2]]
     for this in interesting:
         print("{} : {}".format(this,slurm_dict[this]))
 
