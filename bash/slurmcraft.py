@@ -90,7 +90,7 @@ add_this("hard",   {
     "state_size" :          32,
     "naive_eta" :           1,
     "free_eta" :            .5,
-    "beta" :                [[{"curiosity" : "free"},  .001]], 
+    "beta" :                .001, #[[{"curiosity" : "free"},  .001]], 
     "target_entropy" :      [[{"curiosity" : "none"}, -2.5]],
     "agents_per_pos_list" : 36}) 
     
@@ -148,28 +148,31 @@ max_cpus = 36
 if(__name__ == "__main__" and args.arg_list != []):
     
     if(args.comp == "deigo"):
+        nv = ""
+        module = "module load singularity"
         partition = \
 """
 #!/bin/bash -l
 #SBATCH --partition=compute
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --time 48:00:00
+#SBATCH --time 05:00:00
 #SBATCH --mem=50G
 """
 
     if(args.comp == "saion"):
+        nv = "" # "--nv"
+        module = "module load singularity cuda"
         partition = \
 """
 #!/bin/bash -l
 #SBATCH --partition=taniu
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=1
 #SBATCH --time 48:00:00
 #SBATCH --mem=50G
 """
-
+    nv = "" #"--nv" if saion else ""
     for name in args.arg_list:
         if(name in ["break", "empty_space"]): pass 
         else:
@@ -178,9 +181,9 @@ if(__name__ == "__main__" and args.arg_list != []):
 """
 {}
 #SBATCH --ntasks={}
-module load singularity
-singularity exec maze.sif python maze/main.py --comp {} --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
-""".format(partition, max_cpus, args.comp, name, get_args(name))[2:])
+{}
+singularity exec {} maze.sif python maze/main.py --comp {} --arg_name {} {} --agents $agents_per_job --previous_agents $previous_agents
+""".format(partition, max_cpus, module, nv, args.comp, name, get_args(name))[2:])
             
 
 
@@ -188,48 +191,48 @@ singularity exec maze.sif python maze/main.py --comp {} --arg_name {} {} --agent
         f.write(
 """
 {}
-module load singularity
-singularity exec maze.sif python maze/finish_dicts.py --comp {} --arg_title {} --arg_name finishing_dictionaries
-""".format(partition, args.comp, combined)[2:])
+{}
+singularity exec {} maze.sif python maze/finish_dicts.py --comp {} --arg_title {} --arg_name finishing_dictionaries
+""".format(partition, module, nv, args.comp, combined)[2:])
         
     with open("plotting.slurm", "w") as f:
         f.write(
 """
 {}
-module load singularity
-singularity exec maze.sif python maze/plotting.py --comp {} --arg_title {} --arg_name plotting
-""".format(partition, args.comp, combined)[2:])
+{}
+singularity exec {} maze.sif python maze/plotting.py --comp {} --arg_title {} --arg_name plotting
+""".format(partition, module, nv, args.comp, combined)[2:])
         
     with open("plotting_pred.slurm", "w") as f:
         f.write(
 """
 {}
-module load singularity
-singularity exec maze.sif python maze/plotting_pred.py --comp {} --arg_title {} --arg_name plotting_predictions
-""".format(partition, args.comp, combined)[2:])
+{}
+singularity exec {} maze.sif python maze/plotting_pred.py --comp {} --arg_title {} --arg_name plotting_predictions
+""".format(partition, module, nv, args.comp, combined)[2:])
         
     with open("plotting_pos.slurm", "w") as f:
         f.write(
 """
 {}
-module load singularity
-singularity exec maze.sif python maze/plotting_pos.py --comp {} --arg_title {} --arg_name plotting_positions
-""".format(partition, args.comp, combined)[2:])
+{}
+singularity exec {} maze.sif python maze/plotting_pos.py --comp {} --arg_title {} --arg_name plotting_positions
+""".format(partition, module, nv, args.comp, combined)[2:])
         
     with open("plotting_p_values.slurm", "w") as f:
         f.write(
 """
 {}
-module load singularity
-singularity exec maze.sif python maze/plotting_p_val.py --comp {} --arg_title {} --arg_name plotting_p_values
-""".format(partition, args.comp, combined)[2:])
+{}
+singularity exec {} maze.sif python maze/plotting_p_val.py --comp {} --arg_title {} --arg_name plotting_p_values
+""".format(partition, module, nv, args.comp, combined)[2:])
         
     with open("combine_plots.slurm", "w") as f:
         f.write(
 """
 {}
-module load singularity
-singularity exec maze.sif python maze/combine_plots.py --comp {} --arg_title {} --arg_name combining_plots
-""".format(partition, args.comp, combined)[2:])
+{}
+singularity exec {} maze.sif python maze/combine_plots.py --comp {} --arg_title {} --arg_name combining_plots
+""".format(partition, module, nv, args.comp, combined)[2:])
 # %%
 

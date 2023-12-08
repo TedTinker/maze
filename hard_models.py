@@ -142,9 +142,7 @@ class Forward(nn.Module):
         self.rgbd_out_lin = nn.Sequential(
             nn.Linear(2 * args.hidden_size, self.gen_shape[0] * self.gen_shape[1] * self.gen_shape[2]),
             nn.PReLU())
-        
-        print("\n\n", self.gen_shape, "\n\n")
-        
+                
         n_blocks = int(log2(args.image_size))
         modules = []
         for i in range(n_blocks):
